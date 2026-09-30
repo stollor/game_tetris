@@ -19,10 +19,10 @@ const ROOT = path.join(__dirname, '..');
 global.window = global;
 for (const f of [
   'config/balance.js',
-  'src/core/rng.js',
-  'src/core/srs.js',
-  'src/core/timing.js',
-  'src/core/game.js',
+  'core/rng.js',
+  'core/srs.js',
+  'core/timing.js',
+  'core/game.js',
 ]) {
   vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
 }
@@ -72,7 +72,7 @@ function runPieceToGround(level, framesCap) {
 
 console.log('【① 重开后状态坏死】startGame() 解冻音频时钟');
 {
-  const src = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
+  const src = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
   const m = src.match(/function startGame\(modeId\) \{([\s\S]*?)\n  \}/);
   check('存在 startGame()', !!m);
   const body = m ? m[1] : '';
@@ -110,7 +110,7 @@ console.log('【① 附带】帧时钟：游戏速度不随刷新率漂移');
   for (let i = 0; i < 120; i++) fsum += frameDtSec(0);
   check('冻结时钟：Σdt = 0（§8.4 时间静止）', fsum === 0);
 
-  const src = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
+  const src = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
   check('主循环使用 NP.timing.frameDtSec', /const dtSec = global\.NP\.timing\.frameDtSec\(/.test(src));
 }
 
@@ -190,7 +190,7 @@ console.log('【③ 评审回归】UI 层消费事件后不分发玩法层 / 暂
   global.requestAnimationFrame = () => 0;                 // 截断手柄轮询递归
   global.addEventListener = (type, fn) => { handlers[type] = fn; };
   vm.runInThisContext(fs.readFileSync(path.join(ROOT, 'config/input.js'), 'utf8'), { filename: 'config/input.js' });
-  vm.runInThisContext(fs.readFileSync(path.join(ROOT, 'src/ui/input.js'), 'utf8'), { filename: 'src/ui/input.js' });
+  vm.runInThisContext(fs.readFileSync(path.join(ROOT, 'ui/input.js'), 'utf8'), { filename: 'ui/input.js' });
 
   const key = (code, repeat) => handlers.keydown({ code, repeat: !!repeat, preventDefault() {} });
 
@@ -220,7 +220,7 @@ console.log('【③ 评审回归】UI 层消费事件后不分发玩法层 / 暂
     JSON.stringify(acts2[acts2.length - 1]) === JSON.stringify(['moveLeft', false]));
 
   // —— ③-2 同根因第二处：模态判定必须含暂停层，且 Esc 返回不得穿透为 resume ——
-  const mainSrc = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
+  const mainSrc = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
   check('onUiKey 处理完动作后返回 true（消费标记）', /retry\(\);[\s\S]{0,240}?return true;/.test(mainSrc));
   check('onUiKey 的 Esc 返回分支返回 true（不得再当暂停键分发）',
     /return true;[^\n]*\/\/ 同一 Esc 已用于「返回」，不得再当暂停键分发/.test(mainSrc));
@@ -335,7 +335,7 @@ console.log('【④】音频 BGM 回归（双协议）：快速重开 BGM 存活
     }
   }
 
-  const audioSrc = fs.readFileSync(path.join(ROOT, 'src/audio/audio.js'), 'utf8');
+  const audioSrc = fs.readFileSync(path.join(ROOT, 'audio/audio.js'), 'utf8');
   vm.runInThisContext(fs.readFileSync(path.join(ROOT, 'config/audio.js'), 'utf8'), { filename: 'config/audio.js' });
   const AC = global.NP_CONFIG.audio;
 
@@ -345,7 +345,7 @@ console.log('【④】音频 BGM 回归（双协议）：快速重开 BGM 存活
     global.location = { protocol: proto };
     global.Audio = FakeAudio;
     global.AudioContext = FakeAudioContext;
-    vm.runInThisContext(audioSrc, { filename: 'src/audio/audio.js' });   // 每协议一份全新模块态
+    vm.runInThisContext(audioSrc, { filename: 'audio/audio.js' });   // 每协议一份全新模块态
     const A = global.NP.audio;
     const stemEls = () => Object.entries(A.state.elCache).filter(([u]) => u.includes('bgm_main_stem_'));
 
@@ -406,7 +406,7 @@ console.log('【④】音频 BGM 回归（双协议）：快速重开 BGM 存活
   }
 
   // —— §7.6 踩拍吸附 snappedDelayMs（表驱动：1/4 拍网格 15/BPM，±50ms 内吸附、只延迟不回卷） ——
-  vm.runInThisContext(audioSrc, { filename: 'src/audio/audio.js' });
+  vm.runInThisContext(audioSrc, { filename: 'audio/audio.js' });
   const A = global.NP.audio;
   const grid = 15 / 128;                       // BPM=128：1/4 拍网格 = 0.1171875s
   const SNAP_ROWS = [

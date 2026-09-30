@@ -48,7 +48,7 @@ html, body {
 /* ---------- 菜单背景（scene-menu-bg / keyart 由 03-art-design 提供） ---------- */
 .menu-bg {
   position: absolute; inset: 0;
-  background: url("../assets/scene/scene-menu-bg.png") center/cover no-repeat;
+  background: url("../assets/texture/scene/scene-menu-bg.png") center/cover no-repeat;
 }
 .menu-bg::after {
   content: ""; position: absolute; inset: 0;

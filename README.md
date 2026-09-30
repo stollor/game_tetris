@@ -51,13 +51,13 @@ python -m http.server 8080   # 打开 http://localhost:8080
 ## 目录结构
 
 ```
-index.html    入口（按顺序加载 config → i18n → src）
+index.html    入口（按顺序加载 config → i18n → core/audio/render/ui → main）
 config/       数值配置（balance / modes / input / fx / audio / unlock）
 i18n/         文案（zh-CN / en-US）
-src/core/     玩法核心：rng（7-bag）、srs（旋转/T-Spin）、game（状态机）、timing（帧时钟）
-src/audio/    音频引擎（AudioContext 时钟 = 游戏时钟，暂停 = 冻结）
-src/render/   Canvas 渲染与特效
-src/ui/       DOM 界面 / 键盘·手柄·触控输入
+core/         玩法核心：rng（7-bag）、srs（旋转/T-Spin）、game（状态机）、timing（帧时钟）
+audio/        音频引擎（AudioContext 时钟 = 游戏时钟，暂停 = 冻结）
+render/       Canvas 渲染与特效
+ui/           DOM 界面 / 键盘·手柄·触控输入
 assets/       美术 / 音效 / BGM 素材
 tests/ qa/    无头回归测试（473 项）与端到端验证报告
 ```

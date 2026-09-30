@@ -22,7 +22,7 @@ vm.createContext(ctx);
 const FILES = [
   'config/balance.js', 'config/modes.js', 'config/input.js', 'config/fx.js',
   'config/audio.js', 'config/unlock.js', 'i18n/zh-CN.js', 'i18n/en-US.js',
-  'src/core/rng.js', 'src/core/srs.js', 'src/core/game.js',
+  'core/rng.js', 'core/srs.js', 'core/game.js',
 ];
 for (const f of FILES) {
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });

@@ -75,19 +75,19 @@
   /* ---------- 素材加载 ---------- */
   const IMG = {};
   const SPRITES = {
-    lineBurst: { url: 'assets/fx/fx_line_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    comboRing: { url: 'assets/fx/fx_combo_ring.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    recordBurst: { url: 'assets/fx/fx_record_burst.png', frames: 18, cols: 6, cell: 256, fps: 60 },
-    pcBurst: { url: 'assets/fx/fx_pc_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    lockFlash: { url: 'assets/fx/fx_lock_flash.png', frames: 8, cols: 4, cell: 128, fps: 60 },
-    dropTrail: { url: 'assets/fx/fx_drop_trail.png', frames: 8, cols: 4, cell: 128, fps: 60 },
-    levelWave: { url: 'assets/fx/fx_levelup_wave.png', frames: 18, cols: 6, cell: 256, fps: 60 },
-    dangerPulse: { url: 'assets/fx/fx_danger_pulse.png', frames: 8, cols: 4, cell: 256, fps: 12 },
+    lineBurst: { url: 'assets/effect/fx/fx_line_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
+    comboRing: { url: 'assets/effect/fx/fx_combo_ring.png', frames: 16, cols: 4, cell: 256, fps: 60 },
+    recordBurst: { url: 'assets/effect/fx/fx_record_burst.png', frames: 18, cols: 6, cell: 256, fps: 60 },
+    pcBurst: { url: 'assets/effect/fx/fx_pc_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
+    lockFlash: { url: 'assets/effect/fx/fx_lock_flash.png', frames: 8, cols: 4, cell: 128, fps: 60 },
+    dropTrail: { url: 'assets/effect/fx/fx_drop_trail.png', frames: 8, cols: 4, cell: 128, fps: 60 },
+    levelWave: { url: 'assets/effect/fx/fx_levelup_wave.png', frames: 18, cols: 6, cell: 256, fps: 60 },
+    dangerPulse: { url: 'assets/effect/fx/fx_danger_pulse.png', frames: 8, cols: 4, cell: 256, fps: 12 },
   };
   const PARTICLES = {
-    glow: 'assets/fx/particle_glow.png',
-    spark: 'assets/fx/particle_spark.png',
-    shard: 'assets/fx/particle_shard.png',
+    glow: 'assets/effect/fx/particle_glow.png',
+    spark: 'assets/effect/fx/particle_spark.png',
+    shard: 'assets/effect/fx/particle_shard.png',
   };
 
   const state = {
@@ -119,8 +119,8 @@
       img.src = url;
       IMG[key] = img;
     };
-    load('bgField', 'assets/scene/scene-field-bg.png');
-    load('bgMenu', 'assets/scene/scene-menu-bg.png');
+    load('bgField', 'assets/texture/scene/scene-field-bg.png');
+    load('bgMenu', 'assets/texture/scene/scene-menu-bg.png');
     for (const k of Object.keys(SPRITES)) load(k, SPRITES[k].url);
     for (const k of Object.keys(PARTICLES)) load(k, PARTICLES[k]);
   }

@@ -1,0 +1,155 @@
+[
+  {
+    "file": "audio/music/bgm_alt_eclipse.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_alt_neon_rain.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_layer_heartbeat.wav",
+    "duration_s": 3.75,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_full_preview.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_layer_chorus.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_layer_high.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_layer_verse.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_arp.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_bass.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_hat.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_kick.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_lead.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_pad.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_perc.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_main_stem_snare.wav",
+    "duration_s": 15.0,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_menu.wav",
+    "duration_s": 19.2,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  },
+  {
+    "file": "audio/music/bgm_result.wav",
+    "duration_s": 10.667,
+    "sample_rate": 44100,
+    "channels": 2,
+    "bit": 16,
+    "loop": true,
+    "status": "generated"
+  }
+]

@@ -1,0 +1,120 @@
+[
+  {
+    "file": "fx/fx_line_burst.png",
+    "frames": 16,
+    "cols": 4,
+    "cell_px": 256,
+    "fps": 60,
+    "duration_ms": 267,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_combo_ring.png",
+    "frames": 16,
+    "cols": 4,
+    "cell_px": 256,
+    "fps": 60,
+    "duration_ms": 267,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_record_burst.png",
+    "frames": 18,
+    "cols": 6,
+    "cell_px": 256,
+    "fps": 60,
+    "duration_ms": 300,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_pc_burst.png",
+    "frames": 16,
+    "cols": 4,
+    "cell_px": 256,
+    "fps": 60,
+    "duration_ms": 267,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_lock_flash.png",
+    "frames": 8,
+    "cols": 4,
+    "cell_px": 128,
+    "fps": 60,
+    "duration_ms": 133,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_drop_trail.png",
+    "frames": 8,
+    "cols": 4,
+    "cell_px": 128,
+    "fps": 60,
+    "duration_ms": 133,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_levelup_wave.png",
+    "frames": 18,
+    "cols": 6,
+    "cell_px": 256,
+    "fps": 60,
+    "duration_ms": 300,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/fx_danger_pulse.png",
+    "frames": 8,
+    "cols": 4,
+    "cell_px": 256,
+    "fps": 12,
+    "duration_ms": 667,
+    "loop": true,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/particle_glow.png",
+    "frames": 1,
+    "cell_px": 64,
+    "fps": null,
+    "duration_ms": null,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/particle_spark.png",
+    "frames": 1,
+    "cell_px": 32,
+    "fps": null,
+    "duration_ms": null,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  },
+  {
+    "file": "fx/particle_shard.png",
+    "frames": 1,
+    "cell_px": 64,
+    "fps": null,
+    "duration_ms": null,
+    "loop": false,
+    "blend": "additive",
+    "status": "generated"
+  }
+]

@@ -55,7 +55,7 @@ const ctx = {
 };
 ctx.window = ctx;
 vm.createContext(ctx);
-for (const f of ['config/input.js', 'src/ui/touch.js']) {
+for (const f of ['config/input.js', 'ui/touch.js']) {
   vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
 }
 
@@ -394,8 +394,8 @@ console.log('\n[D] 平台适配静态口径（§9 / §8.5）');
 {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const css = fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8');
-  const main = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
-  const render = fs.readFileSync(path.join(ROOT, 'src/render/render.js'), 'utf8');
+  const main = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
+  const render = fs.readFileSync(path.join(ROOT, 'render/render.js'), 'utf8');
 
   ok('viewport meta：恰配屏宽 + 禁缩放 + 安全区（§9）',
     /name="viewport"[^>]*width=device-width/.test(html)
@@ -407,8 +407,8 @@ console.log('\n[D] 平台适配静态口径（§9 / §8.5）');
   ok('切后台 / 失焦自动暂停（§8.4 / DoD 10）',
     /visibilitychange/.test(main) && /autoPause/.test(main));
   ok('触控走同一动作接口（onAction），不走两套逻辑（§8.5）',
-    /createDispatcher\(/.test(fs.readFileSync(path.join(ROOT, 'src/ui/touch.js'), 'utf8'))
-    && /onAction/.test(fs.readFileSync(path.join(ROOT, 'src/ui/touch.js'), 'utf8')));
+    /createDispatcher\(/.test(fs.readFileSync(path.join(ROOT, 'ui/touch.js'), 'utf8'))
+    && /onAction/.test(fs.readFileSync(path.join(ROOT, 'ui/touch.js'), 'utf8')));
 }
 
 console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

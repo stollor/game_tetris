@@ -114,8 +114,8 @@ global.NP.ui = {
 /* ==================== 载入真实模块：配置 / 核心 / 输入 / 主流程 ==================== */
 for (const f of [
   'config/balance.js', 'config/input.js', 'config/modes.js',
-  'src/core/rng.js', 'src/core/srs.js', 'src/core/timing.js', 'src/core/game.js',
-  'src/ui/input.js', 'src/main.js',
+  'core/rng.js', 'core/srs.js', 'core/timing.js', 'core/game.js',
+  'ui/input.js', 'main.js',
 ]) {
   vm.runInThisContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), { filename: f });
 }
@@ -180,7 +180,7 @@ console.log('【场景②】暂停→设置→Esc 返回：返回不得变成“
     app.paused === true && audioCalls.resume === 0, `paused=${app.paused} resume=${audioCalls.resume}`);
 
   // —— 模态判定必须含暂停层（静态口径同步校验）——
-  const src = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
+  const src = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
   check('modalOpen 纳入 screen-pause / resume-countdown',
     /function modalOpen\(\)[\s\S]{0,300}?'screen-pause', 'resume-countdown'/.test(src));
 }
@@ -245,8 +245,8 @@ console.log('【场景③】「返回模式选择」必须路由到模式选择�
   check('结算页 Esc 仍回主菜单 screen-menu（§2.3「仅 Esc 打开菜单」）', shown('screen-menu') && !shown('screen-modes'));
 
   // —— 静态口径同步：按钮文案 =「返回模式选择」且两处按钮都走 quitToModes → screen-modes ——
-  const uiSrc = fs.readFileSync(path.join(ROOT, 'src/ui/ui.js'), 'utf8');
-  const mainSrc = fs.readFileSync(path.join(ROOT, 'src/main.js'), 'utf8');
+  const uiSrc = fs.readFileSync(path.join(ROOT, 'ui/ui.js'), 'utf8');
+  const mainSrc = fs.readFileSync(path.join(ROOT, 'main.js'), 'utf8');
   check('btn-pause-quit（暂停菜单）走 quitToModes',
     /btn-pause-quit'\)\.addEventListener\('click',[\s\S]{0,200}?quitToModes/.test(uiSrc));
   check('btn-result-modes（结算页）走 quitToModes',
