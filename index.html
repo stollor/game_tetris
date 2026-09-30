@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>NEON PULSE · 霓虹脉冲</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230B0E1A'/%3E%3Crect x='3' y='3' width='4' height='4' fill='%2300E5FF'/%3E%3Crect x='9' y='3' width='4' height='4' fill='%23FF2D9B'/%3E%3Crect x='3' y='9' width='4' height='4' fill='%237C4DFF'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%23FFEE58'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <!-- 对局画布（1920×1080 逻辑分辨率） -->
+  <canvas id="game-canvas" width="1920" height="1080"></canvas>
+
+  <!-- ============ 主菜单 ============ -->
+  <section id="screen-menu" class="screen">
+    <div class="menu-bg"></div>
+    <div class="menu-content">
+      <img class="keyart" src="assets/keyart/keyart-main-v2.png" alt="keyart">
+      <h1 class="logo">NEON&nbsp;PULSE</h1>
+      <div class="logo-sub">霓 虹 脉 冲</div>
+      <div class="tagline" data-i18n="menu.tagline"></div>
+      <div class="menu-buttons">
+        <button class="btn primary" id="btn-start" data-i18n="menu.start"></button>
+        <button class="btn" id="btn-settings" data-i18n="menu.settings"></button>
+        <button class="btn" id="btn-help" data-i18n="menu.help"></button>
+        <button class="btn" id="btn-unlocks" data-i18n="menu.credits"></button>
+      </div>
+      <div class="block-strip">
+        <img src="assets/blocks/block-I.png" alt="I"><img src="assets/blocks/block-O.png" alt="O">
+        <img src="assets/blocks/block-T.png" alt="T"><img src="assets/blocks/block-S.png" alt="S">
+        <img src="assets/blocks/block-Z.png" alt="Z"><img src="assets/blocks/block-J.png" alt="J">
+        <img src="assets/blocks/block-L.png" alt="L">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 模式选择 ============ -->
+  <section id="screen-modes" class="screen hidden">
+    <div class="menu-bg dim"></div>
+    <div class="panel-page">
+      <h2 class="page-title" data-i18n="mode.select.title"></h2>
+      <div class="mode-cards" id="mode-cards"></div>
+      <div class="row-center">
+        <button class="btn ghost" id="btn-mode-back" data-i18n="mode.back"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 设置 ============ -->
+  <section id="screen-settings" class="screen hidden">
+    <div class="menu-bg dim"></div>
+    <div class="panel-page wide">
+      <h2 class="page-title" data-i18n="settings.title"></h2>
+      <div class="settings-grid">
+        <div class="settings-col">
+          <h3 data-i18n="settings.audio"></h3>
+          <label class="slider-row"><span data-i18n="settings.bgm"></span>
+            <input type="range" id="vol-bgm" min="0" max="1" step="0.05"><output id="vol-bgm-out"></output></label>
+          <label class="slider-row"><span data-i18n="settings.sfx"></span>
+            <input type="range" id="vol-sfx" min="0" max="1" step="0.05"><output id="vol-sfx-out"></output></label>
+          <label class="slider-row"><span data-i18n="settings.sfxUi"></span>
+            <input type="range" id="vol-ui" min="0" max="1" step="0.05"><output id="vol-ui-out"></output></label>
+          <label class="slider-row"><span data-i18n="settings.sfxGame"></span>
+            <input type="range" id="vol-game" min="0" max="1" step="0.05"><output id="vol-game-out"></output></label>
+          <label class="check-row"><input type="checkbox" id="chk-mute"><span data-i18n="settings.mute"></span></label>
+
+          <h3 data-i18n="settings.visual"></h3>
+          <label class="select-row"><span data-i18n="settings.fxLevel"></span>
+            <select id="sel-fx">
+              <option value="low" data-i18n="settings.fx.low"></option>
+              <option value="mid" data-i18n="settings.fx.mid"></option>
+              <option value="high" data-i18n="settings.fx.high"></option>
+            </select></label>
+          <label class="check-row"><input type="checkbox" id="chk-flash"><span data-i18n="settings.reducedFlash"></span></label>
+          <label class="check-row"><input type="checkbox" id="chk-pip"><span data-i18n="settings.pip"></span></label>
+          <label class="check-row"><input type="checkbox" id="chk-autopause"><span data-i18n="settings.autoPause"></span></label>
+          <label class="check-row"><input type="checkbox" id="chk-countdown"><span data-i18n="settings.resumeCountdown"></span></label>
+          <label class="check-row"><input type="checkbox" id="chk-restartconfirm"><span data-i18n="settings.restartConfirm"></span></label>
+        </div>
+        <div class="settings-col">
+          <h3 data-i18n="settings.controls"></h3>
+          <div class="preset-row">
+            <span data-i18n="settings.preset"></span>
+            <button class="btn mini" data-preset="modern" data-i18n="settings.preset.modern"></button>
+            <button class="btn mini" data-preset="arcade" data-i18n="settings.preset.arcade"></button>
+            <button class="btn mini" data-preset="lefthand" data-i18n="settings.preset.lefthand"></button>
+            <button class="btn mini ghost" id="btn-reset-bindings" data-i18n="settings.reset"></button>
+          </div>
+          <div class="bindings" id="bindings-list"></div>
+
+          <h3 data-i18n="settings.touch"></h3>
+          <label class="check-row"><input type="checkbox" id="chk-touchpad"><span data-i18n="settings.touchPad"></span></label>
+          <label class="slider-row"><span data-i18n="settings.touchPadOpacity"></span>
+            <input type="range" id="vol-touchpad" min="0.3" max="1" step="0.05"><output id="vol-touchpad-out"></output></label>
+
+          <h3 data-i18n="settings.theme"></h3>
+          <label class="select-row"><span data-i18n="settings.skin"></span><select id="sel-skin"></select></label>
+          <label class="select-row"><span data-i18n="settings.background"></span><select id="sel-bg"></select></label>
+          <label class="select-row"><span data-i18n="settings.music"></span><select id="sel-music"></select></label>
+          <label class="select-row"><span data-i18n="settings.language"></span>
+            <select id="sel-lang">
+              <option value="zh-CN">简体中文</option>
+              <option value="en-US">English</option>
+            </select></label>
+        </div>
+      </div>
+      <div class="row-center">
+        <button class="btn primary" id="btn-settings-close" data-i18n="settings.close"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 操作说明 ============ -->
+  <section id="screen-help" class="screen hidden">
+    <div class="menu-bg dim"></div>
+    <div class="panel-page">
+      <h2 class="page-title" data-i18n="help.title"></h2>
+      <div class="help-body">
+        <p data-i18n="help.line1"></p>
+        <p data-i18n="help.line2"></p>
+        <p data-i18n="help.line3"></p>
+        <p data-i18n="help.line4"></p>
+        <p data-i18n="help.line5"></p>
+        <h3 class="help-sub" data-i18n="help.touchTitle"></h3>
+        <p data-i18n="help.touch1"></p>
+        <p data-i18n="help.touch2"></p>
+        <div class="block-strip big">
+          <img src="assets/blocks/block-I.png" alt="I"><img src="assets/blocks/block-T.png" alt="T">
+          <img src="assets/blocks/block-J.png" alt="J"><img src="assets/blocks/block-L.png" alt="L">
+          <img src="assets/blocks/block-S.png" alt="S"><img src="assets/blocks/block-Z.png" alt="Z">
+          <img src="assets/blocks/block-O.png" alt="O">
+        </div>
+      </div>
+      <div class="row-center">
+        <button class="btn ghost" id="btn-help-back" data-i18n="mode.back"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 成就 / 解锁 ============ -->
+  <section id="screen-unlocks" class="screen hidden">
+    <div class="menu-bg dim"></div>
+    <div class="panel-page wide">
+      <h2 class="page-title" data-i18n="unlock.title"></h2>
+      <div class="unlock-stats">
+        <div><span data-i18n="unlock.totalLines"></span>：<b id="stat-lines">0</b></div>
+        <div><span data-i18n="unlock.dailyCount"></span>：<b id="stat-daily">0</b></div>
+      </div>
+      <div class="unlock-grid" id="unlock-grid"></div>
+      <div class="row-center">
+        <button class="btn ghost" id="btn-unlocks-back" data-i18n="mode.back"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 暂停 ============ -->
+  <section id="screen-pause" class="overlay hidden">
+    <div class="dialog">
+      <h2 data-i18n="pause.title"></h2>
+      <p class="hint" data-i18n="pause.hint"></p>
+      <button class="btn primary" id="btn-resume" data-i18n="pause.resume"></button>
+      <button class="btn" id="btn-pause-restart" data-i18n="pause.restart"></button>
+      <button class="btn" id="btn-pause-settings" data-i18n="pause.settings"></button>
+      <button class="btn ghost" id="btn-pause-quit" data-i18n="pause.quit"></button>
+    </div>
+  </section>
+
+  <!-- ============ 快速重开确认 ============ -->
+  <section id="screen-restart" class="overlay hidden">
+    <div class="dialog">
+      <h2 data-i18n="restart.confirm.title"></h2>
+      <button class="btn primary" id="btn-restart-yes" data-i18n="restart.confirm.yes"></button>
+      <button class="btn ghost" id="btn-restart-no" data-i18n="restart.confirm.no"></button>
+    </div>
+  </section>
+
+  <!-- ============ 结算 ============ -->
+  <section id="screen-result" class="screen hidden">
+    <div class="menu-bg dim"></div>
+    <div class="result-panel" id="result-panel">
+      <h2 class="page-title" data-i18n="result.title"></h2>
+      <div class="record-banner hidden" id="record-banner" data-i18n="result.newRecord"></div>
+      <div class="result-grid" id="result-grid"></div>
+      <div class="result-encourage" id="result-encourage"></div>
+      <div class="result-actions">
+        <button class="btn primary big" id="btn-retry" disabled>
+          <span data-i18n="result.retry"></span>
+          <em id="retry-lock-text"></em>
+        </button>
+        <button class="btn" id="btn-result-modes" data-i18n="result.modeSelect"></button>
+        <button class="btn ghost hidden" id="btn-watch-replay" data-i18n="result.watchReplay"></button>
+      </div>
+    </div>
+    <div id="replay-modal" class="overlay hidden">
+      <canvas id="replay-canvas" width="800" height="480"></canvas>
+      <button class="btn ghost" id="btn-replay-close" data-i18n="settings.close"></button>
+    </div>
+  </section>
+
+  <!-- 解锁 / 提示 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 恢复倒计时（独立层：暂停遮罩隐藏后仍可见，由 hideOverlays 统一清理） -->
+  <div id="resume-countdown" class="countdown hidden">3</div>
+
+  <!-- ============ 触控层（framework §8.5）：顶部暂停入口 + 底部虚拟按键区 ============
+       按钮由 src/ui/touch.js 按 config/input.js 触控配置构建（DOM API，无 HTML 拼接）；
+       单个触控目标 ≥ 44×44px（真实 CSS px，由 --tpx 随舞台缩放补偿）、多点触控、可设开关与透明度 -->
+  <button id="btn-touch-pause" class="touch-btn hidden" type="button"></button>
+  <div id="touch-pad" class="hidden"></div>
+</div>
+
+<!-- 配置（外置数值） -->
+<script src="config/balance.js"></script>
+<script src="config/modes.js"></script>
+<script src="config/input.js"></script>
+<script src="config/fx.js"></script>
+<script src="config/audio.js"></script>
+<script src="config/unlock.js"></script>
+<!-- 文案 -->
+<script src="i18n/zh-CN.js"></script>
+<script src="i18n/en-US.js"></script>
+<!-- 核心 -->
+<script src="src/core/rng.js"></script>
+<script src="src/core/srs.js"></script>
+<script src="src/core/timing.js"></script>
+<script src="src/core/game.js"></script>
+<script src="src/audio/audio.js"></script>
+<script src="src/render/render.js"></script>
+<script src="src/ui/input.js"></script>
+<script src="src/ui/touch.js"></script>
+<script src="src/ui/ui.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
