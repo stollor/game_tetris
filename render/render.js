@@ -77,19 +77,19 @@
   /* ---------- 素材加载 ---------- */
   const IMG = {};
   const SPRITES = {
-    lineBurst: { url: 'assets/effect/fx/fx_line_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    comboRing: { url: 'assets/effect/fx/fx_combo_ring.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    recordBurst: { url: 'assets/effect/fx/fx_record_burst.png', frames: 18, cols: 6, cell: 256, fps: 60 },
-    pcBurst: { url: 'assets/effect/fx/fx_pc_burst.png', frames: 16, cols: 4, cell: 256, fps: 60 },
-    lockFlash: { url: 'assets/effect/fx/fx_lock_flash.png', frames: 8, cols: 4, cell: 128, fps: 60 },
-    dropTrail: { url: 'assets/effect/fx/fx_drop_trail.png', frames: 8, cols: 4, cell: 128, fps: 60 },
-    levelWave: { url: 'assets/effect/fx/fx_levelup_wave.png', frames: 18, cols: 6, cell: 256, fps: 60 },
-    dangerPulse: { url: 'assets/effect/fx/fx_danger_pulse.png', frames: 8, cols: 4, cell: 256, fps: 12 },
+    lineBurst: { url: 'assets/effect/fx/fx_line_burst.webp', frames: 16, cols: 4, cell: 256, fps: 60 },
+    comboRing: { url: 'assets/effect/fx/fx_combo_ring.webp', frames: 16, cols: 4, cell: 256, fps: 60 },
+    recordBurst: { url: 'assets/effect/fx/fx_record_burst.webp', frames: 18, cols: 6, cell: 256, fps: 60 },
+    pcBurst: { url: 'assets/effect/fx/fx_pc_burst.webp', frames: 16, cols: 4, cell: 256, fps: 60 },
+    lockFlash: { url: 'assets/effect/fx/fx_lock_flash.webp', frames: 8, cols: 4, cell: 128, fps: 60 },
+    dropTrail: { url: 'assets/effect/fx/fx_drop_trail.webp', frames: 8, cols: 4, cell: 128, fps: 60 },
+    levelWave: { url: 'assets/effect/fx/fx_levelup_wave.webp', frames: 18, cols: 6, cell: 256, fps: 60 },
+    dangerPulse: { url: 'assets/effect/fx/fx_danger_pulse.webp', frames: 8, cols: 4, cell: 256, fps: 12 },
   };
   const PARTICLES = {
-    glow: 'assets/effect/fx/particle_glow.png',
-    spark: 'assets/effect/fx/particle_spark.png',
-    shard: 'assets/effect/fx/particle_shard.png',
+    glow: 'assets/effect/fx/particle_glow.webp',
+    spark: 'assets/effect/fx/particle_spark.webp',
+    shard: 'assets/effect/fx/particle_shard.webp',
   };
 
   const state = {
@@ -121,8 +121,8 @@
       img.src = url;
       IMG[key] = img;
     };
-    load('bgField', 'assets/texture/scene/scene-field-bg.png');
-    load('bgMenu', 'assets/texture/scene/scene-menu-bg.png');
+    load('bgField', 'assets/texture/scene/scene-field-bg.webp');
+    load('bgMenu', 'assets/texture/scene/scene-menu-bg.webp');
     for (const k of Object.keys(SPRITES)) load(k, SPRITES[k].url);
     for (const k of Object.keys(PARTICLES)) load(k, PARTICLES[k]);
   }

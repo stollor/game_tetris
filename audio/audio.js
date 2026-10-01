@@ -87,7 +87,7 @@
       const max = sfxCfg[name].maxInstances || 2;
       const pool = [];
       for (let i = 0; i < max; i++) {
-        const el = new Audio(`assets/audio/sfx/${name}.wav`);
+        const el = new Audio(`assets/audio/sfx/${name}.mp3`);
         el.preload = 'auto';
         pool.push({ el, gain: connectElement(el, 'sfx', sfxCfg[name].bus) });
       }

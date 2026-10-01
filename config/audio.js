@@ -70,14 +70,14 @@ window.NP_CONFIG.audio = {
 
   /* ---------- BGM 主曲 8 分层 stems（128 BPM、15.000s 无缝） ---------- */
   stems: {
-    kick:  'assets/audio/music/bgm_main_stem_kick.wav',
-    snare: 'assets/audio/music/bgm_main_stem_snare.wav',
-    hat:   'assets/audio/music/bgm_main_stem_hat.wav',
-    perc:  'assets/audio/music/bgm_main_stem_perc.wav',
-    bass:  'assets/audio/music/bgm_main_stem_bass.wav',
-    arp:   'assets/audio/music/bgm_main_stem_arp.wav',
-    pad:   'assets/audio/music/bgm_main_stem_pad.wav',
-    lead:  'assets/audio/music/bgm_main_stem_lead.wav',
+    kick:  'assets/audio/music/bgm_main_stem_kick.mp3',
+    snare: 'assets/audio/music/bgm_main_stem_snare.mp3',
+    hat:   'assets/audio/music/bgm_main_stem_hat.mp3',
+    perc:  'assets/audio/music/bgm_main_stem_perc.mp3',
+    bass:  'assets/audio/music/bgm_main_stem_bass.mp3',
+    arp:   'assets/audio/music/bgm_main_stem_arp.mp3',
+    pad:   'assets/audio/music/bgm_main_stem_pad.mp3',
+    lead:  'assets/audio/music/bgm_main_stem_lead.mp3',
   },
   /* 等级段分层增益（§5.2）：1–5 主歌 / 6–10 副歌 / 11+ 高速 */
   stemProfiles: {
@@ -89,11 +89,11 @@ window.NP_CONFIG.audio = {
 
   /* ---------- 其他曲目 ---------- */
   tracks: {
-    menu:       'assets/audio/music/bgm_menu.wav',          // 100 BPM 循环
-    result:     'assets/audio/music/bgm_result.wav',        // 90 BPM 循环
-    heartbeat:  'assets/audio/music/bgm_layer_heartbeat.wav', // 危险心跳低频层
-    alt_neon_rain: 'assets/audio/music/bgm_alt_neon_rain.wav',
-    alt_eclipse:   'assets/audio/music/bgm_alt_eclipse.wav',
+    menu:       'assets/audio/music/bgm_menu.mp3',          // 100 BPM 循环
+    result:     'assets/audio/music/bgm_result.mp3',        // 90 BPM 循环
+    heartbeat:  'assets/audio/music/bgm_layer_heartbeat.mp3', // 危险心跳低频层
+    alt_neon_rain: 'assets/audio/music/bgm_alt_neon_rain.mp3',
+    alt_eclipse:   'assets/audio/music/bgm_alt_eclipse.mp3',
   },
   heartbeat: { fadeInMs: 2000, fadeOutMs: 1000, volume: 0.45 },
   resultVolume: 0.8,
