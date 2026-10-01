@@ -55,34 +55,29 @@ window.NP_CONFIG.input = {
     axisDeadzone: 0.4,
   },
 
-  /* 移动端触控（framework §8.5）：手势识别阈值 + 虚拟按键区。
-     手势 → 动作映射见 §8.5 表（src/ui/touch.js GESTURE_ACTIONS，表驱动测试 tests/test-touch.cjs）。*/
+  /* 移动端触控（framework §8.5 按键唯一口径 · ticket-0002）：手柄式 3+3 按键，无手势。
+     按键 → 动作映射见 §8.5 键语义表（src/ui/touch.js BUTTON_ACTIONS，表驱动测试 tests/test-touch.cjs）。*/
   touch: {
-    /* 手势阈值（工程阈值；动作映射数据行取自 §8.5 表） */
-    tapMaxMs: 260,          // 点击最大时长（超过且静止 = 长按候选）
-    tapMaxPx: 24,           // 点击最大位移（超过 = 滑动，不触发点击旋转）
-    doubleTapMs: 280,       // 双击判定窗口
-    doubleTapPx: 80,        // 双击两次落点最大距离
-    longPressMs: 420,       // 长按 → Hold
-    softDropPx: 24,         // 下滑进入软降的最小位移
-    swipeUpPx: 60,          // 上滑 → 180° 旋转
-    hardDropVelPxMs: 0.85,  // 快速下滑松手 → 硬降的松手速度阈值（px/ms）
-    hardDropMinPx: 60,      // 触发硬降的最小下滑距离
-    /* 边缘 DAS 快速连移（§8.5「含 DAS 快速连移」，与 §7.4 DAS/ARR 同值） */
-    edgeZonePx: 48,         // 抵住屏幕左右边缘的判定带宽
-    edgeDASms: 133,         // = §7.4 DAS
-    edgeARRms: 33,          // = §7.4 ARR
-    /* 虚拟按键区（§8.5：左/右/旋转/软降/硬降 + Hold；可设开关与透明度） */
-    padMinPx: 44,           // 单个触控目标最小边长（CSS px，§8.5 / DoD 10）
-    padDefaultOpacity: 0.85,
+    /* 按键时序（全文唯一口径，见 framework §8.5） */
+    doubleDownMs: 300,      // ↓双击窗：两次↓按下起点间隔 ≤300ms 即判双击，第二击按下瞬间触发硬降
+    holdStandardMs: 400,    // ↑长按 Hold 标准档阈值（达阈值即触发，不等松手）
+    holdLongMs: 650,        // ↑长按 Hold 长档阈值
+    /* 手柄式 3+3 操作区（§8.5 / M-04：各 200×104，多点触控各键独立） */
+    padMinPx: 44,           // 单个触控目标最小边长（CSS px 下限，实际 200×104，§8.5 / DoD 10）
+    padDefaultOpacity: 0.85, // 按键透明度默认（范围 0.30–1.00，步进 0.05）
+    padOpacityMin: 0.30,
+    padOpacityMax: 1.00,
+    padOpacityStep: 0.05,
+    // row: 1 = 第1排 左转·↑·右转；2 = 第2排 ←·↓·→（左转/右转在←/→正上方、↑在↓正上方）
+    // key: 按键标识（controller press/release 用）；action: 离散键的直达动作；
+    // up/down 为特殊键（短/长、按住/双击），经 controller 时序后分发，不直达。
     padButtons: [
-      { action: 'moveLeft',  icon: '\u25C0', labelKey: 'touch.left' },
-      { action: 'moveRight', icon: '\u25B6', labelKey: 'touch.right' },
-      { action: 'rotateCCW', icon: '\u21BA', labelKey: 'touch.ccw' },
-      { action: 'rotateCW',  icon: '\u21BB', labelKey: 'touch.cw' },
-      { action: 'softDrop',  icon: '\u25BC', labelKey: 'touch.soft' },
-      { action: 'hardDrop',  icon: '\u21D3', labelKey: 'touch.hard' },
-      { action: 'hold',      icon: '\u21C4', labelKey: 'touch.hold' },
+      { key: 'turnLeft',  action: 'rotateCCW', icon: '\u21BA', labelKey: 'touch.ccw',   row: 1 },
+      { key: 'up',        action: 'up',        icon: '\u2191', labelKey: 'touch.up',    row: 1 },
+      { key: 'turnRight', action: 'rotateCW',  icon: '\u21BB', labelKey: 'touch.cw',    row: 1 },
+      { key: 'left',      action: 'moveLeft',  icon: '\u25C0', labelKey: 'touch.left',  row: 2 },
+      { key: 'down',      action: 'down',      icon: '\u25BC', labelKey: 'touch.down',  row: 2 },
+      { key: 'right',     action: 'moveRight', icon: '\u25B6', labelKey: 'touch.right', row: 2 },
     ],
   },
 

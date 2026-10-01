@@ -87,12 +87,18 @@
             <button class="btn mini" data-preset="lefthand" data-i18n="settings.preset.lefthand"></button>
             <button class="btn mini ghost" id="btn-reset-bindings" data-i18n="settings.reset"></button>
           </div>
+          <div class="bindings-hint hidden" id="bindings-hint" data-i18n="settings.bindingsHint"></div>
           <div class="bindings" id="bindings-list"></div>
 
           <h3 data-i18n="settings.touch"></h3>
-          <label class="check-row"><input type="checkbox" id="chk-touchpad"><span data-i18n="settings.touchPad"></span></label>
           <label class="slider-row"><span data-i18n="settings.touchPadOpacity"></span>
             <input type="range" id="vol-touchpad" min="0.3" max="1" step="0.05"><output id="vol-touchpad-out"></output></label>
+          <label class="select-row"><span data-i18n="settings.touchHold"></span>
+            <select id="sel-touch-hold">
+              <option value="standard" data-i18n="settings.touchHold.standard"></option>
+              <option value="long" data-i18n="settings.touchHold.long"></option>
+            </select></label>
+          <div class="touch-hint" data-i18n="settings.touchHint"></div>
 
           <h3 data-i18n="settings.theme"></h3>
           <label class="select-row"><span data-i18n="settings.skin"></span><select id="sel-skin"></select></label>
@@ -123,6 +129,10 @@
         <p data-i18n="help.line4"></p>
         <p data-i18n="help.line5"></p>
         <h3 class="help-sub" data-i18n="help.touchTitle"></h3>
+        <div class="help-pad-diagram" aria-hidden="true">
+          <div class="help-pad-row"><span data-i18n="touch.ccw"></span><span data-i18n="touch.up"></span><span data-i18n="touch.cw"></span></div>
+          <div class="help-pad-row"><span data-i18n="touch.left"></span><span data-i18n="touch.down"></span><span data-i18n="touch.right"></span></div>
+        </div>
         <p data-i18n="help.touch1"></p>
         <p data-i18n="help.touch2"></p>
         <div class="block-strip big">

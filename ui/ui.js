@@ -21,8 +21,8 @@
       autoPause: true,
       resumeCountdown: true,
       restartConfirm: true,
-      touchPad: true,                 // 虚拟按键区开关（§8.5）
-      touchPadOpacity: 0.85,          // 虚拟按键透明度（§8.5）
+      touchPadOpacity: 0.85,          // 按键透明度（§8.5：0.30–1.00，步进 0.05，默认 0.85）
+      touchHoldMode: 'standard',      // 长按 ↑ 触发 Hold 时长档（§8.5：standard 400ms / long 650ms）
       skin: 'classic',
       background: 'default',
       music: 'main',
@@ -58,9 +58,14 @@
       const parsed = raw ? JSON.parse(raw) : {};
       const def = defaultSave();
       save = Object.assign(def, parsed);
-      // 设置项逐层合并：旧存档缺新增键（如触控开关）不得失灵
+      // 设置项逐层合并：旧存档缺新增键（如按键时长档）不得失灵
       save.settings = Object.assign(def.settings, parsed.settings || {});
       save.settings.volumes = Object.assign(def.settings.volumes, (parsed.settings && parsed.settings.volumes) || {});
+      // 存档迁移（ticket-0002）：touchPad 开关废除（按键常驻不可关），旧值忽略；
+      // touchHoldMode 缺失回退 standard；非法值回退 standard（单源默认值）
+      if (save.settings.touchHoldMode !== 'standard' && save.settings.touchHoldMode !== 'long') {
+        save.settings.touchHoldMode = 'standard';
+      }
     } catch (e) {
       save = defaultSave();
     }
@@ -83,6 +88,8 @@
       el.textContent = t(el.getAttribute('data-i18n'));
     });
     document.documentElement.lang = lang;
+    // P2：触控按键文案随语言实时刷新（按键在 touch.init 一次性构建，data-i18n 刷不到）
+    try { if (global.NP && global.NP.touch && global.NP.touch.refreshPadLabels) global.NP.touch.refreshPadLabels(); } catch (_) { /* 触控未初始化 */ }
   }
 
   const ACTION_LABELS = {
@@ -105,12 +112,17 @@
   // 它们不在 SCREENS 列表里，但任何场景切换都必须一并隐藏，
   // 否则遮罩会永久残留、盖住主菜单/模式选择/结算页/下一局（尤其退出对局回菜单层的路径）
   const OVERLAYS = ['screen-pause', 'screen-restart', 'resume-countdown', 'replay-modal'];
-  function hideOverlays() { for (const s of OVERLAYS) $(s).classList.add('hidden'); }
+  function hideOverlays() { for (const s of OVERLAYS) $(s).classList.add('hidden'); notifyTouch(); }
   function showScreen(name) {
     for (const s of SCREENS) $(s).classList.toggle('hidden', s !== name);
     hideOverlays();
+    notifyTouch();
   }
-  function hideAll() { for (const s of SCREENS) $(s).classList.add('hidden'); hideOverlays(); }
+  function hideAll() { for (const s of SCREENS) $(s).classList.add('hidden'); hideOverlays(); notifyTouch(); }
+  /** 场景显隐变化后刷新触控层（P0/P1：模态打开时隐藏 3+3 操作区，防遮挡面板控件） */
+  function notifyTouch() {
+    try { if (global.NP && global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh(); } catch (_) { /* 触控未初始化 */ }
+  }
 
   /* ==================== Toast ==================== */
   let toastTimer = 0;
@@ -209,10 +221,12 @@
     chk('chk-countdown', 'resumeCountdown');
     chk('chk-restartconfirm', 'restartConfirm');
 
-    // 触控设置（§8.5：虚拟按键区可设开关与透明度）
-    chk('chk-touchpad', 'touchPad', (v) => {
-      if (global.NP.touch && global.NP.touch.setPadVisible) global.NP.touch.setPadVisible(v);
-    });
+    // 按键操作组（§8.5 / M-03：按键透明度滑条 + 长按 ↑ 触发 Hold 时长档；按键常驻不可关，无开关字段）
+    // 暂停中调设置不写存档（同桌面口径）：只应用到本局会话，恢复后需重进设置持久化
+    const persistSettings = () => {
+      if (global.NP.app && global.NP.app.paused) return;
+      writeSave();
+    };
     const padOp = $('vol-touchpad'), padOpOut = $('vol-touchpad-out');
     if (padOp) {
       padOp.value = s.touchPadOpacity != null ? s.touchPadOpacity : 0.85;
@@ -221,8 +235,22 @@
         s.touchPadOpacity = parseFloat(padOp.value);
         if (padOpOut) padOpOut.textContent = Math.round(s.touchPadOpacity * 100) + '%';
         if (global.NP.touch && global.NP.touch.setPadOpacity) global.NP.touch.setPadOpacity(s.touchPadOpacity);
-        writeSave();
+        persistSettings();
       });
+    }
+    const selHold = $('sel-touch-hold');
+    if (selHold) {
+      selHold.value = s.touchHoldMode || 'standard';
+      const applyHold = () => {
+        s.touchHoldMode = selHold.value;
+        const touchCfg = (global.NP_CONFIG && global.NP_CONFIG.input.touch) || {};
+        const ms = s.touchHoldMode === 'long'
+          ? (touchCfg.holdLongMs != null ? touchCfg.holdLongMs : 650)
+          : (touchCfg.holdStandardMs != null ? touchCfg.holdStandardMs : 400);
+        if (global.NP.touch && global.NP.touch.setHoldMs) global.NP.touch.setHoldMs(ms);
+        persistSettings();
+      };
+      selHold.addEventListener('change', applyHold);
     }
 
     const selFx = $('sel-fx');
@@ -299,6 +327,24 @@
   }
 
   /* ==================== 重绑定 ==================== */
+  // 键位绑定表移动端折叠（§8.5 / M-03）：粗指针或竖屏默认折叠，检测到外接键盘再显示。
+  // 外接键盘检测 = 首次 keydown 即视为外接键盘已接（热切换，不需刷新）。
+  let externalKeyboard = false;
+  function isTouchLayout() {
+    try {
+      if (document.body && document.body.classList && document.body.classList.contains('portrait')) return true;
+      if (global.matchMedia && global.matchMedia('(pointer: coarse)').matches) return true;
+    } catch (_) { /* 桩环境 */ }
+    return false;
+  }
+  function updateBindingsVisibility() {
+    const wrap = $('bindings-list');
+    const hint = $('bindings-hint');
+    if (!wrap) return;
+    const folded = isTouchLayout() && !externalKeyboard;
+    wrap.classList.toggle('hidden', folded);
+    if (hint) hint.classList.toggle('hidden', !folded);
+  }
   function renderBindings() {
     const wrap = $('bindings-list');
     clear(wrap);
@@ -336,6 +382,7 @@
       warn.textContent = t('settings.conflict') + ' ' + conflicts.map((c) => c.code).join(', ');
       wrap.appendChild(warn);
     }
+    updateBindingsVisibility();
   }
 
   function startRebind(action, replaceBind) {
@@ -519,6 +566,7 @@
     clearInterval(retryTimer);
     $('screen-result').classList.add('hidden');
     $('replay-modal').classList.add('hidden');
+    notifyTouch();
   }
 
   function canRetry() { return !$('btn-retry').disabled; }
@@ -581,7 +629,11 @@
 
     // 暂停菜单
     $('btn-resume').addEventListener('click', () => callbacks.resumeGame && callbacks.resumeGame());
-    $('btn-pause-restart').addEventListener('click', () => callbacks.restartGame && callbacks.restartGame());
+    // P2：暂停菜单→重开→弹确认（与 R 键同一确认链路，ticket-0002 §6 口径；直接重开会跳过确认）
+    $('btn-pause-restart').addEventListener('click', () => {
+      if (callbacks.requestRestart) callbacks.requestRestart();
+      else if (callbacks.restartGame) callbacks.restartGame();
+    });
     $('btn-pause-settings').addEventListener('click', () => {
       showScreen('screen-settings');
     });
@@ -619,12 +671,23 @@
       $('replay-modal').classList.add('hidden');
     });
 
+    // 外接键盘检测：首次物理按键即视为外接键盘已接，展开键位绑定表（M-03 热切换）
+    window.addEventListener('keydown', () => {
+      if (!externalKeyboard) { externalKeyboard = true; updateBindingsVisibility(); }
+    });
     bindSettings();
     applySkin();
-    // 触控层初始显隐/透明度（存档口径：设置项持久化，§8.5）
-    if (global.NP.touch && global.NP.touch.setPadVisible) {
-      global.NP.touch.setPadVisible(save.settings.touchPad !== false);
-      global.NP.touch.setPadOpacity(save.settings.touchPadOpacity != null ? save.settings.touchPadOpacity : 0.85);
+    updateBindingsVisibility();
+    // 按键层初始透明度与 Hold 档（存档口径：按键透明度 + 时长档持久化，§8.5；按键常驻不可关）
+    if (global.NP.touch) {
+      if (global.NP.touch.setPadOpacity) global.NP.touch.setPadOpacity(save.settings.touchPadOpacity != null ? save.settings.touchPadOpacity : 0.85);
+      if (global.NP.touch.setHoldMs) {
+        const tc = (global.NP_CONFIG && global.NP_CONFIG.input.touch) || {};
+        global.NP.touch.setHoldMs(save.settings.touchHoldMode === 'long'
+          ? (tc.holdLongMs != null ? tc.holdLongMs : 650)
+          : (tc.holdStandardMs != null ? tc.holdStandardMs : 400));
+      }
+      if (global.NP.touch.setPadVisible) global.NP.touch.setPadVisible(true);
     }
     global.NP.render.fx.setBgTheme(save.settings.background);
     global.NP.render.fx.setFxLevel(save.settings.fxLevel);

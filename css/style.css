@@ -43,6 +43,9 @@ html, body {
   left: 0; top: 0;
   width: 100%; height: 100%;
 }
+/* P2 层级兜底：面板永远压住触控层（触控层 z=40，模态打开时同时隐藏操作区，双保险） */
+.screen { z-index: 50; }
+.overlay { z-index: 60; }
 .hidden { display: none !important; }
 
 /* ---------- 菜单背景（scene-menu-bg / keyart 由 03-art-design 提供） ---------- */
@@ -243,6 +246,7 @@ input[type="checkbox"] { width: 20px; height: 20px; accent-color: #00E5FF; }
 .countdown {
   position: absolute;
   inset: 0;
+  z-index: 61;
   display: flex; align-items: center; justify-content: center;
   font-size: 220px; font-weight: 700; color: #00E5FF;
   text-shadow: 0 0 80px rgba(0,229,255,0.7);
@@ -313,9 +317,10 @@ body.reduced-flash .countdown { animation: none; }
 body.reduced-flash .result-panel.record { animation: none; }
 
 /* ============================================================
-   移动端触控层（framework §8.5）：顶部暂停入口 + 底部虚拟按键区
-   --tpx：触控目标边长（舞台逻辑 px），main.js fit() 按 44/scale 补偿，
-   保证真实 CSS px ≥ 44×44（DoD 10）。
+   移动端触控层（framework §8.5 按键唯一口径 · ticket-0002）
+   手柄式 3+3 操作区（各 200×104 M-04 / 舞台 300×156）+ 顶部暂停入口，无手势。
+   --tpx：顶部暂停键边长（舞台逻辑 px），main.js fit() 按 44/scale 补偿，
+   保证真实 CSS px ≥ 44×44（DoD 10）；操作区大键固定 300×156 已远超下限。
    ============================================================ */
 .touch-btn {
   width: var(--tpx, 88px); height: var(--tpx, 88px);
@@ -331,7 +336,7 @@ body.reduced-flash .result-panel.record { animation: none; }
 }
 .touch-btn:active { background: rgba(0, 229, 255, 0.35); }
 
-/* 顶部暂停入口（必须存在，不依赖手势误触，§8.5） */
+/* 顶部暂停入口（常驻，不依赖手势，§8.5） */
 #btn-touch-pause {
   position: absolute;
   top: calc(20px + env(safe-area-inset-top));
@@ -341,37 +346,108 @@ body.reduced-flash .result-panel.record { animation: none; }
   opacity: 0.85;
 }
 
-/* 底部虚拟按键区（左/右/旋转/软降/硬降 + Hold，多点触控） */
+/* 底部手柄式 3+3 操作区（M-04：两排各 3 键，多点触控各键独立） */
 #touch-pad {
   position: absolute;
-  left: 50%;
+  left: 0; right: 0;
   bottom: calc(24px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  display: flex; gap: 16px; flex-wrap: nowrap;
+  display: flex; flex-direction: column; gap: 24px;
+  align-items: center;
   z-index: 40;
   opacity: 0.85;
+  pointer-events: none;   /* 容器透点，按键接点 */
 }
-#touch-pad .pad-btn { flex: 0 0 auto; }
+.touch-pad-row { display: flex; gap: 42px; pointer-events: none; }
+#touch-pad .pad-btn {
+  pointer-events: auto;
+  flex: 0 0 auto;
+  width: 300px; height: 156px;   /* M-04 200×104 ×1.5（1080 舞台） */
+  min-width: 44px; min-height: 44px;
+  flex-direction: column; gap: 4px;
+  border-radius: 22px;
+}
+#touch-pad .pad-icon { font-size: 56px; line-height: 1; }
+#touch-pad .pad-name { font-size: 20px; letter-spacing: 2px; color: #8A94B8; font-weight: 600; }
+#touch-pad .pad-btn:active .pad-name { color: #EAF2FF; }
+/* 横屏桌面默认隐藏（D-06），竖屏/粗指针由 JS 显隐 */
+#game-canvas.hidden { display: none; }
 
 /* 滚动容器保留触摸滚动（其余区域 touch-action: none） */
 .bindings, .unlock-grid { touch-action: pan-y; }
 
-/* ---------- 竖屏 9:16（body.portrait，§9：场地上部居中、操作区底部） ---------- */
-body.portrait .logo { font-size: 96px; letter-spacing: 10px; }
-body.portrait .logo-sub { font-size: 26px; letter-spacing: 14px; }
-body.portrait .tagline { font-size: 18px; margin-bottom: 14px; }
+/* ---------- 竖屏 9:16（body.portrait，M-01…M-07 定稿线框，2026-09-30 拍板） ---------- */
+/* M-01 · 主菜单：keyart 全宽顶置横幅、按钮全宽（主 96 高/其余 80 高 → 舞台 144/120） */
+body.portrait #stage { background: #0B0E1A; }
+body.portrait .menu-content { justify-content: flex-start; padding-top: 612px; gap: 12px; }
 body.portrait .keyart {
-  width: 420px; right: 24px; bottom: 24px; opacity: 0.45;
+  position: absolute; left: 0; top: 72px; right: auto; bottom: auto;
+  width: 1080px; height: 540px; object-fit: cover;
+  opacity: 1; border: none; border-radius: 0;
+  box-shadow: none;
 }
-body.portrait .menu-buttons { width: 380px; gap: 12px; }
-body.portrait .btn { padding: 12px 26px; font-size: 22px; }
-body.portrait .panel-page { padding: 44px 60px; gap: 18px; }
-body.portrait .panel-page.wide { padding: 34px 44px; }
-body.portrait .page-title { font-size: 42px; letter-spacing: 6px; }
-body.portrait .mode-cards { grid-template-columns: repeat(2, 1fr); gap: 18px; }
-body.portrait .mode-card { padding: 20px 16px; }
-body.portrait .mode-card h3 { font-size: 27px; }
-body.portrait .settings-grid { gap: 22px; }
-body.portrait .slider-row span, body.portrait .select-row span { width: 150px; }
-body.portrait .result-panel { width: 940px; padding: 34px 44px; }
-body.portrait .help-body { font-size: 19px; line-height: 1.8; }
+body.portrait .logo { font-size: 72px; letter-spacing: 8px; }
+body.portrait .logo-sub { font-size: 27px; letter-spacing: 21px; margin-bottom: 4px; }
+body.portrait .tagline { font-size: 22px; letter-spacing: 4px; margin-bottom: 18px; }
+body.portrait .menu-buttons { width: 888px; gap: 30px; }
+body.portrait .menu-buttons .btn { width: 888px; font-size: 30px; letter-spacing: 6px; }
+body.portrait .menu-buttons .btn.primary { height: 144px; }
+body.portrait .menu-buttons .btn:not(.primary) { height: 120px; }
+body.portrait .block-strip { margin-top: 36px; }
+body.portrait .block-strip img { height: 84px; }
+/* M-02 · 模式选择：竖排 4 卡（592×200 → 舞台 888×300，gap 20 → 30） */
+body.portrait .panel-page { padding: 96px 96px 60px; gap: 30px; }
+body.portrait .panel-page.wide { padding: 96px 96px 60px; }
+body.portrait .page-title { font-size: 48px; letter-spacing: 6px; }
+body.portrait .mode-cards { grid-template-columns: 1fr; gap: 30px; align-content: start; }
+body.portrait .mode-card { min-height: 300px; padding: 28px 30px; }
+body.portrait .mode-card h3 { font-size: 34px; }
+body.portrait .mode-card .desc { font-size: 22px; }
+body.portrait .mode-card .best { font-size: 22px; }
+/* M-03 · 设置：单列分组面板，控件命中区 ≥52px（舞台 px） */
+/* P1：竖屏设置单列超高必须可滚（主题组/关闭按钮不得超出舞台不可点） */
+body.portrait .panel-page { overflow-y: auto; touch-action: pan-y; }
+body.portrait .settings-grid { grid-template-columns: 1fr; gap: 30px; flex: none; }
+body.portrait #screen-settings .row-center { margin-top: 24px; padding-bottom: 24px; }
+body.portrait .settings-col h3 { font-size: 28px; margin: 22px 0 16px; }
+body.portrait .slider-row, body.portrait .check-row, body.portrait .select-row { min-height: 78px; font-size: 24px; }
+body.portrait .slider-row span, body.portrait .select-row span { width: 260px; }
+body.portrait .slider-row input[type="range"] { height: 52px; }
+body.portrait input[type="checkbox"] { width: 32px; height: 32px; }
+body.portrait select { font-size: 24px; padding: 12px 16px; min-height: 60px; }
+body.portrait .touch-hint, body.portrait .bindings-hint { font-size: 22px; line-height: 1.6; color: #8A94B8; margin: 12px 0; }
+body.portrait .btn { padding: 12px 26px; font-size: 24px; }
+body.portrait .btn.mini { min-height: 60px; font-size: 22px; }
+/* M-05 · 暂停覆盖层：浮层 500×700 → 舞台 750×1050，继续主按钮 96 高/其余 80 高 */
+body.portrait .dialog { min-width: 750px; padding: 60px 75px; gap: 24px; }
+body.portrait .dialog h2 { font-size: 45px; }
+body.portrait .dialog .btn { width: 100%; font-size: 28px; }
+body.portrait .dialog .btn.primary { height: 144px; }
+body.portrait .dialog .btn:not(.primary) { height: 120px; }
+/* M-06 · 结算：大面板 592×820 → 舞台 888×1230，主按钮全宽 96 高/次按钮半宽 80 高 */
+body.portrait .result-panel { width: 888px; padding: 50px 48px; gap: 26px; }
+body.portrait .result-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 28px; font-size: 24px; }
+body.portrait .result-actions { flex-wrap: wrap; }
+body.portrait .result-actions .btn.primary { width: 100%; height: 144px; font-size: 32px; }
+body.portrait .result-actions .btn:not(.primary) { width: 396px; height: 120px; }
+/* M-07 · 操作说明：按键图解两排 6 键 + 说明 */
+body.portrait .help-body { font-size: 22px; line-height: 1.8; }
+body.portrait .help-pad-diagram { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+body.portrait .help-pad-row { display: flex; gap: 12px; }
+body.portrait .help-pad-row span {
+  flex: 1; text-align: center; padding: 18px 0;
+  border: 2px solid rgba(0,229,255,0.5); border-radius: 14px;
+  background: rgba(20,26,46,0.72); font-size: 24px; letter-spacing: 2px;
+}
+.help-pad-diagram { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
+.help-pad-row { display: flex; gap: 12px; }
+.help-pad-row span {
+  flex: 1; text-align: center; padding: 14px 0;
+  border: 1px solid #2A3352; border-radius: 10px;
+  background: rgba(20,26,46,0.7); font-size: 20px;
+}
+/* M-04 操作区顶部暂停键（竖屏右上：定位按线框，尺寸跟 --tpx 补偿，真实 CSS px ≥ 44×44，DoD 10） */
+body.portrait #btn-touch-pause { width: var(--tpx, 122px); height: var(--tpx, 122px); min-width: 44px; min-height: 44px; font-size: 40px; top: calc(84px + env(safe-area-inset-top)); right: 36px; }
+/* P2（ticket-0002 采样1/2）：390px 竖屏设置预设按钮折行间距 + 结算锁定文案字号 */
+body.portrait .preset-row { gap: 18px; }
+body.portrait .preset-row .btn.mini { flex: 1 1 40%; min-height: 72px; }
+body.portrait .result-actions .btn em { font-size: 20px; }

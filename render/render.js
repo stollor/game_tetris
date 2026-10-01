@@ -31,22 +31,22 @@
       },
       padZoneY: 960,           // 底部虚拟按键区起点（DOM 层对齐，不遮挡场地/HUD）
     },
+    // 竖屏 M-04（1080×1920 = 720×1280 线框 ×1.5）：场地 10×20 全高左侧（67.5px/格，=45px×1.5）/
+    // 右侧信息栏自上而下（SCORE 大号 → LV·TIME → OBJECTIVE → HOLD → NEXT×5 竖排）/ 底部 3+3 操作区。
+    // COMBO/B2B 不占侧栏（场中央浮字，§8.2 阈值表）；BEST 不进对局侧栏（结算/模式卡展示）。
     portrait: {
-      field: { x: 310, y: 290, cell: 46, cols: 10, rows: 20 },   // 460×920，上部居中
-      hold: { x: 55, y: 155, w: 190, h: 130 },
-      next: { x: 275, y: 155, w: 145, h: 130, gap: 12, count: 5, horizontal: true },
-      pip: { x: 785, y: 300, w: 275, h: 366 },
+      field: { x: 36, y: 96, cell: 67.5, cols: 10, rows: 20 },   // 675×1350，全高左侧
+      hold: { x: 735, y: 546, w: 309, h: 144 },
+      next: { x: 735, y: 750, w: 309, h: 114, gap: 12, count: 5, horizontal: false },
+      pip: { x: 387, y: 700, w: 306, h: 408 },
       hud: {
-        score: { x: 60, y: 1240, w: 460, h: 130 },
-        level: { x: 545, y: 1240, w: 230, h: 110 },
-        combo: { x: 795, y: 1240, w: 225, h: 110 },
-        b2b: { x: 60, y: 1385, w: 220, h: 96 },
-        time: { x: 300, y: 1385, w: 220, h: 96 },
-        objective: { x: 540, y: 1385, w: 480, h: 120 },
-        best: { x: 60, y: 1515, w: 460, h: 86 },
-        clear: { x: 760, y: 1558 },
+        score: { x: 735, y: 198, w: 309, h: 144 },
+        level: { x: 735, y: 354, w: 148, h: 84 },
+        time: { x: 895, y: 354, w: 148, h: 84 },
+        objective: { x: 735, y: 450, w: 309, h: 84 },
+        clear: { x: 540, y: 1446 },
       },
-      padZoneY: 1620,          // y ≥ 1620 全部留给底部虚拟按键操作区
+      padZoneY: 1500,          // y ≥ 1500 全部留给底部手柄式 3+3 操作区（M-04：0,1500 1080×420）
     },
   };
   const LAY = Object.assign({}, LAYOUTS.landscape);
@@ -575,10 +575,11 @@
     const T = global.NP.t;
     const HD = LAY.hud;
 
-    // HOLD
+    // HOLD（P2 ticket-0002 采样2：竖屏窄栏标签 +2，桌面 22 不动）
     const hold = LAY.hold;
+    const isPortraitHud = LAY.next && LAY.next.w > 200;   // 竖屏 w309 / 横屏 w112（桌面分支零改动）
     drawPanel(ctx, hold.x, hold.y, hold.w, hold.h);
-    label(ctx, T('hud.hold'), hold.x + 16, hold.y + 30, 22, '#8A94B8');
+    label(ctx, T('hud.hold'), hold.x + 16, hold.y + 30, isPortraitHud ? 24 : 22, '#8A94B8');
     if (game && game.holdType) {
       drawMiniPiece(ctx, game.holdType, hold.x + hold.w / 2, hold.y + hold.h * 0.62, 26,
         game.holdUsed ? 0.35 : 1);
@@ -586,7 +587,7 @@
 
     // NEXT ×5（向下透明度递减 100% → 35%；竖屏横向排列）
     const nx = LAY.next;
-    label(ctx, T('hud.next'), nx.x + 8, nx.y - 12, 22, '#8A94B8');
+    label(ctx, T('hud.next'), nx.x + 8, nx.y - 12, isPortraitHud ? 24 : 22, '#8A94B8');
     if (game) {
       const nexts = game.bagger.peek(nx.count);
       for (let i = 0; i < nexts.length; i++) {
@@ -597,84 +598,139 @@
       }
     }
 
-    // SCORE
+    // SCORE（大号；桌面 h130 原口径零改动，竖屏小宽自适应）
     const S = HD.score;
     drawPanel(ctx, S.x, S.y, S.w, S.h);
-    label(ctx, T('hud.score'), S.x + 18, S.y + 32, 22, '#8A94B8');
-    if (game) numText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + 102, 64, '#EAF2FF');
+    if (S.w < 320) {
+      label(ctx, T('hud.score'), S.x + 18, S.y + 30, 22, '#8A94B8');
+      if (game) numText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + S.h - 28, 44, '#EAF2FF');
+    } else {
+      label(ctx, T('hud.score'), S.x + 18, S.y + 32, 22, '#8A94B8');
+      if (game) numText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + 102, 64, '#EAF2FF');
+    }
 
-    // LEVEL
+    // LEVEL（桌面 h110 原口径零改动；竖屏 h84 收紧）
     const L = HD.level;
     drawPanel(ctx, L.x, L.y, L.w, L.h);
-    label(ctx, T('hud.level'), L.x + 18, L.y + 32, 22, '#8A94B8');
-    if (game) numText(ctx, String(game.level), L.x + 18, L.y + 92, 52, '#00E5FF');
-
-    // COMBO
-    const C = HD.combo;
-    drawPanel(ctx, C.x, C.y, C.w, C.h);
-    label(ctx, T('hud.combo'), C.x + 18, C.y + 32, 22, '#8A94B8');
-    if (game && game.combo >= 2) {
-      numText(ctx, '×' + game.combo, C.x + 18, C.y + 92, 52, '#FF2D9B');
+    if (L.h <= 90) {
+      label(ctx, T('hud.level'), L.x + 12, L.y + 24, 20, '#8A94B8');
+      if (game) numText(ctx, String(game.level), L.x + 12, L.y + L.h - 12, 36, '#00E5FF');
     } else {
-      numText(ctx, '—', C.x + 18, C.y + 92, 42, '#8A94B8');
+      label(ctx, T('hud.level'), L.x + 18, L.y + 32, 22, '#8A94B8');
+      if (game) numText(ctx, String(game.level), L.x + 18, L.y + 92, 52, '#00E5FF');
     }
 
-    // B2B
-    const B = HD.b2b;
-    drawPanel(ctx, B.x, B.y, B.w, B.h);
-    label(ctx, T('hud.b2b'), B.x + 18, B.y + 30, 20, '#8A94B8');
-    if (game) numText(ctx, game.b2bActive ? '×' + (game.b2bCount + 1) : '—', B.x + 18, B.y + 78, 36,
-      game.b2bActive ? '#FFD54F' : '#8A94B8');
+    // COMBO（M-04 竖屏不占侧栏，场中央浮字见 drawCaptions；缺槽位即跳过）
+    if (HD.combo) {
+      const C = HD.combo;
+      drawPanel(ctx, C.x, C.y, C.w, C.h);
+      label(ctx, T('hud.combo'), C.x + 18, C.y + 32, 22, '#8A94B8');
+      if (game && game.combo >= 2) {
+        numText(ctx, '×' + game.combo, C.x + 18, C.y + 92, 52, '#FF2D9B');
+      } else {
+        numText(ctx, '—', C.x + 18, C.y + 92, 42, '#8A94B8');
+      }
+    }
 
-    // TIME / 目标
+    // B2B（同上，竖屏浮字）
+    if (HD.b2b) {
+      const B = HD.b2b;
+      drawPanel(ctx, B.x, B.y, B.w, B.h);
+      label(ctx, T('hud.b2b'), B.x + 18, B.y + 30, 20, '#8A94B8');
+      if (game) numText(ctx, game.b2bActive ? '×' + (game.b2bCount + 1) : '—', B.x + 18, B.y + 78, 36,
+        game.b2bActive ? '#FFD54F' : '#8A94B8');
+    }
+
+    // TIME（桌面 h96 原口径零改动；竖屏 h84 收紧）
     const TM = HD.time;
     drawPanel(ctx, TM.x, TM.y, TM.w, TM.h);
-    label(ctx, T('hud.time'), TM.x + 18, TM.y + 30, 20, '#8A94B8');
-    if (game) {
-      const timeTxt = game.mode.timeLimitMs
-        ? fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs))
-        : fmtTime(game.elapsedMs);
-      numText(ctx, timeTxt, TM.x + 18, TM.y + 78, 32, '#EAF2FF');
+    if (TM.h <= 90) {
+      label(ctx, T('hud.time'), TM.x + 12, TM.y + 24, 20, '#8A94B8');
+      if (game) {
+        const timeTxt = game.mode.timeLimitMs
+          ? fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs))
+          : fmtTime(game.elapsedMs);
+        numText(ctx, timeTxt, TM.x + 12, TM.y + TM.h - 12, 26, '#EAF2FF');
+      }
+    } else {
+      label(ctx, T('hud.time'), TM.x + 18, TM.y + 30, 20, '#8A94B8');
+      if (game) {
+        const timeTxt = game.mode.timeLimitMs
+          ? fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs))
+          : fmtTime(game.elapsedMs);
+        numText(ctx, timeTxt, TM.x + 18, TM.y + 78, 32, '#EAF2FF');
+      }
     }
 
-    // OBJECTIVE（进度条）
+    // OBJECTIVE（桌面 h120 原口径零改动；竖屏 h84 收紧）
     const O = HD.objective;
     drawPanel(ctx, O.x, O.y, O.w, O.h);
-    label(ctx, T('hud.objective'), O.x + 18, O.y + 32, 22, '#8A94B8');
-    if (game) {
-      let ratio = 0, txt = '';
-      if (game.mode.goalLines) {
-        ratio = Math.min(1, game.totalLines / game.mode.goalLines);
-        txt = `${game.totalLines} / ${game.mode.goalLines} ${T('hud.lines')}`;
-      } else if (game.mode.timeLimitMs) {
-        ratio = 1 - Math.min(1, game.elapsedMs / game.mode.timeLimitMs);
-        txt = T('hud.left') + ' ' + fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs));
-      } else {
-        ratio = Math.min(1, game.totalLines / ((game.mode.clearLevel || 15) * 10 - 10));
-        txt = `${game.totalLines} ${T('hud.lines')} · LV ${game.level}`;
+    if (O.h <= 90) {
+      label(ctx, T('hud.objective'), O.x + 12, O.y + 24, 20, '#8A94B8');
+      if (game) {
+        let ratio = 0, txt = '';
+        if (game.mode.goalLines) {
+          ratio = Math.min(1, game.totalLines / game.mode.goalLines);
+          txt = `${game.totalLines} / ${game.mode.goalLines} ${T('hud.lines')}`;
+        } else if (game.mode.timeLimitMs) {
+          ratio = 1 - Math.min(1, game.elapsedMs / game.mode.timeLimitMs);
+          txt = T('hud.left') + ' ' + fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs));
+        } else {
+          ratio = Math.min(1, game.totalLines / ((game.mode.clearLevel || 15) * 10 - 10));
+          txt = `${game.totalLines} ${T('hud.lines')} · LV ${game.level}`;
+        }
+        numText(ctx, txt, O.x + 12, O.y + O.h - 22, 24, '#EAF2FF');
+        const bw = O.w - 24;
+        const barY = O.y + O.h - 12;
+        ctx.fillStyle = 'rgba(42,51,82,0.8)';
+        ctx.fillRect(O.x + 12, barY, bw, 6);
+        const g = ctx.createLinearGradient(O.x + 12, 0, O.x + 12 + bw, 0);
+        g.addColorStop(0, '#00E5FF'); g.addColorStop(1, '#7C4DFF');
+        ctx.fillStyle = g;
+        ctx.fillRect(O.x + 12, barY, bw * ratio, 6);
       }
-      numText(ctx, txt, O.x + 18, O.y + 84, 34, '#EAF2FF');
-      const bw = O.w - 36;
-      ctx.fillStyle = 'rgba(42,51,82,0.8)';
-      ctx.fillRect(O.x + 18, O.y + 98, bw, 8);
-      const g = ctx.createLinearGradient(O.x + 18, 0, O.x + 18 + bw, 0);
-      g.addColorStop(0, '#00E5FF'); g.addColorStop(1, '#7C4DFF');
-      ctx.fillStyle = g;
-      ctx.fillRect(O.x + 18, O.y + 98, bw * ratio, 8);
+    } else {
+      label(ctx, T('hud.objective'), O.x + 18, O.y + 32, 22, '#8A94B8');
+      if (game) {
+        let ratio = 0, txt = '';
+        if (game.mode.goalLines) {
+          ratio = Math.min(1, game.totalLines / game.mode.goalLines);
+          txt = `${game.totalLines} / ${game.mode.goalLines} ${T('hud.lines')}`;
+        } else if (game.mode.timeLimitMs) {
+          ratio = 1 - Math.min(1, game.elapsedMs / game.mode.timeLimitMs);
+          txt = T('hud.left') + ' ' + fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs));
+        } else {
+          ratio = Math.min(1, game.totalLines / ((game.mode.clearLevel || 15) * 10 - 10));
+          txt = `${game.totalLines} ${T('hud.lines')} · LV ${game.level}`;
+        }
+        numText(ctx, txt, O.x + 18, O.y + 84, 34, '#EAF2FF');
+        const bw = O.w - 36;
+        ctx.fillStyle = 'rgba(42,51,82,0.8)';
+        ctx.fillRect(O.x + 18, O.y + 98, bw, 8);
+        const g = ctx.createLinearGradient(O.x + 18, 0, O.x + 18 + bw, 0);
+        g.addColorStop(0, '#00E5FF'); g.addColorStop(1, '#7C4DFF');
+        ctx.fillStyle = g;
+        ctx.fillRect(O.x + 18, O.y + 98, bw * ratio, 8);
+      }
     }
 
-    // BEST / 危险提示
-    const BT = HD.best;
-    drawPanel(ctx, BT.x, BT.y, BT.w, BT.h);
-    label(ctx, T('hud.best'), BT.x + 18, BT.y + 32, 20, '#8A94B8');
-    if (game) {
-      const bestTxt = game.mode.scoreType === 'time'
-        ? (game.bestTimeMs ? fmtTime(game.bestTimeMs) : '—')
-        : String(game.bestScore || 0);
-      numText(ctx, bestTxt, BT.x + 18, BT.y + 70, 30, '#FFD54F');
-      if (game.danger) {
-        label(ctx, '⚠ ' + T('hud.danger'), BT.x + BT.w - 18, BT.y + 70, 28, '#FF1744', 'right');
+    // BEST / 危险提示（M-04 竖屏不进对局侧栏，缺槽位即跳过；危险红光见 drawDanger + 心跳层）
+    if (HD.best) {
+      const BT = HD.best;
+      drawPanel(ctx, BT.x, BT.y, BT.w, BT.h);
+      label(ctx, T('hud.best'), BT.x + 18, BT.y + 32, 20, '#8A94B8');
+      if (game) {
+        const bestTxt = game.mode.scoreType === 'time'
+          ? (game.bestTimeMs ? fmtTime(game.bestTimeMs) : '—')
+          : String(game.bestScore || 0);
+        numText(ctx, bestTxt, BT.x + 18, BT.y + 70, 30, '#FFD54F');
+        if (game.danger) {
+          label(ctx, '⚠ ' + T('hud.danger'), BT.x + BT.w - 18, BT.y + 70, 28, '#FF1744', 'right');
+        }
       }
+    } else if (game && game.danger && HD.objective) {
+      // 竖屏危险角标（OBJECTIVE 栏右端，不另占侧栏）
+      label(ctx, '⚠ ' + T('hud.danger'), HD.objective.x + HD.objective.w - 12, HD.objective.y + 52, 24, '#FF1744', 'right');
     }
     // 通关进度提示（调试 / 信息）
     if (game && game.mode.clearLevel && game.cleared) {

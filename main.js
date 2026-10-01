@@ -344,14 +344,19 @@
     // 否则遮罩残留 + 音频 suspend 会污染结算页 / 下一局
     if (!state.game || state.game.phase === 'over') return;
     state.paused = true;
+    // §8.5 按键时序：暂停时清掉全部按住态、双击待判与长按计时，恢复后需重按（防幽灵输入）
+    if (global.NP.touch && global.NP.touch.clearHeld) global.NP.touch.clearHeld();
+    if (state.game && typeof state.game.setHeld === 'function') { state.game.setHeld('moveLeft', false); state.game.setHeld('moveRight', false); state.game.setHeld('softDrop', false); }
     global.NP.audio.playSfx('ui-pause-in');
     global.NP.audio.suspend();                  // 冻结音频时钟 = 冻结一切游戏时钟
     $('screen-pause').classList.remove('hidden');
+    if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();   // 模态打开隐藏操作区（P0/P1）
   }
 
   function resumeGame() {
     if (!state.paused || state.resuming) return;   // 倒计时进行中不重复启动
     $('screen-pause').classList.add('hidden');
+    if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();   // 倒计时仍是模态，保持隐藏
     const settings = global.NP.ui.getSettings();
     if (!settings.resumeCountdown) {
       doResume();
@@ -381,6 +386,27 @@
     global.NP.audio.playSfx('ui-count-go');
     state.paused = false;
     state.lastNow = global.NP.audio.now();      // 防止恢复瞬间 dt 跳变
+    if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();   // 恢复对局重显操作区
+  }
+
+  /**
+   * 快速重开统一入口（ticket-0002 §6：暂停菜单→重开→弹确认，与 R 键同一链路）。
+   * 确认期间对局冻结；取消由 ui 层接回 resumeGame。
+   */
+  function requestRestart() {
+    if (state.scene !== 'game' || !state.game) return;
+    if (global.NP.ui.getSettings().restartConfirm) {
+      $('screen-pause').classList.add('hidden');
+      state.paused = true;
+      global.NP.audio.suspend();
+      $('screen-restart').classList.remove('hidden');
+      if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();
+    } else {
+      $('screen-restart').classList.add('hidden');
+      $('screen-pause').classList.add('hidden');
+      global.NP.ui.hideResult();
+      startGame(state.modeId);
+    }
   }
 
   /* ==================== 输入动作分发 ==================== */
@@ -433,14 +459,8 @@
     else if (name === 'hardDrop') game.hardDrop();
     else if (name === 'hold') game.hold();
     else if (name === 'restart') {
-      // 快速重开：默认先弹确认（§8.4）；确认期间对局冻结
-      if (global.NP.ui.getSettings().restartConfirm) {
-        state.paused = true;
-        A.suspend();
-        $('screen-restart').classList.remove('hidden');
-      } else {
-        startGame(state.modeId);
-      }
+      // 快速重开统一走 requestRestart（暂停菜单→重开与 R 键同一确认链路，§8.4/§6）
+      requestRestart();
     }
   }
 
@@ -507,6 +527,7 @@
         } else {
           global.NP.ui.showScreen(screens[cur] || 'screen-menu');
         }
+        if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();
         return true;                            // 同一 Esc 已用于「返回」，不得再当暂停键分发
       }
     }
@@ -593,6 +614,8 @@
       stage.style.transform = `scale(${s})`;
       document.body.classList.toggle('portrait', portrait);
       global.NP.render.setLayout(portrait ? 'portrait' : 'landscape');
+      // 竖屏/横屏切换刷新按键显隐（M-04 操作区仅移动端常驻，桌面默认隐藏，D-06）
+      if (global.NP.touch && global.NP.touch.setPadVisible) global.NP.touch.setPadVisible(true);
       // 触控目标 ≥ 44×44 真实 CSS px（§8.5 / DoD 10）：舞台缩放后按 44/s 补偿；
       // 小屏手机上换算到 CSS px 恰好 44px，大屏不低于 88px
       const tpx = Math.ceil(Math.max(88, 44 / s));
@@ -607,6 +630,7 @@
     global.NP.ui.init({
       startMode: (modeId) => startGame(modeId),
       resumeGame,
+      requestRestart,
       restartGame: () => {
         $('screen-restart').classList.add('hidden');
         $('screen-pause').classList.add('hidden');
@@ -624,11 +648,12 @@
         } else {
           global.NP.ui.showScreen('screen-menu');
         }
+        if (global.NP.touch && global.NP.touch.refresh) global.NP.touch.refresh();
       },
     });
 
-    // 触控输入（framework §8.5）：手势 + 虚拟按键区 + 顶部暂停入口，
-    // 全部走与键盘/手柄同一 onAction 动作接口（不走两套逻辑，§8.5）
+    // 触控输入（framework §8.5 按键唯一口径）：手柄式 3+3 操作区 + 顶部暂停入口，无手势，
+    // 全部走与键盘/手柄同一 onAction 动作接口（不走两套逻辑，§8.5），与键盘/手柄可热切换
     if (global.NP.touch && global.NP.touch.init) {
       global.NP.touch.init({
         onAction,
@@ -637,8 +662,14 @@
         pauseBtn: $('btn-touch-pause'),
       });
       const ts = global.NP.ui.getSettings();
-      global.NP.touch.setPadVisible(ts.touchPad !== false);
+      const tc = (global.NP_CONFIG && global.NP_CONFIG.input.touch) || {};
+      if (global.NP.touch.setHoldMs) {
+        global.NP.touch.setHoldMs(ts.touchHoldMode === 'long'
+          ? (tc.holdLongMs != null ? tc.holdLongMs : 650)
+          : (tc.holdStandardMs != null ? tc.holdStandardMs : 400));
+      }
       global.NP.touch.setPadOpacity(ts.touchPadOpacity != null ? ts.touchPadOpacity : 0.85);
+      global.NP.touch.setPadVisible(true);
     }
 
     // 首次用户手势解锁音频
