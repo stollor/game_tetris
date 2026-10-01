@@ -5,7 +5,7 @@
  *   1. BUTTON_ACTIONS    —— §8.5「按键 → 动作」映射表（唯一口径，测试逐行断言）
  *   2. createButtonController —— 3+3 按键时序状态机（纯逻辑，无 DOM 依赖）
  *   3. createDispatcher  —— 按键事件 → onAction(name, down) 动作分发（与键盘/手柄同一动作接口，§8.5）
- *   4. buildPad / bindPauseButton —— 手柄式 3+3 操作区（各 200×104、多点触控各键独立）
+ *   4. buildPad / bindPauseButton —— 手柄式 3+3 操作区（各 200×96、多点触控各键独立）
  *      与顶部暂停入口（常驻，不依赖手势）
  *
  * §8.5 键语义（全文唯一口径）：
@@ -221,7 +221,7 @@
     } catch (_) { return 400; }
   }
 
-  /** 构建手柄式 3+3 操作区（§8.5 / M-04：第1排 左转·↑·右转；第2排 ←·↓·→，各 200×104，多点触控） */
+  /** 构建手柄式 3+3 操作区（§8.5 / M-04：第1排 左转·↑·右转；第2排 ←·↓·→，各 200×96，多点触控） */
   function buildPad(container, onAction, touchCfg) {
     const cfg = touchCfg || ((global.NP_CONFIG && global.NP_CONFIG.input.touch) || {});
     container.replaceChildren();

@@ -318,9 +318,9 @@ body.reduced-flash .result-panel.record { animation: none; }
 
 /* ============================================================
    移动端触控层（framework §8.5 按键唯一口径 · ticket-0002）
-   手柄式 3+3 操作区（各 200×104 M-04 / 舞台 300×156）+ 顶部暂停入口，无手势。
+   手柄式 3+3 操作区（各 200×96 M-04 / 舞台 300×144，ticket-0003 精修）+ 顶部暂停入口，无手势。
    --tpx：顶部暂停键边长（舞台逻辑 px），main.js fit() 按 44/scale 补偿，
-   保证真实 CSS px ≥ 44×44（DoD 10）；操作区大键固定 300×156 已远超下限。
+   保证真实 CSS px ≥ 44×44（DoD 10）；操作区大键固定 300×144 已远超下限。
    ============================================================ */
 .touch-btn {
   width: var(--tpx, 88px); height: var(--tpx, 88px);
@@ -361,7 +361,7 @@ body.reduced-flash .result-panel.record { animation: none; }
 #touch-pad .pad-btn {
   pointer-events: auto;
   flex: 0 0 auto;
-  width: 300px; height: 156px;   /* M-04 200×104 ×1.5（1080 舞台） */
+  width: 300px; height: 144px;   /* M-04 200×96 ×1.5（1080 舞台，ticket-0003 精修） */
   min-width: 44px; min-height: 44px;
   flex-direction: column; gap: 4px;
   border-radius: 22px;
@@ -391,7 +391,7 @@ body.portrait .tagline { font-size: 22px; letter-spacing: 4px; margin-bottom: 18
 body.portrait .menu-buttons { width: 888px; gap: 30px; }
 body.portrait .menu-buttons .btn { width: 888px; font-size: 30px; letter-spacing: 6px; }
 body.portrait .menu-buttons .btn.primary { height: 144px; }
-body.portrait .menu-buttons .btn:not(.primary) { height: 120px; }
+body.portrait .menu-buttons .btn:not(.primary) { height: 132px; }   /* M-01 次按钮 88 spec×1.5 */
 body.portrait .block-strip { margin-top: 36px; }
 body.portrait .block-strip img { height: 84px; }
 /* M-02 · 模式选择：竖排 4 卡（592×200 → 舞台 888×300，gap 20 → 30） */
@@ -417,18 +417,19 @@ body.portrait select { font-size: 24px; padding: 12px 16px; min-height: 60px; }
 body.portrait .touch-hint, body.portrait .bindings-hint { font-size: 22px; line-height: 1.6; color: #8A94B8; margin: 12px 0; }
 body.portrait .btn { padding: 12px 26px; font-size: 24px; }
 body.portrait .btn.mini { min-height: 60px; font-size: 22px; }
-/* M-05 · 暂停覆盖层：浮层 500×700 → 舞台 750×1050，继续主按钮 96 高/其余 80 高 */
+/* M-05 · 暂停覆盖层：浮层 500×700 → 舞台 750×1050，继续主按钮 96 spec/其余 88 spec（舞台 144/132） */
 body.portrait .dialog { min-width: 750px; padding: 60px 75px; gap: 24px; }
 body.portrait .dialog h2 { font-size: 45px; }
 body.portrait .dialog .btn { width: 100%; font-size: 28px; }
 body.portrait .dialog .btn.primary { height: 144px; }
-body.portrait .dialog .btn:not(.primary) { height: 120px; }
-/* M-06 · 结算：大面板 592×820 → 舞台 888×1230，主按钮全宽 96 高/次按钮半宽 80 高 */
+body.portrait .dialog .btn:not(.primary) { height: 132px; }   /* M-05 重开/设置/返回 420×88 spec×1.5 */
+/* M-06 · 结算：大面板 592×820 → 舞台 888×1230，主按钮全宽 96 spec/次按钮全宽 88 spec（舞台 144/132，全宽堆叠） */
 body.portrait .result-panel { width: 888px; padding: 50px 48px; gap: 26px; }
 body.portrait .result-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 28px; font-size: 24px; }
 body.portrait .result-actions { flex-wrap: wrap; }
 body.portrait .result-actions .btn.primary { width: 100%; height: 144px; font-size: 32px; }
-body.portrait .result-actions .btn:not(.primary) { width: 396px; height: 120px; }
+/* M-06 返回/回放 592×88 spec 全宽堆叠（舞台 888×132） */
+body.portrait .result-actions .btn:not(.primary) { width: 100%; height: 132px; }
 /* M-07 · 操作说明：按键图解两排 6 键 + 说明 */
 body.portrait .help-body { font-size: 22px; line-height: 1.8; }
 body.portrait .help-pad-diagram { display: flex; flex-direction: column; gap: 12px; margin: 18px 0; }
@@ -446,8 +447,79 @@ body.portrait .help-pad-row span {
   background: rgba(20,26,46,0.7); font-size: 20px;
 }
 /* M-04 操作区顶部暂停键（竖屏右上：定位按线框，尺寸跟 --tpx 补偿，真实 CSS px ≥ 44×44，DoD 10） */
-body.portrait #btn-touch-pause { width: var(--tpx, 122px); height: var(--tpx, 122px); min-width: 44px; min-height: 44px; font-size: 40px; top: calc(84px + env(safe-area-inset-top)); right: 36px; }
+body.portrait #btn-touch-pause { width: var(--tpx, 102px); height: var(--tpx, 102px); min-width: 44px; min-height: 44px; font-size: 40px; top: calc(min(78px, 190px - var(--tpx, 102px)) + env(safe-area-inset-top)); right: 36px; }
+/* M-04 暂停分层：暂停❚❚ 68×68 @52 spec（舞台 102 @78），底 ≤190 < SCORE 顶 198，零重叠；
+   --tpx 放大（小屏 44px 补偿）时 top 自适应上移（190-tpx），全视口零重叠 + 真实 44px 双保
+   （P1 var 回归保留，见 tests/test-touch.cjs [H]） */
 /* P2（ticket-0002 采样1/2）：390px 竖屏设置预设按钮折行间距 + 结算锁定文案字号 */
 body.portrait .preset-row { gap: 18px; }
 body.portrait .preset-row .btn.mini { flex: 1 1 40%; min-height: 72px; }
 body.portrait .result-actions .btn em { font-size: 20px; }
+
+/* ============================================================
+   ticket-0003 移动端精修（M-02 对比度/短句 · M-07 只讲手机 ·
+   返回/次按钮加大 · M-08 一排一个）。一律 body.portrait 分支，桌面零改动。
+   ============================================================ */
+/* M-02 · 卡片对比度：描边 + 底色提亮一档（与页面底 #0B0E1A 可辨，并排目检） */
+body.portrait .mode-card {
+  background: rgba(32, 40, 68, 0.95);
+  border: 2px solid #00E5FF;
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.22);
+}
+body.portrait .mode-card .desc { font-size: 24px; color: #C9D2DE; }
+/* M-02 · 返回 96 spec → 144 舞台全宽；M-03/M-07/M-08 底部返回/关闭 132 高全宽 */
+body.portrait #screen-modes .row-center .btn { width: 888px; height: 144px; font-size: 30px; }
+body.portrait #screen-settings .row-center .btn,
+body.portrait #screen-help .row-center .btn,
+body.portrait #screen-unlocks .row-center .btn { width: 888px; height: 132px; font-size: 28px; }
+/* 右上关闭/返回（M-03/M-07/M-08 200×88 spec → 300×132 舞台）：竖屏专属，桌面隐藏 */
+.top-right-btn { display: none; }
+body.portrait .top-right-btn {
+  display: block;
+  position: absolute; top: 72px; right: 96px;
+  width: 300px; height: 132px;
+  font-size: 28px; letter-spacing: 4px;
+}
+/* M-07 · 只讲手机：桌面段落竖屏隐藏，移动 5+2 行竖屏专显（桌面隐藏） */
+.help-mobile-only { display: none; }
+body.portrait .help-desktop-only { display: none; }
+body.portrait .help-mobile-only { display: block; }
+body.portrait .help-mobile-only .help-m-row {
+  min-height: 156px;   /* 104 spec×1.5，短句单行 */
+  display: flex; align-items: center; justify-content: center;
+  margin: 12px 0; padding: 12px 16px;
+  border: 2px solid rgba(0, 229, 255, 0.5); border-radius: 14px;
+  background: rgba(20, 26, 46, 0.72);
+  font-size: 36px; letter-spacing: 2px; line-height: 1.4;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.portrait .help-mobile-only .help-s-row {
+  min-height: 88px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 12px 0; padding: 12px 16px;
+  font-size: 33px; letter-spacing: 1px; line-height: 1.5; color: #8A94B8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* M-08 · 成就一排一个纵向列表（行 528×200 spec → 792×300 舞台） */
+body.portrait .unlock-grid { grid-template-columns: 1fr; gap: 24px; }
+body.portrait .unlock-item { min-height: 300px; }
+/* 成就行内结构（图标 + 主列 + 状态；桌面复用同一 DOM，布局零改动） */
+.unlock-item { display: flex; gap: 14px; align-items: flex-start; }
+.unlock-item .u-icon { font-size: 44px; line-height: 1.2; flex: 0 0 auto; }
+.unlock-item .u-main { flex: 1 1 auto; min-width: 0; }
+.unlock-item .name {
+  font-size: 21px; letter-spacing: 2px; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;   /* 长名称缩行不溢出 */
+}
+.unlock-item .cond { font-size: 15px; color: #8A94B8; }
+.unlock-item .u-progress {
+  height: 12px; border-radius: 6px; margin-top: 10px;
+  background: rgba(42, 51, 82, 0.8); overflow: hidden;
+}
+.unlock-item .u-bar { height: 100%; background: linear-gradient(90deg, #00E5FF, #7C4DFF); }
+.unlock-item .u-progtext { font-size: 14px; color: #8A94B8; font-family: monospace; margin-top: 4px; }
+.unlock-item .u-badge { font-size: 15px; color: #00E676; letter-spacing: 2px; margin-top: 8px; }
+body.portrait .unlock-item .name { font-size: 30px; }
+body.portrait .unlock-item .cond { font-size: 24px; }
+body.portrait .unlock-item .u-progtext { font-size: 22px; }
+body.portrait .unlock-item .u-badge { font-size: 24px; }

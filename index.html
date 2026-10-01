@@ -52,6 +52,7 @@
     <div class="menu-bg dim"></div>
     <div class="panel-page wide">
       <h2 class="page-title" data-i18n="settings.title"></h2>
+      <button class="btn ghost top-right-btn" id="btn-settings-top" data-i18n="settings.close"></button>
       <div class="settings-grid">
         <div class="settings-col">
           <h3 data-i18n="settings.audio"></h3>
@@ -122,24 +123,40 @@
     <div class="menu-bg dim"></div>
     <div class="panel-page">
       <h2 class="page-title" data-i18n="help.title"></h2>
+      <button class="btn ghost top-right-btn" id="btn-help-top" data-i18n="settings.close"></button>
       <div class="help-body">
-        <p data-i18n="help.line1"></p>
-        <p data-i18n="help.line2"></p>
-        <p data-i18n="help.line3"></p>
-        <p data-i18n="help.line4"></p>
-        <p data-i18n="help.line5"></p>
-        <h3 class="help-sub" data-i18n="help.touchTitle"></h3>
-        <div class="help-pad-diagram" aria-hidden="true">
-          <div class="help-pad-row"><span data-i18n="touch.ccw"></span><span data-i18n="touch.up"></span><span data-i18n="touch.cw"></span></div>
-          <div class="help-pad-row"><span data-i18n="touch.left"></span><span data-i18n="touch.down"></span><span data-i18n="touch.right"></span></div>
+        <!-- 桌面帮助保留（键鼠/手柄段落，D-04 零改动；竖屏隐藏，见 CSS body.portrait .help-desktop-only） -->
+        <div class="help-desktop-only">
+          <p data-i18n="help.line1"></p>
+          <p data-i18n="help.line2"></p>
+          <p data-i18n="help.line3"></p>
+          <p data-i18n="help.line4"></p>
+          <p data-i18n="help.line5"></p>
         </div>
-        <p data-i18n="help.touch1"></p>
-        <p data-i18n="help.touch2"></p>
-        <div class="block-strip big">
-          <img src="assets/texture/blocks/block-I.png" alt="I"><img src="assets/texture/blocks/block-T.png" alt="T">
-          <img src="assets/texture/blocks/block-J.png" alt="J"><img src="assets/texture/blocks/block-L.png" alt="L">
-          <img src="assets/texture/blocks/block-S.png" alt="S"><img src="assets/texture/blocks/block-Z.png" alt="Z">
-          <img src="assets/texture/blocks/block-O.png" alt="O">
+        <h3 class="help-sub" data-i18n="help.touchTitle"></h3>
+        <div class="help-desktop-only">
+          <div class="help-pad-diagram" aria-hidden="true">
+            <div class="help-pad-row"><span data-i18n="touch.ccw"></span><span data-i18n="touch.up"></span><span data-i18n="touch.cw"></span></div>
+            <div class="help-pad-row"><span data-i18n="touch.left"></span><span data-i18n="touch.down"></span><span data-i18n="touch.right"></span></div>
+          </div>
+          <p data-i18n="help.touch1"></p>
+          <p data-i18n="help.touch2"></p>
+          <div class="block-strip big">
+            <img src="assets/texture/blocks/block-I.png" alt="I"><img src="assets/texture/blocks/block-T.png" alt="T">
+            <img src="assets/texture/blocks/block-J.png" alt="J"><img src="assets/texture/blocks/block-L.png" alt="L">
+            <img src="assets/texture/blocks/block-S.png" alt="S"><img src="assets/texture/blocks/block-Z.png" alt="Z">
+            <img src="assets/texture/blocks/block-O.png" alt="O">
+          </div>
+        </div>
+        <!-- M-07 移动端只讲手机：按键图解 5 行 + 补充说明 2 行（短句单行大字，桌面隐藏） -->
+        <div class="help-mobile-only">
+          <div class="help-m-row" data-i18n="help.m1"></div>
+          <div class="help-m-row" data-i18n="help.m2"></div>
+          <div class="help-m-row" data-i18n="help.m3"></div>
+          <div class="help-m-row" data-i18n="help.m4"></div>
+          <div class="help-m-row" data-i18n="help.m5"></div>
+          <div class="help-s-row" data-i18n="help.s1"></div>
+          <div class="help-s-row" data-i18n="help.s2"></div>
         </div>
       </div>
       <div class="row-center">
@@ -153,6 +170,7 @@
     <div class="menu-bg dim"></div>
     <div class="panel-page wide">
       <h2 class="page-title" data-i18n="unlock.title"></h2>
+      <button class="btn ghost top-right-btn" id="btn-unlocks-top" data-i18n="mode.back"></button>
       <div class="unlock-stats">
         <div><span data-i18n="unlock.totalLines"></span>：<b id="stat-lines">0</b></div>
         <div><span data-i18n="unlock.dailyCount"></span>：<b id="stat-daily">0</b></div>

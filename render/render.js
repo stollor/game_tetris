@@ -31,22 +31,24 @@
       },
       padZoneY: 960,           // 底部虚拟按键区起点（DOM 层对齐，不遮挡场地/HUD）
     },
-    // 竖屏 M-04（1080×1920 = 720×1280 线框 ×1.5）：场地 10×20 全高左侧（67.5px/格，=45px×1.5）/
-    // 右侧信息栏自上而下（SCORE 大号 → LV·TIME → OBJECTIVE → HOLD → NEXT×5 竖排）/ 底部 3+3 操作区。
+    // 竖屏 M-04（1080×1920 = 720×1280 线框 ×1.5，ticket-0003 精修）：
+    // 右栏窄化 206→184（舞台 309→276，内容紧凑排版），场地 45→48px/格（舞台 cell 72，720×1440 @24,84，
+    // 高度吃满顶栏下缘到操作区上缘；比例场地≈66%宽/右栏≈25%宽）；暂停❚❚独占右上（DOM 层 102×102 @954,78，
+    // 底 180 < SCORE 顶 198，零重叠）；NEXT 格 184×64 spec（舞台 276×96）。
     // COMBO/B2B 不占侧栏（场中央浮字，§8.2 阈值表）；BEST 不进对局侧栏（结算/模式卡展示）。
     portrait: {
-      field: { x: 36, y: 96, cell: 67.5, cols: 10, rows: 20 },   // 675×1350，全高左侧
-      hold: { x: 735, y: 546, w: 309, h: 144 },
-      next: { x: 735, y: 750, w: 309, h: 114, gap: 12, count: 5, horizontal: false },
+      field: { x: 24, y: 84, cell: 72, cols: 10, rows: 20 },   // 720×1440，全高左侧（48px/格 spec）
+      hold: { x: 768, y: 522, w: 276, h: 120 },
+      next: { x: 768, y: 696, w: 276, h: 96, gap: 12, count: 5, horizontal: false },
       pip: { x: 387, y: 700, w: 306, h: 408 },
       hud: {
-        score: { x: 735, y: 198, w: 309, h: 144 },
-        level: { x: 735, y: 354, w: 148, h: 84 },
-        time: { x: 895, y: 354, w: 148, h: 84 },
-        objective: { x: 735, y: 450, w: 309, h: 84 },
+        score: { x: 768, y: 198, w: 276, h: 132 },
+        level: { x: 768, y: 342, w: 132, h: 78 },
+        time: { x: 912, y: 342, w: 132, h: 78 },
+        objective: { x: 768, y: 432, w: 276, h: 78 },
         clear: { x: 540, y: 1446 },
       },
-      padZoneY: 1500,          // y ≥ 1500 全部留给底部手柄式 3+3 操作区（M-04：0,1500 1080×420）
+      padZoneY: 1548,          // y ≥ 1548 全部留给底部手柄式 3+3 操作区（M-04：0,1548 1080×372）
     },
   };
   const LAY = Object.assign({}, LAYOUTS.landscape);
@@ -233,6 +235,27 @@
     ctx.textAlign = align || 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(text, x, y);
+  }
+  /* M-04 右栏窄化配套：数值字号自适应不换行（ticket-0003）。
+     在给定最大宽度内按需缩小字号绘制，单行不换行不溢出；桌面宽栏不受影响（传入 maxW 极大即原逻辑）。 */
+  function fitHudText(ctx, text, x, y, baseSize, maxW, color, weight) {
+    let size = baseSize;
+    const fam = weight === 'label'
+      ? `"Rajdhani","Chakra Petch","Segoe UI",sans-serif`
+      : `"Consolas","Roboto Mono",monospace`;
+    const wt = weight === 'label' ? 600 : 700;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    while (size > 10) {
+      ctx.font = `${wt} ${size}px ${fam}`;
+      try {
+        if (ctx.measureText(text).width <= maxW) break;
+      } catch (_) { break; }   // 桩环境无 measureText：保持基准字号
+      size -= 2;
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    return size;
   }
 
   /* ==================== 特效触发 API ==================== */
@@ -577,7 +600,7 @@
 
     // HOLD（P2 ticket-0002 采样2：竖屏窄栏标签 +2，桌面 22 不动）
     const hold = LAY.hold;
-    const isPortraitHud = LAY.next && LAY.next.w > 200;   // 竖屏 w309 / 横屏 w112（桌面分支零改动）
+    const isPortraitHud = LAY.next && LAY.next.w > 200;   // 竖屏 w276 / 横屏 w112（桌面分支零改动）
     drawPanel(ctx, hold.x, hold.y, hold.w, hold.h);
     label(ctx, T('hud.hold'), hold.x + 16, hold.y + 30, isPortraitHud ? 24 : 22, '#8A94B8');
     if (game && game.holdType) {
@@ -598,12 +621,12 @@
       }
     }
 
-    // SCORE（大号；桌面 h130 原口径零改动，竖屏小宽自适应）
+    // SCORE（大号；桌面 h130 原口径零改动，竖屏小宽自适应不换行 ticket-0003）
     const S = HD.score;
     drawPanel(ctx, S.x, S.y, S.w, S.h);
     if (S.w < 320) {
       label(ctx, T('hud.score'), S.x + 18, S.y + 30, 22, '#8A94B8');
-      if (game) numText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + S.h - 28, 44, '#EAF2FF');
+      if (game) fitHudText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + S.h - 28, 44, S.w - 36, '#EAF2FF');
     } else {
       label(ctx, T('hud.score'), S.x + 18, S.y + 32, 22, '#8A94B8');
       if (game) numText(ctx, String(Math.round(game.score)).padStart(7, '0'), S.x + 18, S.y + 102, 64, '#EAF2FF');
@@ -614,7 +637,7 @@
     drawPanel(ctx, L.x, L.y, L.w, L.h);
     if (L.h <= 90) {
       label(ctx, T('hud.level'), L.x + 12, L.y + 24, 20, '#8A94B8');
-      if (game) numText(ctx, String(game.level), L.x + 12, L.y + L.h - 12, 36, '#00E5FF');
+      if (game) fitHudText(ctx, String(game.level), L.x + 12, L.y + L.h - 12, 36, L.w - 24, '#00E5FF');
     } else {
       label(ctx, T('hud.level'), L.x + 18, L.y + 32, 22, '#8A94B8');
       if (game) numText(ctx, String(game.level), L.x + 18, L.y + 92, 52, '#00E5FF');
@@ -650,7 +673,7 @@
         const timeTxt = game.mode.timeLimitMs
           ? fmtTime(Math.max(0, game.mode.timeLimitMs - game.elapsedMs))
           : fmtTime(game.elapsedMs);
-        numText(ctx, timeTxt, TM.x + 12, TM.y + TM.h - 12, 26, '#EAF2FF');
+        fitHudText(ctx, timeTxt, TM.x + 12, TM.y + TM.h - 12, 26, TM.w - 24, '#EAF2FF');
       }
     } else {
       label(ctx, T('hud.time'), TM.x + 18, TM.y + 30, 20, '#8A94B8');
@@ -679,7 +702,7 @@
           ratio = Math.min(1, game.totalLines / ((game.mode.clearLevel || 15) * 10 - 10));
           txt = `${game.totalLines} ${T('hud.lines')} · LV ${game.level}`;
         }
-        numText(ctx, txt, O.x + 12, O.y + O.h - 22, 24, '#EAF2FF');
+        fitHudText(ctx, txt, O.x + 12, O.y + O.h - 22, 24, O.w - 24, '#EAF2FF');
         const bw = O.w - 24;
         const barY = O.y + O.h - 12;
         ctx.fillStyle = 'rgba(42,51,82,0.8)';

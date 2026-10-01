@@ -151,19 +151,34 @@
   }
 
   /* ==================== 模式卡片 ==================== */
+  // M-02 精修（ticket-0003）：竖屏走短句一行（名称 + 短规则 + 最佳成绩，禁止长说明），
+  // 桌面保持长说明 + 最佳成绩行原口径（D-02 零改动）。
+  function isPortraitUI() {
+    try { return !!(document.body && document.body.classList && document.body.classList.contains('portrait')); }
+    catch (_) { return false; }
+  }
   function renderModeCards() {
     const wrap = $('mode-cards');
     clear(wrap);
+    const portrait = isPortraitUI();
     for (const mode of global.NP_CONFIG.modes) {
       const card = document.createElement('div');
-      card.className = 'mode-card';
+      card.className = 'mode-card' + (portrait ? ' short' : '');
       card.dataset.mode = mode.id;
       const best = recordText(mode);
       if (mode.id === 'daily') card.appendChild(el('div', 'badge', 'DAILY'));
       card.appendChild(el('h3', null, t(mode.nameKey)));
-      card.appendChild(el('div', 'desc', t(mode.descKey)));
-      if (mode.daily) card.appendChild(el('div', 'daily-date', t('mode.dailyDate') + ': ' + global.NP.rng.utcDateString()));
-      card.appendChild(el('div', 'best', t('mode.best') + ': ' + best));
+      if (portrait) {
+        // 短句一行：短规则｜最佳 X（文案键 mode.<id>.short，中英齐备）
+        const shortKey = 'mode.' + mode.id + '.short';
+        const shortTxt = t(shortKey);
+        const shown = (shortTxt && shortTxt !== shortKey) ? shortTxt : t(mode.descKey);
+        card.appendChild(el('div', 'desc', shown + '｜' + t('mode.best') + ': ' + best));
+      } else {
+        card.appendChild(el('div', 'desc', t(mode.descKey)));
+        if (mode.daily) card.appendChild(el('div', 'daily-date', t('mode.dailyDate') + ': ' + global.NP.rng.utcDateString()));
+        card.appendChild(el('div', 'best', t('mode.best') + ': ' + best));
+      }
       card.addEventListener('mouseenter', () => global.NP.audio.playSfx('ui-hover'));
       card.addEventListener('click', () => {
         global.NP.audio.playSfx('ui-confirm');
@@ -405,24 +420,88 @@
   }
 
   /* ==================== 成就 / 解锁 ==================== */
+  // M-08 精修（ticket-0003）：一排一个纵向行（图标 + 名称 + 条件 + 进度条/达成章），
+  // 两态（达成 / 未达成灰态 + 进度，定义见 framework §6.2，无隐藏态）；长名称缩行由 CSS ellipsis 保证。
+  // 与桌面 D-05 同数据口径（存档驱动），桌面 DOM 结构复用同一构建（D-05 零改动：仅增量图标/进度节点）。
+  function unlockProgress(kind, item) {
+    // 返回 { ratio: 0..1, text }；已达成由调用方直接显示达成章，不走进度条
+    const st = save.stats;
+    try {
+      if (kind === 'skin') {
+        if (!item.lines) return null;
+        return { ratio: Math.min(1, st.totalLines / item.lines), text: `${st.totalLines} / ${item.lines}` };
+      }
+      if (kind === 'bg') {
+        const c = item.cond;
+        if (!c) return null;
+        if (c.type === 'marathonLevel') return { ratio: Math.min(1, st.marathonBestLevel / c.level), text: `LV ${st.marathonBestLevel} / ${c.level}` };
+        if (c.type === 'sprintUnder') return st.sprintBestMs > 0
+          ? { ratio: st.sprintBestMs <= c.seconds * 1000 ? 1 : 0, text: `${(st.sprintBestMs / 1000).toFixed(2)}s / ${c.seconds}s` }
+          : { ratio: 0, text: `— / ${c.seconds}s` };
+        return null;
+      }
+      if (kind === 'music') {
+        if (!item.daily) return null;
+        return { ratio: Math.min(1, st.dailyCompletions / item.daily), text: `${st.dailyCompletions} / ${item.daily}` };
+      }
+      if (kind === 'title') {
+        const c = item.cond;
+        if (c.type === 'maxCombo') return { ratio: Math.min(1, st.bestMaxCombo / c.value), text: `${st.bestMaxCombo} / ${c.value}` };
+        if (c.type === 'pcCount') return { ratio: Math.min(1, st.bestPc / c.value), text: `${st.bestPc} / ${c.value}` };
+        if (c.type === 'tspinClears') return { ratio: Math.min(1, st.bestTspinClears / c.value), text: `${st.bestTspinClears} / ${c.value}` };
+        if (c.type === 'sprintUnder') return st.sprintBestMs > 0
+          ? { ratio: st.sprintBestMs <= c.seconds * 1000 ? 1 : 0, text: `${(st.sprintBestMs / 1000).toFixed(2)}s / ${c.seconds}s` }
+          : { ratio: 0, text: `— / ${c.seconds}s` };
+        if (c.type === 'marathonLevel') return { ratio: Math.min(1, st.marathonBestLevel / c.level), text: `LV ${st.marathonBestLevel} / ${c.level}` };
+        if (c.type === 'dailyCount') return { ratio: Math.min(1, st.dailyCompletions / c.value), text: `${st.dailyCompletions} / ${c.value}` };
+        return null;
+      }
+    } catch (_) { return null; }
+    return null;
+  }
   function renderUnlocks() {
     $('stat-lines').textContent = save.stats.totalLines;
     $('stat-daily').textContent = save.stats.dailyCompletions;
     const grid = $('unlock-grid');
     clear(grid);
     const U = global.NP_CONFIG.unlock;
-    const add = (name, cond, ok) => {
-      const item = document.createElement('div');
-      item.className = 'unlock-item' + (ok ? '' : ' locked');
-      item.appendChild(el('span', 'state ' + (ok ? 'ok' : 'no'), ok ? t('unlock.unlocked') : t('unlock.locked')));
-      item.appendChild(el('div', 'name', name));
-      item.appendChild(el('div', 'cond', cond));
-      grid.appendChild(item);
+    const ICONS = { skin: '🎨', bg: '🌃', music: '🎵', title: '🏆' };
+    const add = (kind, item, name, cond, ok) => {
+      const it = document.createElement('div');
+      it.className = 'unlock-item' + (ok ? '' : ' locked');
+      it.dataset.kind = kind;
+      const icon = document.createElement('span');
+      icon.className = 'u-icon';
+      icon.textContent = ICONS[kind] || '🏆';
+      it.appendChild(icon);
+      const main = document.createElement('div');
+      main.className = 'u-main';
+      main.appendChild(el('div', 'name', name));
+      main.appendChild(el('div', 'cond', cond));
+      if (ok) {
+        main.appendChild(el('div', 'u-badge', t('unlock.unlocked')));
+      } else {
+        const p = unlockProgress(kind, item);
+        if (p) {
+          const bar = document.createElement('div');
+          bar.className = 'u-progress';
+          const fill = document.createElement('div');
+          fill.className = 'u-bar';
+          fill.style.width = Math.round(p.ratio * 100) + '%';
+          bar.appendChild(fill);
+          const lab = el('div', 'u-progtext', p.text);
+          main.appendChild(bar);
+          main.appendChild(lab);
+        }
+      }
+      it.appendChild(main);
+      it.appendChild(el('span', 'state ' + (ok ? 'ok' : 'no'), ok ? t('unlock.unlocked') : t('unlock.locked')));
+      grid.appendChild(it);
     };
-    for (const sk of U.skins) add(t(sk.nameKey), `${t('unlock.totalLines')} ≥ ${sk.lines}`, save.unlocks.skins.includes(sk.id));
-    for (const bg of U.backgrounds) add(t(bg.nameKey), t(bg.condKey), save.unlocks.backgrounds.includes(bg.id));
-    for (const mu of U.musics) add(t(mu.nameKey), mu.condKey ? t(mu.condKey) : t('unlock.bg.none'), save.unlocks.musics.includes(mu.id));
-    for (const ti of U.titles) add(t(ti.nameKey), t(ti.condKey), save.unlocks.titles.includes(ti.id));
+    for (const sk of U.skins) add('skin', sk, t(sk.nameKey), `${t('unlock.totalLines')} ≥ ${sk.lines}`, save.unlocks.skins.includes(sk.id));
+    for (const bg of U.backgrounds) add('bg', bg, t(bg.nameKey), t(bg.condKey), save.unlocks.backgrounds.includes(bg.id));
+    for (const mu of U.musics) add('music', mu, t(mu.nameKey), mu.condKey ? t(mu.condKey) : t('unlock.bg.none'), save.unlocks.musics.includes(mu.id));
+    for (const ti of U.titles) add('title', ti, t(ti.nameKey), t(ti.condKey), save.unlocks.titles.includes(ti.id));
   }
 
   /** 一局结束后更新统计并评估解锁（返回新解锁列表） */
@@ -622,9 +701,21 @@
       global.NP.audio.playSfx('ui-cancel');
       showScreen('screen-menu');
     });
-    $('btn-settings-close').addEventListener('click', () => {
+    const closeSettings = () => {
       global.NP.audio.playSfx('ui-cancel');
       callbacks.closeSettings ? callbacks.closeSettings() : showScreen('screen-menu');
+    };
+    $('btn-settings-close').addEventListener('click', closeSettings);
+    // M-03/M-07/M-08 右上关闭/返回（竖屏专属，桌面隐藏；同一动作接口）
+    const topBtn = (id, fn) => { const b = $(id); if (b) b.addEventListener('click', fn); };
+    topBtn('btn-settings-top', closeSettings);
+    topBtn('btn-help-top', () => {
+      global.NP.audio.playSfx('ui-cancel');
+      showScreen('screen-menu');
+    });
+    topBtn('btn-unlocks-top', () => {
+      global.NP.audio.playSfx('ui-cancel');
+      showScreen('screen-menu');
     });
 
     // 暂停菜单

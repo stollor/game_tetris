@@ -62,7 +62,7 @@ window.NP_CONFIG.input = {
     doubleDownMs: 300,      // ↓双击窗：两次↓按下起点间隔 ≤300ms 即判双击，第二击按下瞬间触发硬降
     holdStandardMs: 400,    // ↑长按 Hold 标准档阈值（达阈值即触发，不等松手）
     holdLongMs: 650,        // ↑长按 Hold 长档阈值
-    /* 手柄式 3+3 操作区（§8.5 / M-04：各 200×104，多点触控各键独立） */
+    /* 手柄式 3+3 操作区（§8.5 / M-04：各 200×96，多点触控各键独立，ticket-0003 精修） */
     padMinPx: 44,           // 单个触控目标最小边长（CSS px 下限，实际 200×104，§8.5 / DoD 10）
     padDefaultOpacity: 0.85, // 按键透明度默认（范围 0.30–1.00，步进 0.05）
     padOpacityMin: 0.30,
