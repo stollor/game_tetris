@@ -1,0 +1,13 @@
+{
+  "index": 1,
+  "passed": true,
+  "operation": "初始状态",
+  "action": null,
+  "from": null,
+  "expectedState": "开始菜单",
+  "actualState": "开始菜单",
+  "error": null,
+  "warnings": [],
+  "artifactErrors": [],
+  "screenshot": "截图/000_正常_初始状态_开始菜单.png"
+}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "主界面功能流程",
+  "initialState": "主界面",
+  "timeoutMs": 5000,
+  "steps": [
+    {
+      "name": "打开设置覆盖场景",
+      "from": "主界面",
+      "action": "menu.settings",
+      "to": "设置界面"
+    },
+    {
+      "name": "关闭设置并恢复主界面",
+      "from": "设置界面",
+      "action": "settings.done",
+      "to": "主界面"
+    },
+    {
+      "name": "请求开始游戏",
+      "from": "主界面",
+      "action": "menu.start",
+      "to": "主界面",
+      "expectTextChanged": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "index": 2,
+  "passed": true,
+  "operation": "关闭 180 度旋转设置",
+  "action": "menu.rotation180",
+  "from": "开始菜单",
+  "expectedState": "开始菜单",
+  "actualState": "开始菜单",
+  "error": null,
+  "warnings": [],
+  "artifactErrors": [],
+  "screenshot": "截图/001_正常_关闭-180-度旋转设置_开始菜单.png"
+}

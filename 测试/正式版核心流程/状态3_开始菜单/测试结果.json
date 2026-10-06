@@ -1,0 +1,13 @@
+{
+  "index": 3,
+  "passed": true,
+  "operation": "重新开启 180 度旋转设置",
+  "action": "menu.rotation180",
+  "from": "开始菜单",
+  "expectedState": "开始菜单",
+  "actualState": "开始菜单",
+  "error": null,
+  "warnings": [],
+  "artifactErrors": [],
+  "screenshot": "截图/002_正常_重新开启-180-度旋转设置_开始菜单.png"
+}

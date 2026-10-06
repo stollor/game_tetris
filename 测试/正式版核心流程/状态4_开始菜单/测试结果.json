@@ -1,0 +1,13 @@
+{
+  "index": 4,
+  "passed": true,
+  "operation": "打开模式选择",
+  "action": "menu.start",
+  "from": "开始菜单",
+  "expectedState": "开始菜单",
+  "actualState": "开始菜单",
+  "error": null,
+  "warnings": [],
+  "artifactErrors": [],
+  "screenshot": "截图/003_正常_打开模式选择_开始菜单.png"
+}

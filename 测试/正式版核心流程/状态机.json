@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "name": "正式版核心流程",
+  "initialState": "开始菜单",
+  "timeoutMs": 8000,
+  "steps": [
+    {
+      "name": "关闭 180 度旋转设置",
+      "from": "开始菜单",
+      "action": "menu.rotation180",
+      "to": "开始菜单",
+      "expectTextIncludes": ["180°旋转：关"]
+    },
+    {
+      "name": "重新开启 180 度旋转设置",
+      "from": "开始菜单",
+      "action": "menu.rotation180",
+      "to": "开始菜单",
+      "expectTextIncludes": ["180°旋转：开"]
+    },
+    {
+      "name": "打开模式选择",
+      "from": "开始菜单",
+      "action": "menu.start",
+      "to": "开始菜单",
+      "expectTextIncludes": ["选择游戏模式"]
+    },
+    {
+      "name": "开始马拉松",
+      "from": "开始菜单",
+      "action": "mode.马拉松",
+      "to": "俄罗斯方块对局",
+      "expectState": {
+        "模式": "马拉松",
+        "阶段": "进行中",
+        "等级": 1
+      }
+    },
+    {
+      "name": "半转操作",
+      "from": "俄罗斯方块对局",
+      "action": "keyboard",
+      "keyboard": {
+        "key": "z"
+      },
+      "to": "俄罗斯方块对局",
+      "expectState": {
+        "模式": "马拉松",
+        "阶段": "进行中",
+        "朝向": 2
+      }
+    },
+    {
+      "name": "长按移动",
+      "from": "俄罗斯方块对局",
+      "action": "keyboard",
+      "keyboard": {
+        "key": "ArrowLeft",
+        "holdMs": 400
+      },
+      "to": "俄罗斯方块对局",
+      "expectState": {
+        "模式": "马拉松",
+        "阶段": "进行中"
+      }
+    },
+    {
+      "name": "暂停冻结状态",
+      "from": "俄罗斯方块对局",
+      "action": "keyboard",
+      "keyboard": {
+        "key": "p"
+      },
+      "to": "俄罗斯方块对局",
+      "expectState": {
+        "模式": "马拉松",
+        "阶段": "暂停"
+      }
+    },
+    {
+      "name": "恢复游戏",
+      "from": "俄罗斯方块对局",
+      "action": "keyboard",
+      "keyboard": {
+        "key": "Escape"
+      },
+      "to": "俄罗斯方块对局",
+      "expectState": {
+        "模式": "马拉松",
+        "阶段": "进行中"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "index": 7,
+  "passed": true,
+  "operation": "长按移动",
+  "action": "keyboard",
+  "from": "俄罗斯方块对局",
+  "expectedState": "俄罗斯方块对局",
+  "actualState": "俄罗斯方块对局",
+  "error": null,
+  "warnings": [],
+  "artifactErrors": [],
+  "screenshot": "截图/006_正常_长按移动_俄罗斯方块对局.png"
+}

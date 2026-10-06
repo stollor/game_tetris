@@ -1,0 +1,77 @@
+{
+  "index": 1,
+  "result": "正常",
+  "operation": "初始状态",
+  "expectedState": "开始菜单",
+  "actualState": "开始菜单",
+  "snapshot": {
+    "version": 1,
+    "sequence": 2,
+    "game": "NEON PULSE · 俄罗斯方块",
+    "sceneId": "开始菜单",
+    "sceneName": "开始菜单",
+    "width": 1280,
+    "height": 720,
+    "texts": [
+      "NEON PULSE",
+      "俄罗斯方块  ·  霓虹街机",
+      "选择你的节奏",
+      "开始游戏",
+      "设置",
+      "180°旋转：开",
+      "← → 移动     ↑ / X 旋转     ↓ 软降     空格 硬降     P 暂停"
+    ],
+    "interactives": [
+      {
+        "id": "开始菜单/menu.start",
+        "name": "menu.start",
+        "sceneId": "开始菜单",
+        "type": "Rectangle",
+        "label": "menu.start",
+        "enabled": true,
+        "visible": true,
+        "bounds": {
+          "x": 490,
+          "y": 329,
+          "width": 300,
+          "height": 54
+        }
+      },
+      {
+        "id": "开始菜单/menu.settings",
+        "name": "menu.settings",
+        "sceneId": "开始菜单",
+        "type": "Rectangle",
+        "label": "menu.settings",
+        "enabled": true,
+        "visible": true,
+        "bounds": {
+          "x": 490,
+          "y": 399,
+          "width": 300,
+          "height": 46
+        }
+      },
+      {
+        "id": "开始菜单/menu.rotation180",
+        "name": "menu.rotation180",
+        "sceneId": "开始菜单",
+        "type": "Rectangle",
+        "label": "menu.rotation180",
+        "enabled": true,
+        "visible": true,
+        "bounds": {
+          "x": 490,
+          "y": 459,
+          "width": 300,
+          "height": 42
+        }
+      }
+    ],
+    "diagnostics": {
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "screenshot": "截图/000_正常_初始状态_开始菜单.png"
+}
