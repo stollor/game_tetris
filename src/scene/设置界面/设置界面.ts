@@ -6,7 +6,7 @@ import { 界面下拉菜单 } from "../../../core/组件/Phaser界面/下拉菜�
 import { 界面分组 } from "../../../core/组件/Phaser界面/分组";
 import { 界面布局 } from "../../../core/组件/Phaser界面/布局";
 import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
-import { 界面控件, 界面文字 } from "../../../core/组件/Phaser界面/控件";
+import { 绑定按钮手势, 界面控件, 界面文字 } from "../../../core/组件/Phaser界面/控件";
 import { 界面滑块 } from "../../../core/组件/Phaser界面/滑块";
 import {
   更新游戏设置,
@@ -183,11 +183,13 @@ class 外观选择卡片 extends 界面控件 {
       })
       .setOrigin(0.5);
     this.add([this.底板, this.预览, this.标签]);
-    this.底板.setInteractive({ useHandCursor: true }).on("pointerup", 配置.选择);
-    this.底板.on("pointerover", () => this.底板.setStrokeStyle(2, 配置.强调色, 0.8));
-    this.底板.on("pointerout", () =>
-      this.底板.setStrokeStyle(配置.已选 ? 2 : 1, 边色, 配置.已选 ? 1 : 0.42),
-    );
+    this.底板.setInteractive({ useHandCursor: true });
+    绑定按钮手势(this.底板, {
+      点击: 配置.选择,
+      移入: () => this.底板.setStrokeStyle(2, 配置.强调色, 0.8),
+      移出: () =>
+        this.底板.setStrokeStyle(配置.已选 ? 2 : 1, 边色, 配置.已选 ? 1 : 0.42),
+    });
     场景.add.existing(this);
   }
 }

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { 界面控件 } from "./控件";
+import { 绑定按钮手势, 界面控件 } from "./控件";
 import { 绘制玻璃按钮 } from "./玻璃绘制";
 import { Phaser预制体配置 } from "./预制体配置";
 
@@ -16,8 +16,12 @@ export interface 按钮配置 {
   字号?: string;
   样式?: "面板" | "文字";
   自适应文案?: boolean;
+  移入?: (指针: Phaser.Input.Pointer) => void;
+  移出?: (指针: Phaser.Input.Pointer) => void;
   按下?: () => void;
   松开?: () => void;
+  取消?: () => void;
+  按住?: (指针: Phaser.Input.Pointer, 帧间隔: number) => void;
   字体?: string;
   面板透明度?: number;
   边框透明度?: number;
@@ -78,22 +82,29 @@ export class 界面按钮 extends 界面控件 {
     this.add([this.视觉, this.底板, this.标签]);
     if (this.自适应文案) this.按文案调整尺寸();
     this.重绘视觉();
-    this.底板.on("pointerup", 配置.点击);
-    if (配置.按下) this.底板.on("pointerdown", 配置.按下);
-    if (配置.松开) {
-      this.底板.on("pointerup", 配置.松开);
-      this.底板.on("pointerupoutside", 配置.松开);
-      this.底板.on("pointerout", 配置.松开);
-    }
-    this.底板.on("pointerover", () => {
-      this.悬停 = true;
-      this.重绘视觉();
-      if (文字按钮) this.setScale(1.06);
-    });
-    this.底板.on("pointerout", () => {
-      this.悬停 = false;
-      this.重绘视觉();
-      if (文字按钮) this.setScale(1);
+    绑定按钮手势(this.底板, {
+      移入: (指针) => {
+        this.悬停 = true;
+        this.重绘视觉();
+        if (文字按钮) this.setScale(1.06);
+        配置.移入?.(指针);
+      },
+      移出: (指针) => {
+        this.悬停 = false;
+        this.重绘视觉();
+        if (文字按钮) this.setScale(1);
+        配置.移出?.(指针);
+      },
+      按下: () => 配置.按下?.(),
+      取消: () => {
+        配置.取消?.();
+        配置.松开?.();
+      },
+      按住: 配置.按住,
+      点击: () => {
+        配置.点击();
+        配置.松开?.();
+      },
     });
     scene.add.existing(this);
   }

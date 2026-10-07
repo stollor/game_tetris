@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { 界面控件 } from "./控件";
+import { 绑定按钮手势, 界面控件 } from "./控件";
 import { 界面滑块 } from "./滑块";
 
 export interface 音量控制配置 {
@@ -58,8 +58,8 @@ export class 界面音量控制 extends 界面控件 {
         hitArea: this.创建矩形命中区域(36, 42),
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
       })
-      .setName(`${配置.名称}.mute`)
-      .on("pointerdown", this.切换静音);
+      .setName(`${配置.名称}.mute`);
+    绑定按钮手势(this.图标按钮, { 点击: this.切换静音 });
     const 滑块宽 = Math.max(72, 配置.宽 - (轨道起点 + 配置.宽 / 2) - 66);
     this.滑块 = new 界面滑块(scene, 轨道起点 + 36 + 滑块宽 / 2, 0, {
       宽: 滑块宽,

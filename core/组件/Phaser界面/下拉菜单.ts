@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { 界面布局 } from "./布局";
 import { 界面按钮 } from "./按钮";
-import { 界面控件 } from "./控件";
+import { 绑定按钮手势, 界面控件 } from "./控件";
 import { 绘制玻璃面板 } from "./玻璃绘制";
 
 export interface 下拉选项 {
@@ -65,7 +65,7 @@ export class 界面下拉菜单 extends 界面控件 {
       hitArea: this.创建矩形命中区域(配置.宽, 配置.高),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
     });
-    this.on("pointerdown", this.切换展开);
+    绑定按钮手势(this, { 点击: this.切换展开 });
     scene.add.existing(this);
   }
 

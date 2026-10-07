@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { 应用文字清晰度 } from "../../../core/文字清晰度";
 import { 播放程序音效, 解锁程序音频, 设置程序音乐场景 } from "../../../core/程序音频";
 import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
+import { 绑定按钮手势 } from "../../../core/组件/Phaser界面/控件";
 import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../core/设置";
 import { 打开覆盖页面 } from "../../../core/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
@@ -201,14 +202,15 @@ export class 开始菜单 extends Phaser.Scene {
       .rectangle(x, y, w, h, 0x000000, 0.001)
       .setInteractive({ useHandCursor: true })
       .setName(name);
-    plate
-      .on("pointerover", () => 绘制底板(true))
-      .on("pointerout", () => 绘制底板(false))
-      .on("pointerdown", () => {
-        解锁程序音频();
-        播放程序音效("开始");
-        action();
-      });
+    plate.on("pointerdown", () => {
+      解锁程序音频();
+      播放程序音效("开始");
+    });
+    绑定按钮手势(plate, {
+      点击: action,
+      移入: () => 绘制底板(true),
+      移出: () => 绘制底板(false),
+    });
     // 紫色文字在深色底板上对比不足，换亮薰衣草白保可读
     const 文字色值 = color === 0x7c4dff ? 0xe9e2ff : color;
     const text = this.add

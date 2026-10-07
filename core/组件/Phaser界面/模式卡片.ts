@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { 绑定按钮手势 } from "./控件";
 import { 绘制玻璃面板 } from "./玻璃绘制";
 import { 亮色, 颜色字符串 } from "./颜色工具";
 
@@ -32,16 +33,18 @@ export class 界面模式卡片 extends Phaser.GameObjects.Container {
     this.视觉 = scene.add.graphics();
     this.背板 = scene.add
       .rectangle(0, 0, 配置.宽, 配置.高, 0x000000, 0.001)
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => {
+      .setInteractive({ useHandCursor: true });
+    绑定按钮手势(this.背板, {
+      点击: 配置.点击,
+      移入: () => {
         this.悬停 = true;
         this.重绘视觉();
-      })
-      .on("pointerout", () => {
+      },
+      移出: () => {
         this.悬停 = false;
         this.重绘视觉();
-      })
-      .on("pointerdown", 配置.点击);
+      },
+    });
     const 条 = scene.add
       .rectangle(-配置.宽 / 2 + 3, 0, 4, Math.max(1, 配置.高 - 30), 配置.强调色)
       .setAlpha(0.95);

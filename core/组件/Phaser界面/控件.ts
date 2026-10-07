@@ -14,6 +14,59 @@ export interface 文字控件配置 extends 控件尺寸 {
   对齐?: "左" | "中";
 }
 
+export interface 按钮手势回调 {
+  移入?: (指针: Phaser.Input.Pointer) => void;
+  移出?: (指针: Phaser.Input.Pointer) => void;
+  按下?: (指针: Phaser.Input.Pointer) => void;
+  取消?: (指针: Phaser.Input.Pointer) => void;
+  按住?: (指针: Phaser.Input.Pointer, 帧间隔: number) => void;
+  点击: (指针: Phaser.Input.Pointer) => void;
+}
+
+/** 按下必须开始于控件内；移出后取消；仅在同一指针于控件内抬起时点击。 */
+export function 绑定按钮手势(目标: Phaser.GameObjects.GameObject, 回调: 按钮手势回调): void {
+  const 按下中的指针 = new Map<number, Phaser.Input.Pointer>();
+  const 取消按下 = (指针: Phaser.Input.Pointer): void => {
+    if (!按下中的指针.delete(指针.id)) return;
+    回调.取消?.(指针);
+  };
+  const 按下 = (指针: Phaser.Input.Pointer): void => {
+    取消按下(指针);
+    按下中的指针.set(指针.id, 指针);
+    回调.按下?.(指针);
+  };
+  const 抬起 = (指针: Phaser.Input.Pointer): void => {
+    if (!按下中的指针.delete(指针.id)) return;
+    回调.点击(指针);
+  };
+  const 持续按住 = (_时间: number, 帧间隔: number): void => {
+    if (!回调.按住) return;
+    for (const 指针 of 按下中的指针.values()) 回调.按住(指针, 帧间隔);
+  };
+  const 移出 = (指针: Phaser.Input.Pointer): void => {
+    回调.移出?.(指针);
+    取消按下(指针);
+  };
+  const 清理 = (): void => {
+    for (const 指针 of 按下中的指针.values()) 回调.取消?.(指针);
+    按下中的指针.clear();
+    if (回调.移入) 目标.off("pointerover", 回调.移入);
+    目标.off("pointerdown", 按下);
+    目标.off("pointerout", 移出);
+    目标.off("pointerup", 抬起);
+    目标.off("pointerupoutside", 取消按下);
+    目标.scene.events.off(Phaser.Scenes.Events.UPDATE, 持续按住);
+  };
+
+  if (回调.移入) 目标.on("pointerover", 回调.移入);
+  目标.on("pointerdown", 按下);
+  目标.on("pointerout", 移出);
+  目标.on("pointerup", 抬起);
+  目标.on("pointerupoutside", 取消按下);
+  if (回调.按住) 目标.scene.events.on(Phaser.Scenes.Events.UPDATE, 持续按住);
+  目标.once("destroy", 清理);
+}
+
 function 解析内边距(值: number | undefined): Phaser.Types.GameObjects.Text.TextPadding {
   const 内边距 = 值 ?? 8;
   return { left: 内边距, right: 内边距, top: 内边距, bottom: 内边距 };
