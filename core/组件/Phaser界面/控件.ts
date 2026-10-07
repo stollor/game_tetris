@@ -81,8 +81,11 @@ export class 界面文字 extends 界面控件 {
   }
 
   setLabel(文案: string): this {
+    const 宽 = this.width;
+    const 高 = this.height;
     this.文本对象.setText(文案);
     this.测量尺寸();
+    this.布局尺寸变化(宽, 高);
     return this;
   }
 
@@ -92,19 +95,27 @@ export class 界面文字 extends 界面控件 {
   }
 
   setFontSize(字号: string): this {
+    const 宽 = this.width;
+    const 高 = this.height;
     this.文本对象.setFontSize(字号);
     this.测量尺寸();
+    this.布局尺寸变化(宽, 高);
     return this;
   }
 
   protected 布局尺寸变化(宽: number, 高: number): void {
-    this.文本对象.setPosition(this.对齐 === "左" ? -宽 / 2 : 0, 0);
-    this.文本对象.setOrigin(this.对齐 === "左" ? 0 : 0.5, 0.5);
+    this.文本对象.setFixedSize(0, 0);
     this.文本对象.setWordWrapWidth(Math.max(1, 宽));
-    if (高 > this.文本对象.height) this.文本对象.setFixedSize(宽, 高);
+    const 自然高 = this.文本对象.height;
+    const 纵向偏移 = Math.max(0, (高 - 自然高) / 2);
+    this.文本对象.setPosition(this.对齐 === "左" ? -宽 / 2 : 0, 纵向偏移);
+    this.文本对象.setOrigin(this.对齐 === "左" ? 0 : 0.5, 0.5);
+    if (高 > 自然高) this.文本对象.setFixedSize(宽, 高);
   }
 
   private 测量尺寸(): void {
+    this.文本对象.setFixedSize(0, 0);
+    if (this.固定宽度 !== undefined) this.文本对象.setWordWrapWidth(this.固定宽度);
     const 宽 = this.固定宽度 ?? this.文本对象.width;
     this.更新首选尺寸(宽, Math.max(this.文本对象.height, 1));
   }

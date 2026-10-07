@@ -37,6 +37,54 @@ interface 设置分组配置 {
   行: 设置行配置[];
 }
 
+class 外观标题牌 extends 界面控件 {
+  constructor(
+    场景: Phaser.Scene,
+    标题: string,
+    配置: { 宽: number; 高: number; 面板色: number; 强调色: number; 文字色: string; 英文: boolean },
+  ) {
+    super(场景, 0, 0, 配置.宽, 配置.高);
+    const 背板 = 场景.add.graphics();
+    背板
+      .fillStyle(配置.面板色, 0.32)
+      .fillRoundedRect(-配置.宽 / 2 + 4, -配置.高 / 2 + 8, 配置.宽 - 8, 配置.高 - 16, 6)
+      .lineStyle(1, 配置.强调色, 0.45)
+      .strokeRoundedRect(-配置.宽 / 2 + 4, -配置.高 / 2 + 8, 配置.宽 - 8, 配置.高 - 16, 6);
+    this.add(背板);
+
+    const 字号 = 标题.length > 6 ? "11px" : "14px";
+    if (配置.英文) {
+      const 文本 = 场景.add
+        .text(0, 0, 标题, {
+          fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif',
+          fontSize: 字号,
+          fontStyle: "bold",
+          color: 配置.文字色,
+          align: "center",
+        })
+        .setOrigin(0.5)
+        .setAngle(-90);
+      this.add(文本);
+    } else {
+      const 字符 = [...标题];
+      const 行高 = 17;
+      字符.forEach((字, 索引) => {
+        const 文本 = 场景.add
+          .text(0, (索引 - (字符.length - 1) / 2) * 行高, 字, {
+            fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif',
+            fontSize: 字号,
+            fontStyle: "bold",
+            color: 配置.文字色,
+            align: "center",
+          })
+          .setOrigin(0.5);
+        this.add(文本);
+      });
+    }
+    场景.add.existing(this);
+  }
+}
+
 class 外观选择卡片 extends 界面控件 {
   private readonly 底板: Phaser.GameObjects.Rectangle;
   private readonly 预览: Phaser.GameObjects.Graphics;
@@ -145,8 +193,6 @@ class 外观选择卡片 extends 界面控件 {
 }
 
 export class 设置界面 extends Phaser.Scene {
-  private 状态文字?: 界面文字;
-
   constructor() {
     super("设置界面");
   }
@@ -346,9 +392,9 @@ export class 设置界面 extends Phaser.Scene {
     const 外观 = this.获取外观();
     const 窄屏 = 宽 < 460;
     const 是背景 = 标题 === "背景" || 标题 === "Background";
-    const 间距 = 窄屏 ? 4 : 10;
-    const 标签宽 = 窄屏 ? 宽 : 112;
-    const 内容宽 = 窄屏 ? 宽 : 宽 - 标签宽 - 间距;
+    const 间距 = 窄屏 ? 6 : 10;
+    const 标签宽 = 窄屏 ? 42 : 52;
+    const 内容宽 = 宽 - 标签宽 - 间距;
     const 卡片高 = 是背景 ? 82 : 78;
     const 卡片宽 = (内容宽 - 间距 * (选项.length - 1)) / 选项.length;
     const 当前 = 获取游戏设置();
@@ -359,35 +405,19 @@ export class 设置界面 extends Phaser.Scene {
       间距: 4,
       自动主轴尺寸: true,
     });
-    if (窄屏) {
-      容器.添加(
-        new 界面文字(this, 0, 0, {
-          宽,
-          高: 24,
-          文案: 标题,
-          字号: "13px",
-          颜色: 外观.正文,
-          对齐: "左",
-          内边距: 2,
-        }),
-        { 宽, 高: 24 },
-      );
-    }
     const 行 = new 界面布局(this, 0, 0, { 方向: "水平", 宽, 高: 卡片高, 间距, 交叉轴对齐: "居中" });
-    if (!窄屏) {
-      行.添加(
-        new 界面文字(this, 0, 0, {
-          宽: 标签宽,
-          高: 卡片高,
-          文案: 标题,
-          字号: "15px",
-          颜色: 外观.正文,
-          对齐: "左",
-          内边距: 2,
-        }),
-        { 宽: 标签宽, 高: 卡片高 },
-      );
-    }
+    const 英文 = 获取游戏设置().语言 === "English";
+    行.添加(
+      new 外观标题牌(this, 标题, {
+        宽: 标签宽,
+        高: 卡片高,
+        面板色: this.色值(外观.面板),
+        强调色: this.色值(外观.强调色),
+        文字色: 外观.正文,
+        英文,
+      }),
+      { 宽: 标签宽, 高: 卡片高 },
+    );
     for (const 项目 of 选项) {
       const 样式值 =
         项目.名称 === "settings.style.gilded-night"
@@ -569,7 +599,7 @@ export class 设置界面 extends Phaser.Scene {
     });
     标题布局.添加(标题, { 高: 38, 伸展: 1 });
     标题布局.添加(
-      this.创建按钮(0, 0, 42, 38, "×", "settings.close", () => this.关闭()),
+      this.创建按钮(0, 0, 42, 38, "×", "settings.close", () => this.关闭(), false, "20px"),
       { 宽: 42, 高: 38 },
     );
 
@@ -578,17 +608,9 @@ export class 设置界面 extends Phaser.Scene {
       宽: 内容宽,
       高: 38,
       间距: 8,
+      主轴对齐: "末尾",
       交叉轴对齐: "居中",
     });
-    this.状态文字 = new 界面文字(this, 0, 0, {
-      宽: 120,
-      高: 38,
-      文案: "",
-      字号: "12px",
-      颜色: 外观.次要文字,
-      对齐: "左",
-    });
-    页脚.添加(this.状态文字, { 宽: 内容宽 - 258, 高: 38, 伸展: 1 });
     页脚.添加(this.创建按钮(0, 0, 142, 38, 文案.恢复默认, "settings.defaults", this.恢复默认), {
       宽: 142,
       高: 38,
@@ -602,12 +624,10 @@ export class 设置界面 extends Phaser.Scene {
   private 更新(变化: Partial<游戏设置>): void {
     const 设置 = 更新游戏设置(变化);
     应用游戏设置(设置);
-    this.状态文字?.setLabel(this.获取文案().设置已更新);
   }
 
   private 恢复默认 = (): void => {
     this.更新({ ...默认设置 });
-    this.状态文字?.setLabel(this.获取文案().已恢复默认);
   };
 
   private 关闭(): void {
