@@ -16,7 +16,7 @@ function 同步容器文字(对象: Phaser.GameObjects.GameObject, 分辨率: nu
 }
 
 /** Phaser.Text 使用独立 Canvas 纹理；在高 DPI 屏幕上用有限的设备像素倍率绘制。 */
-export function 应用文字清晰度(scene: Phaser.Scene, 最低分辨率 = 1): void {
+export function 应用文字清晰度(scene: Phaser.Scene, 最低分辨率 = 2): void {
   let 当前分辨率 = 获取文字分辨率(最低分辨率);
   const 处理新对象 = (对象: Phaser.GameObjects.GameObject): void => {
     同步容器文字(对象, 当前分辨率);

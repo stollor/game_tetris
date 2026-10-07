@@ -186,6 +186,7 @@ export class 设置界面 extends Phaser.Scene {
     字号?: string,
   ): 界面按钮 {
     const 外观 = this.获取外观();
+    // 设置按钮文字禁止使用文字阴影，保持文字清晰。
     return new 界面按钮(this, x, y, {
       宽,
       高,
@@ -196,6 +197,7 @@ export class 设置界面 extends Phaser.Scene {
       文字色: 外观.正文,
       点击,
       已选,
+      文字色跟随底色: true,
       字号: 字号 ?? (this.scale.width < 520 ? "12px" : "15px"),
     });
   }

@@ -50,7 +50,6 @@ export class 界面数值面板 extends Phaser.GameObjects.Container {
     for (const 项 of this.项目) {
       项.标签.setOrigin(0.5, 0);
       项.数值.setOrigin(0.5, 0);
-      项.数值.setShadow(0, 2, "#04070f", 5, true, true);
     }
     this.add([this.背板, ...this.项目.flatMap((项) => [项.标签, 项.数值])]);
     this.布局(宽, 高);

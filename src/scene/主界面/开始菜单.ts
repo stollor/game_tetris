@@ -1,6 +1,8 @@
 import Phaser from "phaser";
+import { 应用文字清晰度 } from "../../../core/文字清晰度";
 import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
 import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../core/设置";
+import { 解锁程序音频, 播放程序音效, 设置程序音乐场景 } from "../../../core/程序音频";
 import { 打开覆盖页面 } from "../../../core/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
 import { 应用背景文字样式, 背景基调, 背景文字配色 } from "../../视觉/文字可读性";
@@ -22,6 +24,9 @@ export class 开始菜单 extends Phaser.Scene {
   }
 
   create(): void {
+    应用文字清晰度(this);
+    设置程序音乐场景("菜单");
+    this.input.on("pointerdown", 解锁程序音频);
     // 场景实例会在对局结束后复用；每次进入菜单都从首屏开始。
     this.选择模式 = false;
     this.cameras.main.setBackgroundColor("#080B18");
@@ -92,13 +97,11 @@ export class 开始菜单 extends Phaser.Scene {
         letterSpacing: 2,
       })
       .setOrigin(0.5);
-    副标题文本.setShadow(0, 1, 文字配色.阴影色, 3, false, true);
     c.add(副标题文本);
     if (!this.选择模式) {
       const 标语文本 = this.add
         .text(0, -55, "选择你的节奏", { fontSize: "21px", color: 文字配色.强调, fontStyle: "bold" })
         .setOrigin(0.5);
-      标语文本.setShadow(0, 1.5, 文字配色.阴影色, 4, false, true);
       c.add(标语文本);
       this.按钮(
         c,
@@ -141,7 +144,6 @@ export class 开始菜单 extends Phaser.Scene {
         .fillRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10)
         .lineStyle(1, 浅底 ? 0xffffff : 0x2c3f66, 0.42)
         .strokeRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10);
-      操作提示文本.setShadow(0, 1, 文字配色.阴影色, 3, false, true);
       c.add(操作提示文本);
       c.addAt(提示底衬, 0);
     } else {
@@ -152,7 +154,6 @@ export class 开始菜单 extends Phaser.Scene {
           fontStyle: "bold",
         })
         .setOrigin(0.5);
-      模式标语文本.setShadow(0, 1.5, 文字配色.阴影色, 4, false, true);
       c.add(模式标语文本);
       模式项.forEach((item, i) => {
         const y = -48 + i * 70;
@@ -221,7 +222,11 @@ export class 开始菜单 extends Phaser.Scene {
     plate
       .on("pointerover", () => 绘制底板(true))
       .on("pointerout", () => 绘制底板(false))
-      .on("pointerdown", action);
+      .on("pointerdown", () => {
+        解锁程序音频();
+        播放程序音效("开始");
+        action();
+      });
     // 紫色文字在深色底板上对比不足，换亮薰衣草白保可读
     const 文字色值 = color === 0x7c4dff ? 0xe9e2ff : color;
     const text = this.add
@@ -237,6 +242,7 @@ export class 开始菜单 extends Phaser.Scene {
 
   private 开始(模式: 游戏模式): void {
     const 日期 = new Date().toISOString().slice(0, 10);
+    设置程序音乐场景("对局");
     this.scene.start("俄罗斯方块对局", { 模式, 日期 });
   }
 }

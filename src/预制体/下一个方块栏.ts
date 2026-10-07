@@ -79,7 +79,6 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
       color: "#A9BDD8",
       letterSpacing: 2,
     });
-    this.标题.setShadow(0, 1, "#04070f", 3, true, true);
     this.add([this.绘图, this.辉光层, this.标题]);
     this.setDepth(2);
     scene.add.existing(this);

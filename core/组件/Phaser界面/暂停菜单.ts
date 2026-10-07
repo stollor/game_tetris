@@ -59,7 +59,6 @@ export class 界面暂停菜单 extends Phaser.GameObjects.Container {
     const 标题 = scene.add
       .text(0, -92, "稍作休息", { fontSize: "29px", fontStyle: "bold", color: 外观.标题色 })
       .setOrigin(0.5);
-    标题.setShadow(0, 2, "#04070f", 6, true, true);
     const 说明 = scene.add
       .text(0, -50, "当前进度已为你保留", { fontSize: "14px", color: 外观.说明色 })
       .setOrigin(0.5);

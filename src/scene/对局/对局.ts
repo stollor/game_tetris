@@ -9,6 +9,12 @@ import { 界面触屏操作区, type 触屏操作 } from "../../../core/组件/P
 import { type 背景主题, 获取游戏设置 } from "../../../core/设置";
 import { 绑定音频管理器 } from "../../../core/音频";
 import {
+  解锁程序音频,
+  播放程序音效,
+  设置程序音乐暂停,
+  设置程序音乐场景,
+} from "../../../core/程序音频";
+import {
   type 俄罗斯方块状态,
   切换暂停,
   创建新局,
@@ -78,6 +84,10 @@ interface 横移输入 {
 
 export class 对局 extends Phaser.Scene {
   private 状态 = 创建新局();
+  private 音频上次阶段: 俄罗斯方块状态["阶段"] = "进行中";
+  private 音频上次消行数 = 0;
+  private 音频上次预告方块 = this.状态.下一个方块;
+  private 硬降处理中 = false;
   private 绘图?: Phaser.GameObjects.Graphics;
   private 背景图?: Phaser.GameObjects.Graphics;
   private 背景动画层?: Phaser.GameObjects.Graphics;
@@ -133,6 +143,9 @@ export class 对局 extends Phaser.Scene {
     this.每日日期 = data.日期 ?? new Date().toISOString().slice(0, 10);
     this.当前随机源 = 创建模式随机源(this.模式, this.每日日期);
     this.状态 = 创建新局(this.当前随机源, this.测试序列, this.模式);
+    this.音频上次阶段 = this.状态.阶段;
+    this.音频上次消行数 = this.状态.消行数;
+    this.音频上次预告方块 = this.状态.下一个方块;
     this.结束已存档 = false;
     this.结束时刻 = 0;
   }
@@ -140,6 +153,8 @@ export class 对局 extends Phaser.Scene {
   create(): void {
     应用文字清晰度(this);
     绑定音频管理器(this.sound);
+    设置程序音乐场景("对局");
+    this.input.on("pointerdown", 解锁程序音频);
     this.cameras.main.setBackgroundColor("#080B18");
     this.背景图 = this.add.graphics().setDepth(-2);
     this.背景主题 = 获取游戏设置().背景主题;
@@ -176,6 +191,7 @@ export class 对局 extends Phaser.Scene {
     this.scale.on("resize", this.布局界面, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off("resize", this.布局界面, this);
+      this.input.off("pointerdown", 解锁程序音频);
       window.removeEventListener("keydown", this.处理按键按下);
       window.removeEventListener("keyup", this.处理按键松开);
       delete window.__俄罗斯方块测试__;
@@ -352,6 +368,7 @@ export class 对局 extends Phaser.Scene {
     if (!支持按键.includes(事件.code)) return;
     事件.preventDefault();
     if (事件.repeat || this.按住按键.has(事件.code)) return;
+    解锁程序音频();
     this.按住按键.add(事件.code);
 
     if (事件.code === "KeyP" || 事件.code === "Escape") {
@@ -365,14 +382,16 @@ export class 对局 extends Phaser.Scene {
 
     if (事件.code === "ArrowLeft") this.开始横移(-1);
     if (事件.code === "ArrowRight") this.开始横移(1);
-    if (事件.code === "ArrowUp") 旋转方块(this.状态, 1, false, this.当前随机源);
-    if (事件.code === "ArrowDown") 软降一步(this.状态, this.当前随机源);
-    if (事件.code === "KeyX") 旋转方块(this.状态, -1, false, this.当前随机源);
+    if (事件.code === "ArrowUp") this.操作旋转(1, false);
+    if (事件.code === "ArrowDown") this.操作软降();
+    if (事件.code === "KeyX") this.操作旋转(-1, false);
     if (事件.code === "KeyZ" && 获取游戏设置().旋转180) {
-      旋转方块(this.状态, 1, true, this.当前随机源);
+      this.操作旋转(1, true);
     }
     if (事件.code === "Space") {
-      硬降(this.状态, this.当前随机源);
+      this.硬降处理中 = true;
+      const 距离 = 硬降(this.状态, this.当前随机源);
+      if (距离 > 0) 播放程序音效("硬降");
       this.重置计时器();
     }
     this.更新界面();
@@ -390,7 +409,7 @@ export class 对局 extends Phaser.Scene {
     const 输入 = 方向 < 0 ? this.左移输入 : this.右移输入;
     输入.按住毫秒 = 0;
     输入.下次横移毫秒 = 133;
-    移动方块(this.状态, 方向, 0, this.当前随机源);
+    if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放程序音效("移动");
     this.更新界面();
   }
 
@@ -405,7 +424,7 @@ export class 对局 extends Phaser.Scene {
     }
     输入.按住毫秒 += delta;
     while (输入.按住毫秒 >= 输入.下次横移毫秒) {
-      移动方块(this.状态, 方向, 0, this.当前随机源);
+      if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放程序音效("移动");
       输入.下次横移毫秒 += 33;
       this.更新界面();
     }
@@ -581,7 +600,6 @@ export class 对局 extends Phaser.Scene {
       color: "#E7F7FF",
       letterSpacing: 2,
     });
-    this.标题文字.setShadow(0, 2, "#04070f", 6, true, true);
     this.副标题文字 = this.add.text(0, 0, this.取文案().对局副标题, {
       fontFamily: "Arial, sans-serif",
       fontSize: "13px",
@@ -648,7 +666,6 @@ export class 对局 extends Phaser.Scene {
       color: "#FFEE58",
       fontStyle: "bold",
     });
-    this.最佳文字.setShadow(0, 2, "#04070f", 5, true, true);
     this.状态文字 = this.add
       .text(0, 0, "", {
         fontSize: "13px",
@@ -690,7 +707,6 @@ export class 对局 extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10)
       .setVisible(false);
-    this.结束分数文字.setShadow(0, 3, "#04070f", 8, true, true);
     this.结束统计标签 = [
       this.取文案().消除行数,
       this.取文案().最高等级,
@@ -782,11 +798,11 @@ export class 对局 extends Phaser.Scene {
         this.开始横移(方向);
       } else if (操作 === "左转" || 操作 === "旋转" || 操作 === "右转") {
         if (操作 === "右转" && !获取游戏设置().旋转180) return;
-        旋转方块(this.状态, 操作 === "左转" ? -1 : 1, 操作 === "右转", this.当前随机源);
+        this.操作旋转(操作 === "左转" ? -1 : 1, 操作 === "右转");
         this.更新界面();
       } else if (操作 === "软降") {
         this.按住按键.add("ArrowDown");
-        软降一步(this.状态, this.当前随机源);
+        this.操作软降();
         this.更新界面();
       }
     });
@@ -993,6 +1009,7 @@ export class 对局 extends Phaser.Scene {
   }
   private 更新界面(): void {
     if (!this.绘图) return;
+    this.同步程序音频();
     this.绘制装饰();
     this.棋盘预制体?.更新(this.状态);
     this.绘制下一个方块();
@@ -1039,6 +1056,43 @@ export class 对局 extends Phaser.Scene {
     if (this.状态.阶段 === "结束" && !this.结束已存档) this.保存纪录();
     this.绘制结算面板();
     this.发布测试快照();
+  }
+
+  private 操作旋转(方向: 1 | -1, 半转: boolean): void {
+    const 成功 = 旋转方块(this.状态, 方向, 半转, this.当前随机源);
+    if (成功) 播放程序音效("旋转");
+  }
+
+  private 操作软降(): void {
+    if (软降一步(this.状态, this.当前随机源)) 播放程序音效("软降");
+  }
+
+  private 同步程序音频(): void {
+    if (this.状态.消行数 > this.音频上次消行数) 播放程序音效("消行");
+    else if (
+      this.状态.下一个方块 !== this.音频上次预告方块 &&
+      this.音频上次阶段 === "进行中" &&
+      this.状态.阶段 === "进行中" &&
+      !this.硬降处理中
+    ) {
+      播放程序音效("锁定");
+    }
+    if (this.状态.阶段 !== this.音频上次阶段) {
+      if (this.状态.阶段 === "暂停") {
+        播放程序音效("暂停");
+        设置程序音乐暂停(true);
+      } else if (this.状态.阶段 === "进行中") {
+        播放程序音效("继续");
+        设置程序音乐暂停(false);
+      } else {
+        播放程序音效("结束");
+        设置程序音乐暂停(true);
+      }
+    }
+    this.音频上次阶段 = this.状态.阶段;
+    this.音频上次消行数 = this.状态.消行数;
+    this.音频上次预告方块 = this.状态.下一个方块;
+    this.硬降处理中 = false;
   }
 
   private 保存纪录(): void {

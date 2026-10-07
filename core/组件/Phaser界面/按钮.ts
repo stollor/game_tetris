@@ -21,6 +21,7 @@ export interface 按钮配置 {
   字体?: string;
   面板透明度?: number;
   边框透明度?: number;
+  文字色跟随底色?: boolean;
 }
 
 /** 由 Phaser 容器、图形和文本组成的通用可交互按钮。 */
@@ -35,6 +36,7 @@ export class 界面按钮 extends 界面控件 {
   private readonly 自适应文案: boolean;
   private readonly 面板透明度: number;
   private readonly 边框透明度: number;
+  private readonly 文字色跟随底色: boolean;
   private 悬停 = false;
   private 当前宽: number;
   private 当前高: number;
@@ -48,6 +50,7 @@ export class 界面按钮 extends 界面控件 {
     this.强调色 = 配置.强调色;
     this.面板透明度 = 配置.面板透明度 ?? Phaser预制体配置.按钮.面板透明度;
     this.边框透明度 = 配置.边框透明度 ?? Phaser预制体配置.按钮.边框透明度;
+    this.文字色跟随底色 = 配置.文字色跟随底色 ?? false;
     this.自适应文案 = this.样式 === "文字" && 配置.自适应文案 !== false;
     this.当前宽 = 配置.宽;
     this.当前高 = 配置.高;
@@ -58,11 +61,12 @@ export class 界面按钮 extends 界面控件 {
       .setInteractive({ useHandCursor: true })
       .setName(配置.name);
     this.视觉 = scene.add.graphics();
+    // 按钮文字禁止使用文字阴影，避免字形边缘发虚。
     this.标签 = scene.add
       .text(0, 0, 配置.文案, {
         fontFamily: 配置.字体 ?? Phaser预制体配置.字体,
         fontSize: 配置.字号 ?? `${Phaser预制体配置.按钮.最小字号 + 3}px`,
-        color: 配置.文字色,
+        color: this.文字色跟随底色 ? this.获取适配文字色() : 配置.文字色,
         align: "center",
         padding: 文字按钮 ? { left: 18, right: 18, top: 10, bottom: 10 } : undefined,
         wordWrap: 文字按钮 ? undefined : { width: Math.max(0, 配置.宽 - 16) },
@@ -104,6 +108,7 @@ export class 界面按钮 extends 界面控件 {
 
   setSelected(已选: boolean): this {
     this.已选 = 已选;
+    if (this.文字色跟随底色) this.标签.setColor(this.获取适配文字色());
     this.重绘视觉();
     return this;
   }
@@ -151,5 +156,18 @@ export class 界面按钮 extends 界面控件 {
 
   private 颜色值(颜色: string): number {
     return Number.parseInt(颜色.replace("#", ""), 16);
+  }
+
+  private 获取适配文字色(): string {
+    const 背景色 = this.已选 ? this.强调色 : this.面板色;
+    const 色值 = this.颜色值(背景色);
+    const 通道 = [16, 8, 0].map((位移) => {
+      const sRGB = ((色值 >> 位移) & 0xff) / 255;
+      return sRGB <= 0.04045 ? sRGB / 12.92 : ((sRGB + 0.055) / 1.055) ** 2.4;
+    });
+    const 亮度 = 0.2126 * (通道[0] ?? 0) + 0.7152 * (通道[1] ?? 0) + 0.0722 * (通道[2] ?? 0);
+    const 深色对比 = (亮度 + 0.05) / 0.05;
+    const 浅色对比 = 1.05 / (亮度 + 0.05);
+    return 浅色对比 >= 深色对比 ? "#fff8e7" : "#241d12";
   }
 }

@@ -98,7 +98,6 @@ export function 绘制玻璃按钮(
   const x = 中心X - 宽 / 2;
   const y = 中心Y - 高 / 2;
   const 悬停 = 选项.悬停 ?? false;
-  绘制柔影(图形, x, y, 宽, 高, 圆角, 选项.选中 ? 0.45 : 0.3);
   图形.fillStyle(填色, 透明度).fillRoundedRect(x, y, 宽, 高, 圆角);
   if (悬停 && !选项.选中) {
     图形.fillStyle(亮色(填色, 0.12), 0.5).fillRoundedRect(x + 1, y + 1, 宽 - 2, 高 - 2, 圆角 - 1);

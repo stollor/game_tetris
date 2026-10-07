@@ -54,7 +54,6 @@ export class 界面模式卡片 extends Phaser.GameObjects.Container {
         letterSpacing: 1,
       })
       .setOrigin(0, 0.5);
-    标题.setShadow(0, 2, "#04070f", 5, true, true);
     const 说明 = scene.add
       .text(-配置.宽 / 2 + 22, 配置.高 * 0.2, 配置.说明, {
         fontFamily: 配置.字体,
@@ -62,14 +61,12 @@ export class 界面模式卡片 extends Phaser.GameObjects.Container {
         color: 配置.次文字色,
       })
       .setOrigin(0, 0.5);
-    说明.setShadow(0, 1, "#04070f", 4, true, true);
     const 箭头 = scene.add
       .text(配置.宽 / 2 - 18, -配置.高 * 0.14, "↗", {
         fontSize: `${Math.max(18, 配置.高 * 0.2)}px`,
         color: 颜色字符串(配置.强调色),
       })
       .setOrigin(1, 0.5);
-    箭头.setShadow(0, 0, 颜色字符串(配置.强调色), 10, true, true);
     const 附注 = scene.add
       .text(配置.宽 / 2 - 18, 配置.高 * 0.22, 配置.附注, {
         fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif',
