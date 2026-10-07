@@ -479,23 +479,6 @@ export class 设置界面 extends Phaser.Scene {
           },
         ],
       },
-      {
-        标题: 设置.语言 === "English" ? "Gameplay" : "玩法",
-        行: [
-          {
-            类型: "options",
-            标题: 设置.语言 === "English" ? "180° rotation" : "180°旋转",
-            选项: [
-              单选("settings.rotation180.on", 文案.开, "true", String(设置.旋转180), () =>
-                this.更新({ 旋转180: true }),
-              ),
-              单选("settings.rotation180.off", 文案.关, "false", String(设置.旋转180), () =>
-                this.更新({ 旋转180: false }),
-              ),
-            ],
-          },
-        ],
-      },
     ];
   }
 

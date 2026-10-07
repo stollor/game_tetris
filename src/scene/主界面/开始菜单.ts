@@ -1,11 +1,11 @@
 import Phaser from "phaser";
 import { 应用文字清晰度 } from "../../../core/文字清晰度";
+import { 播放程序音效, 解锁程序音频, 设置程序音乐场景 } from "../../../core/程序音频";
 import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
 import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../core/设置";
-import { 解锁程序音频, 播放程序音效, 设置程序音乐场景 } from "../../../core/程序音频";
 import { 打开覆盖页面 } from "../../../core/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
-import { 应用背景文字样式, 背景基调, 背景文字配色 } from "../../视觉/文字可读性";
+import { 应用背景文字样式, 背景文字配色 } from "../../视觉/文字可读性";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
 
 const 模式项: { 模式: 游戏模式; 标题: string; 说明: string; 色彩: number }[] = [
@@ -128,24 +128,6 @@ export class 开始菜单 extends Phaser.Scene {
         () => 打开覆盖页面(this, "设置界面"),
         0x7c4dff,
       );
-      const 操作提示文本 = this.add
-        .text(0, 178, "← → 移动     ↑ / X 旋转     ↓ 软降     空格 硬降     P 暂停", {
-          fontSize: w < 700 ? "11px" : "13px",
-          color: 文字配色.主字,
-        })
-        .setOrigin(0.5);
-      // 海面亮暗变化大，小字加主题自适应底衬保住对比，不用描边避免洗灰字芯
-      const 浅底 = 背景基调(this.背景主题) === "浅底";
-      const 提示宽 = 操作提示文本.width + 26;
-      const 提示高 = 操作提示文本.height + 12;
-      const 提示底衬 = this.add.graphics();
-      提示底衬
-        .fillStyle(浅底 ? 0xf2f8ff : 0x060b16, 浅底 ? 0.66 : 0.52)
-        .fillRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10)
-        .lineStyle(1, 浅底 ? 0xffffff : 0x2c3f66, 0.42)
-        .strokeRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10);
-      c.add(操作提示文本);
-      c.addAt(提示底衬, 0);
     } else {
       const 模式标语文本 = this.add
         .text(0, -104, "选择游戏模式", {

@@ -1,4 +1,6 @@
 import Phaser from "phaser";
+import { 获取文案, 解析语言 } from "../../多语言";
+import { 获取游戏设置 } from "../../设置";
 import { 界面按钮 } from "./按钮";
 import { 绘制玻璃面板 } from "./玻璃绘制";
 import { Phaser预制体配置 } from "./预制体配置";
@@ -19,7 +21,7 @@ export interface 暂停菜单外观 {
 export class 界面暂停菜单 extends Phaser.GameObjects.Container {
   constructor(
     scene: Phaser.Scene,
-    回调: { 继续: () => void; 重开: () => void; 返回: () => void },
+    回调: { 继续: () => void; 重开: () => void; 返回: () => void; 设置: () => void },
     外观: 暂停菜单外观 = Phaser预制体配置.暂停菜单,
   ) {
     super(scene, scene.scale.width / 2, scene.scale.height / 2);
@@ -67,6 +69,7 @@ export class 界面暂停菜单 extends Phaser.GameObjects.Container {
       强调色: 外观.强调色,
       文字色: 外观.按钮文字色,
     };
+    const 设置文案 = 获取文案(解析语言(获取游戏设置().语言)).设置;
     const 继续 = new 界面按钮(scene, 0, -4, {
       宽: 300,
       高: 50,
@@ -78,7 +81,7 @@ export class 界面暂停菜单 extends Phaser.GameObjects.Container {
       字号: "16px",
     });
     const 重开 = new 界面按钮(scene, -80, 66, {
-      宽: 140,
+      宽: 120,
       高: 44,
       文案: "重新开始",
       name: "game.pause.restart",
@@ -86,8 +89,18 @@ export class 界面暂停菜单 extends Phaser.GameObjects.Container {
       点击: 回调.重开,
       字号: "13px",
     });
-    const 返回 = new 界面按钮(scene, 80, 66, {
-      宽: 140,
+    const 设置 = new 界面按钮(scene, 0, 66, {
+      宽: 120,
+      高: 44,
+      文案: 设置文案,
+      name: "game.pause.settings",
+      ...样式,
+      点击: 回调.设置,
+      字号: "13px",
+    });
+    重开.setPosition(-142, 66);
+    const 返回 = new 界面按钮(scene, 142, 66, {
+      宽: 120,
       高: 44,
       文案: "返回首页",
       name: "game.pause.home",
@@ -95,7 +108,7 @@ export class 界面暂停菜单 extends Phaser.GameObjects.Container {
       点击: 回调.返回,
       字号: "13px",
     });
-    this.add([遮罩, 卡片, 标题, 说明, 继续, 重开, 返回]);
+    this.add([遮罩, 卡片, 标题, 说明, 继续, 重开, 设置, 返回]);
     scene.add.existing(this);
   }
 

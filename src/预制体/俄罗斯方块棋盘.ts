@@ -21,6 +21,7 @@ export class 俄罗斯方块棋盘 extends Phaser.GameObjects.Container {
   private readonly 辉光层: Phaser.GameObjects.Graphics;
   private readonly 格子图层: Phaser.GameObjects.Graphics;
   private 格子大小 = 24;
+  private 落点影透明度 = 100;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0);
@@ -34,9 +35,10 @@ export class 俄罗斯方块棋盘 extends Phaser.GameObjects.Container {
     scene.add.existing(this);
   }
 
-  布局(左: number, 顶: number, 格子大小: number, 透明度: number): this {
+  布局(左: number, 顶: number, 格子大小: number, 透明度: number, 显示网格 = true): this {
     this.setPosition(左, 顶);
     this.格子大小 = 格子大小;
+    this.网格层.setVisible(显示网格);
     const 宽 = 棋盘宽度 * 格子大小;
     const 高 = 可见高度 * 格子大小;
     const 背景色 = 游戏外观.棋盘.背景色;
@@ -126,10 +128,22 @@ export class 俄罗斯方块棋盘 extends Phaser.GameObjects.Container {
     ) {
       for (const 格子 of 幽灵.格子) 格子.行2 += 2;
     }
-    for (const [列, 行] of 读取格子(幽灵)) this.绘制格(列, 行, 幽灵.类型, 1, true);
+    for (const [列, 行] of 读取格子(幽灵)) {
+      this.绘制格(列, 行, 幽灵.类型, this.落点影透明度 / 100, true);
+    }
     for (const [列, 行] of 读取格子(状态.当前方块)) {
       this.绘制格(列, 行, 状态.当前方块.类型, 1, false);
     }
+    return this;
+  }
+
+  设置落点影透明度(透明度: number): this {
+    this.落点影透明度 = Phaser.Math.Clamp(透明度, 0, 100);
+    return this;
+  }
+
+  设置网格显示(显示: boolean): this {
+    this.网格层.setVisible(显示);
     return this;
   }
 

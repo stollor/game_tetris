@@ -3,6 +3,7 @@ export interface 游戏文案 {
   主界面说明: string;
   开始游戏: string;
   设置: string;
+  对局设置: string;
   退出游戏: string;
   请求开始说明: string;
   无法关闭页面: string;
@@ -15,6 +16,11 @@ export interface 游戏文案 {
   背景音乐: string;
   音乐音量: string;
   音效音量: string;
+  落点影透明度: string;
+  旋转180设置: string;
+  显示网格: string;
+  显示按键说明: string;
+  返回暂停菜单: string;
   开: string;
   关: string;
   跟随系统: string;

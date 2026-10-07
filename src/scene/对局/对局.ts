@@ -1,6 +1,13 @@
 import Phaser from "phaser";
 import { 获取文案, 解析语言 } from "../../../core/多语言";
 import { 应用文字清晰度 } from "../../../core/文字清晰度";
+import {
+  播放程序音效,
+  解锁程序音频,
+  设置程序音乐场景,
+  设置程序音乐暂停,
+} from "../../../core/程序音频";
+import { 界面对局设置菜单 } from "../../../core/组件/Phaser界面/对局设置菜单";
 import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
 import { 界面数值面板 } from "../../../core/组件/Phaser界面/数值面板";
 import { 界面暂停菜单 } from "../../../core/组件/Phaser界面/暂停菜单";
@@ -8,12 +15,6 @@ import { 绘制玻璃面板 } from "../../../core/组件/Phaser界面/玻璃绘�
 import { 界面触屏操作区, type 触屏操作 } from "../../../core/组件/Phaser界面/触屏操作区";
 import { type 背景主题, 获取游戏设置 } from "../../../core/设置";
 import { 绑定音频管理器 } from "../../../core/音频";
-import {
-  解锁程序音频,
-  播放程序音效,
-  设置程序音乐暂停,
-  设置程序音乐场景,
-} from "../../../core/程序音频";
 import {
   type 俄罗斯方块状态,
   切换暂停,
@@ -120,6 +121,8 @@ export class 对局 extends Phaser.Scene {
   private 预览栏?: 下一个方块栏;
   private 棋盘预制体?: 俄罗斯方块棋盘;
   private 暂停面板?: 界面暂停菜单;
+  private 对局设置面板?: 界面对局设置菜单;
+  private 对局设置打开 = false;
   private 重开按钮?: 界面按钮;
   private 菜单按钮?: 界面按钮;
   private 结束已存档 = false;
@@ -182,9 +185,17 @@ export class 对局 extends Phaser.Scene {
       },
       重开: () => this.重新开始(),
       返回: () => this.scene.start("开始菜单"),
+      设置: () => this.打开对局设置(),
+    });
+    this.对局设置面板 = new 界面对局设置菜单(this, {
+      返回: () => this.返回暂停菜单(),
+      预览落点影: (透明度) => {
+        this.棋盘预制体?.设置落点影透明度(透明度).更新(this.状态);
+      },
     });
     window.addEventListener("keydown", this.处理按键按下);
     window.addEventListener("keyup", this.处理按键松开);
+    window.addEventListener("gamemaker:settings-change", this.对局设置已更新);
     this.绑定测试接口();
     this.更新界面();
     this.布局界面();
@@ -194,6 +205,7 @@ export class 对局 extends Phaser.Scene {
       this.input.off("pointerdown", 解锁程序音频);
       window.removeEventListener("keydown", this.处理按键按下);
       window.removeEventListener("keyup", this.处理按键松开);
+      window.removeEventListener("gamemaker:settings-change", this.对局设置已更新);
       delete window.__俄罗斯方块测试__;
     });
   }
@@ -244,12 +256,15 @@ export class 对局 extends Phaser.Scene {
       棋盘左侧 = Math.round((宽 - 内容总宽) / 2);
       棋盘顶部 = Math.round(Math.max(顶部信息底 + 12, (高 - 棋盘像素高 + 顶部信息底) / 2));
     }
-    this.棋盘预制体?.布局(
-      棋盘左侧,
-      棋盘顶部,
-      格子大小,
-      this.竖屏布局 ? 游戏外观.棋盘.手机面板透明度 : 游戏外观.棋盘.桌面面板透明度,
-    );
+    this.棋盘预制体
+      ?.布局(
+        棋盘左侧,
+        棋盘顶部,
+        格子大小,
+        this.竖屏布局 ? 游戏外观.棋盘.手机面板透明度 : 游戏外观.棋盘.桌面面板透明度,
+        获取游戏设置().显示网格,
+      )
+      .设置落点影透明度(获取游戏设置().落点影透明度);
 
     this.标题文字
       ?.setText(this.模式)
@@ -261,6 +276,7 @@ export class 对局 extends Phaser.Scene {
     this.暂停按钮?.setPosition(宽 - 58, 38);
     this.触屏操作区?.布局(宽, 高, this.竖屏布局);
     this.暂停面板?.布局(宽, 高);
+    this.对局设置面板?.布局(宽, 高);
 
     const 侧栏X = 棋盘左侧 + 棋盘像素宽 + (this.竖屏布局 ? (宽 < 640 ? 10 : 16) : 20);
     const 侧栏顶 = this.竖屏布局 ? 棋盘顶部 - 10 : 棋盘顶部 + 8;
@@ -292,7 +308,7 @@ export class 对局 extends Phaser.Scene {
       )
       .setOrigin(this.紧凑布局 ? 0.5 : 0, 0)
       .setFontSize(this.竖屏布局 ? "18px" : "16px");
-    const 显示键位说明 = !this.竖屏布局;
+    const 显示键位说明 = 获取游戏设置().显示按键说明 && !this.竖屏布局;
     const 键位区X = this.紧凑布局 ? 宽 / 2 : 侧栏X + 16;
     const 键位区顶 = this.紧凑布局 ? 高 - 90 : 侧栏顶 + 196;
     this.操作标题
@@ -1007,6 +1023,26 @@ export class 对局 extends Phaser.Scene {
           };
     this.预览栏?.显示([this.状态.下一个方块, ...this.状态.后续方块], 布局);
   }
+
+  private 打开对局设置(): void {
+    if (this.状态.阶段 !== "暂停") return;
+    this.对局设置打开 = true;
+    this.暂停面板?.setVisible(false);
+    this.对局设置面板?.打开();
+  }
+
+  private 返回暂停菜单(): void {
+    this.对局设置打开 = false;
+    this.对局设置面板?.setVisible(false);
+    this.暂停面板?.setVisible(this.状态.阶段 === "暂停");
+  }
+
+  private readonly 对局设置已更新 = (): void => {
+    const 设置 = 获取游戏设置();
+    this.棋盘预制体?.设置落点影透明度(设置.落点影透明度).设置网格显示(设置.显示网格);
+    this.布局界面();
+  };
+
   private 更新界面(): void {
     if (!this.绘图) return;
     this.同步程序音频();
@@ -1030,7 +1066,8 @@ export class 对局 extends Phaser.Scene {
     若变化设置文字(this.模式文字, 模式名);
     this.模式文字?.setVisible(this.模式 !== "马拉松");
     若变化设置文字(this.最佳文字, this.读取最佳文案());
-    const 显示键位说明 = !this.竖屏布局 && this.状态.阶段 === "进行中";
+    const 显示键位说明 =
+      获取游戏设置().显示按键说明 && !this.竖屏布局 && this.状态.阶段 === "进行中";
     this.操作标题?.setVisible(显示键位说明);
     for (const 说明 of this.操作说明) 说明.setVisible(显示键位说明);
     this.快速移动提示?.setVisible(显示键位说明);
@@ -1043,7 +1080,10 @@ export class 对局 extends Phaser.Scene {
     this.暂停按钮?.setLabel(this.状态.阶段 === "暂停" ? 文案.继续 : 文案.暂停);
     const 显示触屏按钮 = this.竖屏布局 && this.状态.阶段 === "进行中";
     this.触屏操作区?.setVisible(显示触屏按钮);
-    this.暂停面板?.setVisible(this.状态.阶段 === "暂停");
+    const 暂停中 = this.状态.阶段 === "暂停";
+    if (!暂停中) this.对局设置打开 = false;
+    this.暂停面板?.setVisible(暂停中 && !this.对局设置打开);
+    this.对局设置面板?.setVisible(暂停中 && this.对局设置打开);
     若变化设置文字(
       this.提示文字,
       this.状态.阶段 === "暂停" ? 文案.已暂停 : this.状态.完赛 ? 文案.挑战完成 : 文案.游戏结束,
@@ -1068,8 +1108,9 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 同步程序音频(): void {
-    if (this.状态.消行数 > this.音频上次消行数) 播放程序音效("消行");
-    else if (
+    if (this.状态.消行数 > this.音频上次消行数) {
+      播放程序音效("消行", this.状态.消行数 - this.音频上次消行数);
+    } else if (
       this.状态.下一个方块 !== this.音频上次预告方块 &&
       this.音频上次阶段 === "进行中" &&
       this.状态.阶段 === "进行中" &&
