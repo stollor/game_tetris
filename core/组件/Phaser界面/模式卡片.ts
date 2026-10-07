@@ -90,7 +90,7 @@ export class 界面模式卡片 extends Phaser.GameObjects.Container {
       边色: this.悬停 ? 亮色(强调色, 0.25) : 亮色(面板色, 0.32),
       边透明度: this.悬停 ? 0.8 : 0.5,
       强调色: this.悬停 ? 强调色 : undefined,
-      高光: true,
+      高光: false,
     });
   }
 }
