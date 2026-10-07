@@ -21,6 +21,7 @@ export interface 按钮配置 {
   字体?: string;
   面板透明度?: number;
   边框透明度?: number;
+  边框色?: string;
   文字色跟随底色?: boolean;
 }
 
@@ -36,6 +37,7 @@ export class 界面按钮 extends 界面控件 {
   private readonly 自适应文案: boolean;
   private readonly 面板透明度: number;
   private readonly 边框透明度: number;
+  private readonly 边框色?: string;
   private readonly 文字色跟随底色: boolean;
   private 悬停 = false;
   private 当前宽: number;
@@ -50,6 +52,7 @@ export class 界面按钮 extends 界面控件 {
     this.强调色 = 配置.强调色;
     this.面板透明度 = 配置.面板透明度 ?? Phaser预制体配置.按钮.面板透明度;
     this.边框透明度 = 配置.边框透明度 ?? Phaser预制体配置.按钮.边框透明度;
+    this.边框色 = 配置.边框色;
     this.文字色跟随底色 = 配置.文字色跟随底色 ?? false;
     this.自适应文案 = this.样式 === "文字" && 配置.自适应文案 !== false;
     this.当前宽 = 配置.宽;
@@ -144,6 +147,7 @@ export class 界面按钮 extends 界面控件 {
       悬停: this.悬停,
       透明度: this.已选 ? 0.98 : this.悬停 ? 0.97 : this.面板透明度,
       边透明度: this.边框透明度,
+      边框色: this.边框色 ? this.颜色值(this.边框色) : undefined,
     });
   }
 

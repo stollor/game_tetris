@@ -75,6 +75,7 @@ export function 绘制柔影(
 export interface 玻璃按钮选项 {
   圆角?: number;
   填色?: number;
+  边框色?: number;
   强调色?: number;
   选中?: boolean;
   悬停?: boolean;
@@ -105,7 +106,7 @@ export function 绘制玻璃按钮(
   图形
     .lineStyle(
       1,
-      选项.选中 ? 强调色 : 亮色(填色, 0.5),
+      选项.选中 ? 强调色 : (选项.边框色 ?? 亮色(填色, 0.5)),
       选项.边透明度 ?? (选项.选中 ? 0.9 : 悬停 ? 0.8 : 0.5),
     )
     .strokeRoundedRect(x, y, 宽, 高, 圆角);
