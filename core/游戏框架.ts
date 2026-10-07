@@ -13,37 +13,21 @@ export interface 游戏框架选项 {
 export function 应用游戏设置(设置: 游戏设置): void {
   const 语言 = 解析语言(设置.语言);
   document.documentElement.lang = 语言 === "简体中文" ? "zh-CN" : "en";
-  document.documentElement.dataset.theme = 设置.主题 === "深色" ? "dark" : "light";
-  if (设置.主题 === "跟随系统") {
-    const 深色 = matchMedia("(prefers-color-scheme: dark)").matches;
-    document.documentElement.dataset.theme = 深色 ? "dark" : "light";
-  }
+  document.documentElement.dataset.theme = 设置.样式 === "暖纸古典" ? "light" : "dark";
   应用样式(设置.样式);
 }
 
 export function 获取游戏背景色(设置: 游戏设置): string {
-  if (获取游戏是否浅色主题(设置)) return "#f2ecdd";
+  if (设置.样式 === "暖纸古典") return "#f2ecdd";
   return 获取样式背景色(设置.样式);
 }
 
 export function 获取游戏界面外观(设置: 游戏设置): 游戏界面色彩 {
-  return 获取游戏界面色彩(设置.样式, 获取游戏是否浅色主题(设置));
-}
-
-function 获取游戏是否浅色主题(设置: 游戏设置): boolean {
-  if (设置.主题 === "浅色") return true;
-  if (设置.主题 === "深色") return false;
-  return !matchMedia("(prefers-color-scheme: dark)").matches;
+  return 获取游戏界面色彩(设置.样式, 设置.样式 === "暖纸古典");
 }
 
 export function 创建游戏框架(选项: 游戏框架选项): Phaser.Game {
   应用游戏设置(获取游戏设置());
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    const 设置 = 获取游戏设置();
-    if (设置.主题 !== "跟随系统") return;
-    应用游戏设置(设置);
-    window.dispatchEvent(new CustomEvent<游戏设置>("gamemaker:settings-change", { detail: 设置 }));
-  });
   window.addEventListener("gamemaker:settings-change", (事件: Event) => {
     const 设置 = (事件 as CustomEvent<游戏设置>).detail;
     应用游戏设置(设置);

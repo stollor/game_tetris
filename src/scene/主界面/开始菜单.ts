@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
-import { type 背景主题, 获取游戏设置 } from "../../../core/设置";
+import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../core/设置";
 import { 打开覆盖页面 } from "../../../core/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
 import { 应用背景文字样式, 背景基调, 背景文字配色 } from "../../视觉/文字可读性";
@@ -28,10 +28,19 @@ export class 开始菜单 extends Phaser.Scene {
     this.绘制背景();
     this.构建();
     this.scale.on("resize", this.重建, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.scale.off("resize", this.重建, this),
-    );
+    window.addEventListener("gamemaker:settings-change", this.设置已更新);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off("resize", this.重建, this);
+      window.removeEventListener("gamemaker:settings-change", this.设置已更新);
+    });
   }
+
+  private 设置已更新 = (事件: Event): void => {
+    const 设置 = (事件 as CustomEvent<游戏设置>).detail;
+    if (设置.背景主题 === this.背景主题) return;
+    this.背景主题 = 设置.背景主题;
+    this.重建();
+  };
 
   update(时间: number): void {
     const 新主题 = 获取游戏设置().背景主题;

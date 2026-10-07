@@ -56,29 +56,7 @@
       }
     },
     {
-      "name": "切换深色主题",
-      "from": "设置界面",
-      "action": "settings.theme.dark",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "主题": "深色"
-        }
-      }
-    },
-    {
-      "name": "切换浅色主题",
-      "from": "设置界面",
-      "action": "settings.theme.light",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "主题": "浅色"
-        }
-      }
-    },
-    {
-      "name": "切换样式方案",
+      "name": "选择暖纸古典样式",
       "from": "设置界面",
       "action": "settings.style.warm-paper",
       "to": "设置界面",
@@ -89,13 +67,24 @@
       }
     },
     {
-      "name": "主题跟随系统",
+      "name": "选择青蓝未来样式",
       "from": "设置界面",
-      "action": "settings.theme.system",
+      "action": "settings.style.neon-tide",
       "to": "设置界面",
       "expectStorage": {
         "gamemaker:settings": {
-          "主题": "跟随系统"
+          "样式": "青蓝未来"
+        }
+      }
+    },
+    {
+      "name": "选择极光原野背景并即时应用",
+      "from": "设置界面",
+      "action": "settings.background.极光原野",
+      "to": "设置界面",
+      "expectStorage": {
+        "gamemaker:settings": {
+          "背景主题": "极光原野"
         }
       }
     },

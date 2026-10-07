@@ -1,15 +1,16 @@
 import Phaser from "phaser";
 import { 获取文案, 解析语言 } from "../../../core/多语言";
+import { 应用文字清晰度 } from "../../../core/文字清晰度";
 import { 应用游戏设置, 获取游戏界面外观, 获取游戏背景色 } from "../../../core/游戏框架";
 import { 界面下拉菜单 } from "../../../core/组件/Phaser界面/下拉菜单";
 import { 界面分组 } from "../../../core/组件/Phaser界面/分组";
 import { 界面布局 } from "../../../core/组件/Phaser界面/布局";
 import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
-import { 界面文字 } from "../../../core/组件/Phaser界面/控件";
+import { 界面控件, 界面文字 } from "../../../core/组件/Phaser界面/控件";
+import { 界面滑块 } from "../../../core/组件/Phaser界面/滑块";
 import {
   更新游戏设置,
   type 游戏设置,
-  type 背景主题,
   获取游戏设置,
   type 语言选择,
   默认设置,
@@ -29,11 +30,118 @@ interface 设置选项 {
 type 设置行配置 =
   | { 类型: "options"; 标题: string; 选项: 设置选项[] }
   | { 类型: "language"; 值: 语言选择 }
-  | { 类型: "background"; 值: 背景主题 };
+  | { 类型: "volume"; 标题: string; 值: number; 键: "音乐音量" | "音效音量" };
 
 interface 设置分组配置 {
   标题: string;
   行: 设置行配置[];
+}
+
+class 外观选择卡片 extends 界面控件 {
+  private readonly 底板: Phaser.GameObjects.Rectangle;
+  private readonly 预览: Phaser.GameObjects.Graphics;
+  private readonly 标签: Phaser.GameObjects.Text;
+
+  constructor(
+    场景: Phaser.Scene,
+    配置: {
+      名称: string;
+      标签: string;
+      宽: number;
+      高: number;
+      面板色: number;
+      背景色: number;
+      强调色: number;
+      类型: "样式" | "背景";
+      样式值?: 游戏设置["样式"];
+      已选: boolean;
+      选择: () => void;
+    },
+  ) {
+    super(场景, 0, 0, 配置.宽, 配置.高);
+    this.name = 配置.名称;
+    const 边色 = 配置.已选 ? 配置.强调色 : 0x718092;
+    this.底板 = 场景.add
+      .rectangle(0, 0, 配置.宽, 配置.高, 配置.面板色, 1)
+      .setName(配置.名称)
+      .setStrokeStyle(配置.已选 ? 2 : 1, 边色, 配置.已选 ? 1 : 0.42);
+    this.预览 = 场景.add.graphics();
+    const 预览高 = 配置.类型 === "背景" ? 配置.高 - 30 : 配置.高 - 31;
+    const 预览宽 = 配置.宽 - 12;
+    const x = -预览宽 / 2;
+    const y = -配置.高 / 2 + 5;
+    if (配置.类型 === "背景") {
+      this.预览
+        .fillGradientStyle(配置.背景色, 配置.背景色, 配置.强调色, 配置.强调色, 1, 1, 0.8, 0.8)
+        .fillRoundedRect(x, y, 预览宽, 预览高, 5);
+      this.预览
+        .fillStyle(0xffedbd, 0.92)
+        .fillCircle(x + 预览宽 * 0.74, y + 9, Math.max(3, Math.min(6, 预览高 * 0.13)));
+      this.预览.fillStyle(配置.强调色, 0.9).fillTriangle(x, y + 30, x + 18, y + 13, x + 38, y + 30);
+      this.预览
+        .fillStyle(配置.背景色, 0.72)
+        .fillTriangle(x + 21, y + 30, x + 43, y + 12, x + 66, y + 30);
+      this.预览.fillStyle(0xffffff, 0.25).fillRect(x + 3, y + 32, Math.max(1, 预览宽 - 6), 1);
+    } else if (配置.样式值 === "暖纸古典") {
+      this.预览.fillStyle(0xeadfc8, 1).fillRoundedRect(x, y, 预览宽, 预览高, 2);
+      this.预览.lineStyle(1, 0x9a6b1f, 0.75).strokeRect(x + 4, y + 4, 预览宽 - 8, 预览高 - 8);
+      this.预览.fillStyle(0x9a6b1f, 1).fillRect(x + 9, y + 9, Math.max(16, 预览宽 * 0.4), 4);
+      this.预览
+        .lineStyle(1, 0x8e7a5d, 0.65)
+        .lineBetween(x + 9, y + 18, x + 9 + Math.max(14, 预览宽 * 0.3), y + 18);
+      this.预览.fillStyle(0x9a6b1f, 1).fillRect(x + 9, y + 23, Math.max(22, 预览宽 * 0.55), 7);
+      this.预览
+        .lineStyle(1, 0x9a6b1f, 0.75)
+        .strokeRect(x + 14 + Math.max(22, 预览宽 * 0.55), y + 22, 13, 9);
+    } else if (配置.样式值 === "青蓝未来") {
+      this.预览.fillStyle(0x071922, 1).fillRoundedRect(x, y, 预览宽, 预览高, 4);
+      this.预览.lineStyle(1, 0x4ed5d0, 0.16);
+      for (let gx = x + 7; gx < x + 预览宽; gx += 12)
+        this.预览.lineBetween(gx, y + 3, gx, y + 预览高 - 3);
+      for (let gy = y + 6; gy < y + 预览高; gy += 10)
+        this.预览.lineBetween(x + 3, gy, x + 预览宽 - 3, gy);
+      this.预览.fillStyle(0x4ed5d0, 1).fillRect(x + 6, y + 7, Math.max(15, 预览宽 * 0.36), 5);
+      this.预览.fillStyle(0x4ed5d0, 0.28).fillRect(x + 6, y + 16, Math.max(18, 预览宽 * 0.5), 4);
+      this.预览
+        .lineStyle(1, 0xa4fff4, 0.92)
+        .strokeRect(x + 8, y + 24, Math.max(22, 预览宽 * 0.58), 8);
+      this.预览.fillStyle(0xa4fff4, 1).fillCircle(x + 预览宽 - 10, y + 9, 2);
+    } else {
+      this.预览.fillStyle(0x101a2b, 1).fillRoundedRect(x, y, 预览宽, 预览高, 8);
+      this.预览
+        .fillStyle(0xe6b45c, 1)
+        .fillRoundedRect(x + 7, y + 7, Math.max(18, 预览宽 * 0.42), 7, 4);
+      this.预览
+        .fillStyle(0xf6d98d, 0.75)
+        .fillRoundedRect(x + 7, y + 18, Math.max(14, 预览宽 * 0.25), 4, 2);
+      this.预览
+        .lineStyle(1, 0xe6b45c, 0.94)
+        .strokeRoundedRect(
+          x + 10 + Math.max(18, 预览宽 * 0.42),
+          y + 6,
+          Math.max(10, 预览宽 * 0.2),
+          20,
+          5,
+        );
+      this.预览.fillStyle(0xe6b45c, 1).fillCircle(x + 14, y + 30, 2.5);
+    }
+    this.标签 = 场景.add
+      .text(0, 配置.高 / 2 - 12, 配置.标签, {
+        fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif',
+        fontSize: 配置.宽 < 88 ? "9px" : "11px",
+        color: 配置.面板色 === 0xfbf7ec ? "#423627" : "#e8edf3",
+        align: "center",
+        wordWrap: { width: 配置.宽 - 6 },
+      })
+      .setOrigin(0.5);
+    this.add([this.底板, this.预览, this.标签]);
+    this.底板.setInteractive({ useHandCursor: true }).on("pointerup", 配置.选择);
+    this.底板.on("pointerover", () => this.底板.setStrokeStyle(2, 配置.强调色, 0.8));
+    this.底板.on("pointerout", () =>
+      this.底板.setStrokeStyle(配置.已选 ? 2 : 1, 边色, 配置.已选 ? 1 : 0.42),
+    );
+    场景.add.existing(this);
+  }
 }
 
 export class 设置界面 extends Phaser.Scene {
@@ -44,6 +152,7 @@ export class 设置界面 extends Phaser.Scene {
   }
 
   create(): void {
+    应用文字清晰度(this, 2);
     this.重建界面();
     this.scale.on("resize", this.重建界面, this);
     window.addEventListener("gamemaker:settings-change", this.重建界面);
@@ -95,10 +204,12 @@ export class 设置界面 extends Phaser.Scene {
     const 外观 = this.获取外观();
     const 窄屏 = 宽 < 460;
     const 标签宽 = 标题 ? (窄屏 ? 宽 : 150) : 0;
+    const 卡片选择 = 标题 === this.获取文案().样式 || 标题 === "背景" || 标题 === "Background";
+    const 行高 = 卡片选择 ? 74 : 36;
     const 行 = new 界面布局(this, 0, 0, {
       方向: 窄屏 ? "垂直" : "水平",
       宽,
-      高: 窄屏 ? 0 : 36,
+      高: 窄屏 ? 0 : 行高,
       间距: 窄屏 ? 4 : 10,
       交叉轴对齐: 窄屏 ? "拉伸" : "居中",
       自动主轴尺寸: 窄屏,
@@ -107,7 +218,7 @@ export class 设置界面 extends Phaser.Scene {
       行.添加(
         new 界面文字(this, 0, 0, {
           宽: 标签宽,
-          高: 窄屏 ? 24 : 36,
+          高: 窄屏 ? 24 : 行高,
           文案: 标题,
           字号: 窄屏 ? "13px" : "16px",
           颜色: 外观.正文,
@@ -120,24 +231,36 @@ export class 设置界面 extends Phaser.Scene {
     const 按钮组宽 = 窄屏 ? 宽 : 宽 - 标签宽;
     const 按钮间距 = 窄屏 ? 4 : 10;
     const 按钮宽 = 窄屏
-      ? Math.max(68, Math.min(112, (按钮组宽 - 按钮间距 * (选项.length - 1)) / 3))
-      : Math.max(76, Math.min(126, (按钮组宽 - 按钮间距 * (选项.length - 1)) / 3));
+      ? (按钮组宽 - 按钮间距 * (选项.length - 1)) / 选项.length
+      : Math.max(76, Math.min(160, (按钮组宽 - 按钮间距 * (选项.length - 1)) / 选项.length));
     const 按钮布局 = new 界面布局(this, 0, 0, {
       方向: "水平",
       宽: 按钮组宽,
-      高: 36,
+      高: 行高,
       间距: 按钮间距,
       主轴对齐: "居中",
-      自动换行: 窄屏,
+      自动换行: false,
       自动交叉轴尺寸: 窄屏,
     });
     for (const 项目 of 选项) {
       按钮布局.添加(
-        this.创建按钮(0, 0, 按钮宽, 36, 项目.标签, 项目.名称, 项目.选择, 项目.是否选中),
-        { 宽: 按钮宽, 高: 36 },
+        this.创建按钮(
+          0,
+          0,
+          按钮宽,
+          卡片选择 ? 行高 : 36,
+          卡片选择
+            ? `${项目.标签}\n${标题 === this.获取文案().样式 ? "A  ▰  ▱" : "○  ≋  ≋"}`
+            : 项目.标签,
+          项目.名称,
+          项目.选择,
+          项目.是否选中,
+          卡片选择 ? "11px" : undefined,
+        ),
+        { 宽: 按钮宽, 高: 卡片选择 ? 行高 : 36 },
       );
     }
-    行.添加(按钮布局, 窄屏 ? { 宽: 按钮组宽 } : { 宽: 按钮组宽, 高: 36 });
+    行.添加(按钮布局, 窄屏 ? { 宽: 按钮组宽 } : { 宽: 按钮组宽, 高: 行高 });
     行.重新排列();
     return 行;
   }
@@ -170,41 +293,141 @@ export class 设置界面 extends Phaser.Scene {
       方向: "水平",
       宽,
       高: 36,
-      主轴对齐: "末尾",
+      间距: 10,
+      交叉轴对齐: "居中",
     });
+    行.添加(
+      new 界面文字(this, 0, 0, {
+        宽: 110,
+        高: 36,
+        文案: 文案.语言,
+        字号: "15px",
+        颜色: 外观.正文,
+        对齐: "左",
+        内边距: 2,
+      }),
+      { 宽: 110, 高: 36, 伸展: 1 },
+    );
     行.添加(下拉框, { 宽: 宽度, 高: 36 });
     return 行;
   }
 
-  private 创建背景行(当前背景: 背景主题, 宽: number): 界面布局 {
+  private 创建音量行(标题: string, 值: number, 键: "音乐音量" | "音效音量", 宽: number): 界面布局 {
     const 外观 = this.获取外观();
-    const 下拉框 = new 界面下拉菜单(this, 0, 0, {
-      name: "settings.background.dropdown",
-      宽: Math.min(220, Math.max(180, 宽 * 0.42)),
+    const 文本 = new 界面文字(this, 0, 0, {
+      宽: 126,
       高: 36,
-      文案: 背景主题选项.find((选项) => 选项.值 === 当前背景)?.标签 ?? "晨光海岸",
-      选项: 背景主题选项.map((选项) => ({
-        name: `settings.background.${选项.值}`,
-        文案: 选项.标签,
-        值: 选项.值,
-      })),
-      面板色: 外观.面板,
+      文案: `${标题}  ${值}%`,
+      字号: "14px",
+      颜色: 外观.正文,
+      对齐: "左",
+      内边距: 2,
+    });
+    const 滑块 = new 界面滑块(this, 0, 0, {
+      宽: 80,
+      命中高: 32,
+      值,
+      步进: 5,
+      name: `settings.${键 === "音乐音量" ? "music" : "sfx"}-volume.slider`,
+      轨道色: 外观.轨道,
       强调色: 外观.强调色,
-      文字色: 外观.正文,
-      选择: (值) => {
-        if (值 === "晨光海岸" || 值 === "云海山岚" || 值 === "极光原野" || 值 === "霓虹天际") {
-          this.更新({ 背景主题: 值 });
-        }
-      },
+      变化: (新值) => this.更新({ [键]: 新值 }),
     });
-    const 行 = new 界面布局(this, 0, 0, {
-      方向: "水平",
-      宽,
-      高: 36,
-      主轴对齐: "末尾",
-    });
-    行.添加(下拉框, { 宽: Math.min(220, Math.max(180, 宽 * 0.42)), 高: 36 });
+    滑块.on("change", (新值: number) => 文本.setLabel(`${标题}  ${新值}%`));
+    const 行 = new 界面布局(this, 0, 0, { 方向: "水平", 宽, 高: 36, 间距: 12, 交叉轴对齐: "居中" });
+    行.添加(文本, { 宽: 126, 高: 36 });
+    行.添加(滑块, { 高: 32, 伸展: 1 });
     return 行;
+  }
+
+  private 创建外观行(标题: string, 选项: 设置选项[], 宽: number): 界面布局 {
+    const 外观 = this.获取外观();
+    const 窄屏 = 宽 < 460;
+    const 是背景 = 标题 === "背景" || 标题 === "Background";
+    const 间距 = 窄屏 ? 4 : 10;
+    const 标签宽 = 窄屏 ? 宽 : 112;
+    const 内容宽 = 窄屏 ? 宽 : 宽 - 标签宽 - 间距;
+    const 卡片高 = 是背景 ? 82 : 78;
+    const 卡片宽 = (内容宽 - 间距 * (选项.length - 1)) / 选项.length;
+    const 当前 = 获取游戏设置();
+    const 容器 = new 界面布局(this, 0, 0, {
+      方向: "垂直",
+      宽,
+      高: 0,
+      间距: 4,
+      自动主轴尺寸: true,
+    });
+    if (窄屏) {
+      容器.添加(
+        new 界面文字(this, 0, 0, {
+          宽,
+          高: 24,
+          文案: 标题,
+          字号: "13px",
+          颜色: 外观.正文,
+          对齐: "左",
+          内边距: 2,
+        }),
+        { 宽, 高: 24 },
+      );
+    }
+    const 行 = new 界面布局(this, 0, 0, { 方向: "水平", 宽, 高: 卡片高, 间距, 交叉轴对齐: "居中" });
+    if (!窄屏) {
+      行.添加(
+        new 界面文字(this, 0, 0, {
+          宽: 标签宽,
+          高: 卡片高,
+          文案: 标题,
+          字号: "15px",
+          颜色: 外观.正文,
+          对齐: "左",
+          内边距: 2,
+        }),
+        { 宽: 标签宽, 高: 卡片高 },
+      );
+    }
+    for (const 项目 of 选项) {
+      const 样式值 =
+        项目.名称 === "settings.style.gilded-night"
+          ? "夜空鎏金"
+          : 项目.名称 === "settings.style.warm-paper"
+            ? "暖纸古典"
+            : 项目.名称 === "settings.style.neon-tide"
+              ? "青蓝未来"
+              : undefined;
+      const 值 = 是背景 ? 项目.名称.replace("settings.background.", "") : 样式值;
+      const 是当前 = 是背景 ? 值 === 当前.背景主题 : 值 === 当前.样式;
+      const 配色 = 是背景
+        ? 值 === "晨光海岸"
+          ? [0x78b8d0, 0x47a5aa]
+          : 值 === "云海山岚"
+            ? [0x9dbdca, 0x728f9b]
+            : 值 === "极光原野"
+              ? [0x142d3b, 0x35a879]
+              : [0x17243b, 0x5475b4]
+        : 值 === "暖纸古典"
+          ? [0xf2ecdd, 0x9a6b1f]
+          : 值 === "青蓝未来"
+            ? [0x071922, 0x4ed5d0]
+            : [0x101a2b, 0xe6b45c];
+      const 卡片 = new 外观选择卡片(this, {
+        名称: 项目.名称,
+        标签: 项目.标签,
+        宽: 卡片宽,
+        高: 卡片高,
+        面板色: this.色值(外观.面板),
+        背景色: 配色[0] ?? 0,
+        强调色: 配色[1] ?? 0,
+        类型: 是背景 ? "背景" : "样式",
+        样式值,
+        已选: 是当前,
+        选择: 项目.选择,
+      });
+      行.添加(卡片, { 宽: 卡片宽, 高: 卡片高 });
+    }
+    容器.添加(行, { 宽, 高: 卡片高 });
+    容器.重新排列();
+    return 容器;
   }
 
   private 创建设置分组(设置: 游戏设置, 文案: ReturnType<typeof 获取文案>): 设置分组配置[] {
@@ -217,6 +440,43 @@ export class 设置界面 extends Phaser.Scene {
     ): 设置选项 => ({ 名称, 标签, 是否选中: 当前值 === 值, 选择 });
 
     return [
+      {
+        标题: 设置.语言 === "English" ? "General" : "常规",
+        行: [
+          { 类型: "volume", 标题: 文案.音乐音量, 值: 设置.音乐音量, 键: "音乐音量" },
+          { 类型: "volume", 标题: 文案.音效音量, 值: 设置.音效音量, 键: "音效音量" },
+          { 类型: "language", 值: 设置.语言 },
+        ],
+      },
+      {
+        标题: 文案.外观,
+        行: [
+          {
+            类型: "options",
+            标题: 文案.样式,
+            选项: [
+              单选("settings.style.gilded-night", 文案.夜空鎏金, "夜空鎏金", 设置.样式, () =>
+                this.更新({ 样式: "夜空鎏金" }),
+              ),
+              单选("settings.style.warm-paper", 文案.暖纸古典, "暖纸古典", 设置.样式, () =>
+                this.更新({ 样式: "暖纸古典" }),
+              ),
+              单选("settings.style.neon-tide", 文案.青蓝未来, "青蓝未来", 设置.样式, () =>
+                this.更新({ 样式: "青蓝未来" }),
+              ),
+            ],
+          },
+          {
+            类型: "options",
+            标题: 设置.语言 === "English" ? "Background" : "背景",
+            选项: 背景主题选项.map((项目) =>
+              单选(`settings.background.${项目.值}`, 项目.标签, 项目.值, 设置.背景主题, () =>
+                this.更新({ 背景主题: 项目.值 }),
+              ),
+            ),
+          },
+        ],
+      },
       {
         标题: 设置.语言 === "English" ? "Gameplay" : "玩法",
         行: [
@@ -234,54 +494,6 @@ export class 设置界面 extends Phaser.Scene {
           },
         ],
       },
-      {
-        标题: 文案.外观,
-        行: [
-          {
-            类型: "options",
-            标题: 文案.主题,
-            选项: [
-              单选("settings.theme.system", 文案.跟随系统, "跟随系统", 设置.主题, () =>
-                this.更新({ 主题: "跟随系统" }),
-              ),
-              单选("settings.theme.dark", 文案.深色, "深色", 设置.主题, () =>
-                this.更新({ 主题: "深色" }),
-              ),
-              单选("settings.theme.light", 文案.浅色, "浅色", 设置.主题, () =>
-                this.更新({ 主题: "浅色" }),
-              ),
-            ],
-          },
-          {
-            类型: "options",
-            标题: 文案.样式,
-            选项: [
-              单选("settings.style.gilded-night", 文案.夜空鎏金, "夜空鎏金", 设置.样式, () =>
-                this.更新({ 样式: "夜空鎏金" }),
-              ),
-              单选("settings.style.warm-paper", 文案.暖纸古典, "暖纸古典", 设置.样式, () =>
-                this.更新({ 样式: "暖纸古典" }),
-              ),
-              单选("settings.style.neon-tide", 文案.青蓝未来, "青蓝未来", 设置.样式, () =>
-                this.更新({ 样式: "青蓝未来" }),
-              ),
-            ],
-          },
-        ],
-      },
-      {
-        标题: "语言与背景",
-        行: [
-          {
-            类型: "language",
-            值: 设置.语言,
-          },
-          {
-            类型: "background",
-            值: 设置.背景主题,
-          },
-        ],
-      },
     ];
   }
 
@@ -292,7 +504,7 @@ export class 设置界面 extends Phaser.Scene {
       方向: "垂直",
       宽,
       高: 0,
-      间距: 6,
+      间距: 18,
       自动主轴尺寸: true,
     });
     for (const 分组配置项 of 配置) {
@@ -304,11 +516,15 @@ export class 设置界面 extends Phaser.Scene {
       for (const 行配置 of 分组配置项.行) {
         const 行 =
           行配置.类型 === "options"
-            ? this.创建选项行(行配置.标题, 行配置.选项, 宽)
+            ? 行配置.标题 === this.获取文案().样式 ||
+              行配置.标题 === "背景" ||
+              行配置.标题 === "Background"
+              ? this.创建外观行(行配置.标题, 行配置.选项, 宽)
+              : this.创建选项行(行配置.标题, 行配置.选项, 宽)
             : 行配置.类型 === "language"
               ? this.创建语言行(行配置.值, 宽)
-              : this.创建背景行(行配置.值, 宽);
-        分组.添加行(行, 行.获取首选尺寸().高, 6);
+              : this.创建音量行(行配置.标题, 行配置.值, 行配置.键, 宽);
+        分组.添加行(行, 行.获取首选尺寸().高, 10);
       }
       布局.添加(分组, { 宽, 高: 分组.getContentHeight() });
     }

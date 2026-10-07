@@ -68,7 +68,6 @@ export class 界面按钮 extends 界面控件 {
         wordWrap: 文字按钮 ? undefined : { width: Math.max(0, 配置.宽 - 16) },
       })
       .setOrigin(0.5);
-    if (!文字按钮) this.标签.setShadow(0, 1.5, "#04070f", 4, true, true);
     this.add([this.视觉, this.底板, this.标签]);
     if (this.自适应文案) this.按文案调整尺寸();
     this.重绘视觉();
@@ -114,8 +113,7 @@ export class 界面按钮 extends 界面控件 {
     this.当前高 = 高;
     this.底板.setSize(宽, 高);
     this.标签.setWordWrapWidth(this.样式 === "文字" ? 0 : Math.max(0, 宽 - 16));
-    if (this.底板.input)
-      this.底板.input.hitArea = new Phaser.Geom.Rectangle(0, 0, 宽, 高);
+    if (this.底板.input) this.底板.input.hitArea = new Phaser.Geom.Rectangle(0, 0, 宽, 高);
     this.重绘视觉();
   }
 

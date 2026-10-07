@@ -15,7 +15,8 @@ export class 界面分组 extends 界面控件 {
   private readonly 分隔线: Phaser.GameObjects.Rectangle;
   private readonly 行布局: 界面布局;
   private 分组宽: number;
-  private readonly 标题高 = 30;
+  private readonly 标题高 = 32;
+  private readonly 分隔后间距 = 10;
 
   constructor(scene: Phaser.Scene, x: number, y: number, 配置: 分组配置) {
     super(scene, x, y, 配置.宽, 30);
@@ -42,7 +43,7 @@ export class 界面分组 extends 界面控件 {
 
   添加行(行: Phaser.GameObjects.GameObject, 高度: number, 间距 = 8): this {
     this.行布局.添加(行, { 宽: this.分组宽, 高: 高度, 间距后: 间距 });
-    const 高 = this.标题高 + this.行布局.获取首选尺寸().高;
+    const 高 = this.标题高 + this.分隔后间距 + this.行布局.获取首选尺寸().高;
     this.更新首选尺寸(this.分组宽, 高);
     this.更新内部位置();
     return this;
@@ -56,7 +57,7 @@ export class 界面分组 extends 界面控件 {
     this.分组宽 = 宽;
     this.更新首选尺寸(宽, 高);
     this.分隔线.setSize(宽, 1);
-    this.行布局.设置布局尺寸(宽, Math.max(0, 高 - this.标题高));
+    this.行布局.设置布局尺寸(宽, Math.max(0, 高 - this.标题高 - this.分隔后间距));
     this.更新内部位置();
     return this;
   }
@@ -66,7 +67,7 @@ export class 界面分组 extends 界面控件 {
     const 标题Y = -this.height / 2 + this.标题高 / 2;
     this.标题.setPosition(-this.width / 2, 标题Y);
     this.分隔线.setPosition(0, -this.height / 2 + this.标题高);
-    this.行布局.setPosition(0, -this.height / 2 + this.标题高 + 内容高 / 2);
+    this.行布局.setPosition(0, -this.height / 2 + this.标题高 + this.分隔后间距 + 内容高 / 2);
   }
 
   private 颜色值(颜色: string): number {

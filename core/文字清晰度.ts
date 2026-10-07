@@ -2,8 +2,8 @@ import Phaser from "phaser";
 
 const 最大文字分辨率 = 2;
 
-function 获取文字分辨率(): number {
-  return Math.min(最大文字分辨率, Math.max(1, window.devicePixelRatio || 1));
+function 获取文字分辨率(最低分辨率: number): number {
+  return Math.min(最大文字分辨率, Math.max(最低分辨率, window.devicePixelRatio || 1));
 }
 
 function 同步容器文字(对象: Phaser.GameObjects.GameObject, 分辨率: number): void {
@@ -16,13 +16,13 @@ function 同步容器文字(对象: Phaser.GameObjects.GameObject, 分辨率: nu
 }
 
 /** Phaser.Text 使用独立 Canvas 纹理；在高 DPI 屏幕上用有限的设备像素倍率绘制。 */
-export function 应用文字清晰度(scene: Phaser.Scene): void {
-  let 当前分辨率 = 获取文字分辨率();
+export function 应用文字清晰度(scene: Phaser.Scene, 最低分辨率 = 1): void {
+  let 当前分辨率 = 获取文字分辨率(最低分辨率);
   const 处理新对象 = (对象: Phaser.GameObjects.GameObject): void => {
     同步容器文字(对象, 当前分辨率);
   };
   const 更新分辨率 = (): void => {
-    const 新分辨率 = 获取文字分辨率();
+    const 新分辨率 = 获取文字分辨率(最低分辨率);
     if (新分辨率 === 当前分辨率) return;
     当前分辨率 = 新分辨率;
     for (const 对象 of scene.children.list) 同步容器文字(对象, 当前分辨率);
