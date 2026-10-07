@@ -112,18 +112,18 @@ export class 界面下拉菜单 extends 界面控件 {
     const 外观 = this.配置;
     this.选项布局 = new 界面布局(this.scene, 0, 0, {
       方向: "垂直",
-      宽: this.width,
-      高: 每项高 * this.配置.选项.length + Math.max(0, this.配置.选项.length - 1) * 2,
-      间距: 2,
+      宽: this.width - 4,
+      高: 每项高 * this.配置.选项.length + Math.max(0, this.配置.选项.length - 1) * 6,
+      间距: 6,
       主轴对齐: "起始",
     });
     this.展开底板 = this.scene.add.graphics();
     绘制玻璃面板(
       this.展开底板,
       -(this.width + 12) / 2,
-      -(this.选项布局.height + 12) / 2,
+      -(this.选项布局.height + 16) / 2,
       this.width + 12,
-      this.选项布局.height + 12,
+      this.选项布局.height + 16,
       {
         圆角: 10,
         填色: this.颜色值(外观.面板色),
@@ -138,7 +138,7 @@ export class 界面下拉菜单 extends 界面控件 {
     for (const 选项 of this.配置.选项) {
       this.选项布局.添加(
         new 界面按钮(this.scene, 0, 0, {
-          宽: this.width,
+          宽: this.width - 4,
           高: 每项高,
           文案: 选项.文案,
           name: 选项.name,
@@ -151,7 +151,7 @@ export class 界面下拉菜单 extends 界面控件 {
           },
           字号: "14px",
         }),
-        { 宽: this.width, 高: 每项高 },
+        { 宽: this.width - 4, 高: 每项高 },
       );
     }
     this.add(this.选项布局);
