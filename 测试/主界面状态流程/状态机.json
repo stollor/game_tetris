@@ -1,12 +1,12 @@
 {
   "version": 1,
   "name": "主界面功能流程",
-  "initialState": "主界面",
+  "initialState": "开始菜单",
   "timeoutMs": 5000,
   "steps": [
     {
       "name": "打开设置覆盖场景",
-      "from": "主界面",
+      "from": "开始菜单",
       "action": "menu.settings",
       "to": "设置界面"
     },
@@ -14,13 +14,13 @@
       "name": "关闭设置并恢复主界面",
       "from": "设置界面",
       "action": "settings.done",
-      "to": "主界面"
+      "to": "开始菜单"
     },
     {
       "name": "请求开始游戏",
-      "from": "主界面",
+      "from": "开始菜单",
       "action": "menu.start",
-      "to": "主界面",
+      "to": "开始菜单",
       "expectTextChanged": true
     }
   ]

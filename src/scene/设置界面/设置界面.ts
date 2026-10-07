@@ -6,7 +6,6 @@ import { 界面分组 } from "../../../core/组件/Phaser界面/分组";
 import { 界面布局 } from "../../../core/组件/Phaser界面/布局";
 import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
 import { 界面文字 } from "../../../core/组件/Phaser界面/控件";
-import { 界面滑块 } from "../../../core/组件/Phaser界面/滑块";
 import {
   更新游戏设置,
   type 游戏设置,
@@ -19,7 +18,6 @@ import { 关闭覆盖页面 } from "../../../core/页面切换";
 import { 背景主题选项 } from "../../视觉/霓虹背景";
 
 const 返回页面 = "开始菜单";
-type 音量键 = "音乐音量" | "音效音量";
 
 interface 设置选项 {
   名称: string;
@@ -30,7 +28,6 @@ interface 设置选项 {
 
 type 设置行配置 =
   | { 类型: "options"; 标题: string; 选项: 设置选项[] }
-  | { 类型: "volume"; 标题: string; 值: number; 键: 音量键 }
   | { 类型: "language"; 值: 语言选择 }
   | { 类型: "background"; 值: 背景主题 };
 
@@ -145,59 +142,6 @@ export class 设置界面 extends Phaser.Scene {
     return 行;
   }
 
-  private 创建音量行(标题: string, 值: number, 键: 音量键, 宽: number): 界面布局 {
-    const 外观 = this.获取外观();
-    const 窄屏 = 宽 < 460;
-    const 标签宽 = 窄屏 ? Math.min(110, Math.max(78, 宽 * 0.38)) : 152;
-    const 按钮宽 = 窄屏 ? 26 : 38;
-    const 间距 = 窄屏 ? 5 : 8;
-    const 声道 = 键 === "音乐音量" ? "music" : "sfx";
-    const 音量文字 = new 界面文字(this, 0, 0, {
-      宽: 标签宽,
-      高: 36,
-      文案: `${标题} ${值}`,
-      字号: 窄屏 ? "11px" : "15px",
-      颜色: 外观.正文,
-      对齐: "左",
-      内边距: 2,
-    });
-    const 滑块 = new 界面滑块(this, 0, 0, {
-      宽: 80,
-      命中高: 窄屏 ? 28 : 32,
-      值,
-      步进: 5,
-      name: `settings.${声道}-volume.slider`,
-      轨道色: 外观.轨道,
-      强调色: 外观.强调色,
-      变化: (新值) => this.更新({ [键]: 新值 }),
-    });
-    滑块.on("change", (新值: number) => 音量文字.setLabel(`${标题} ${新值}`));
-    const 行 = new 界面布局(this, 0, 0, {
-      方向: "水平",
-      宽,
-      高: 36,
-      间距,
-      交叉轴对齐: "居中",
-    });
-    const 创建音量按钮 = (方向: "down" | "up", 变化: number) =>
-      this.创建按钮(
-        0,
-        0,
-        按钮宽,
-        窄屏 ? 28 : 32,
-        方向 === "down" ? "−" : "+",
-        `settings.${声道}-volume.${方向}`,
-        () => this.更新({ [键]: Phaser.Math.Clamp(获取游戏设置()[键] + 变化, 0, 100) }),
-        false,
-        "18px",
-      );
-    行.添加(音量文字, { 宽: 标签宽, 高: 36 });
-    行.添加(创建音量按钮("down", -10), { 宽: 按钮宽, 高: 32 });
-    行.添加(滑块, { 高: 窄屏 ? 28 : 32, 伸展: 1 });
-    行.添加(创建音量按钮("up", 10), { 宽: 按钮宽, 高: 32 });
-    return 行;
-  }
-
   private 创建语言行(当前语言: 语言选择, 宽: number): 界面布局 {
     const 外观 = this.获取外观();
     const 文案 = this.获取文案();
@@ -274,22 +218,20 @@ export class 设置界面 extends Phaser.Scene {
 
     return [
       {
-        标题: 文案.声音,
+        标题: 设置.语言 === "English" ? "Gameplay" : "玩法",
         行: [
           {
             类型: "options",
-            标题: 文案.背景音乐,
+            标题: 设置.语言 === "English" ? "180° rotation" : "180°旋转",
             选项: [
-              单选("settings.music.on", 文案.开, "true", String(设置.背景音乐), () =>
-                this.更新({ 背景音乐: true }),
+              单选("settings.rotation180.on", 文案.开, "true", String(设置.旋转180), () =>
+                this.更新({ 旋转180: true }),
               ),
-              单选("settings.music.off", 文案.关, "false", String(设置.背景音乐), () =>
-                this.更新({ 背景音乐: false }),
+              单选("settings.rotation180.off", 文案.关, "false", String(设置.旋转180), () =>
+                this.更新({ 旋转180: false }),
               ),
             ],
           },
-          { 类型: "volume", 标题: 文案.音乐音量, 值: 设置.音乐音量, 键: "音乐音量" },
-          { 类型: "volume", 标题: 文案.音效音量, 值: 设置.音效音量, 键: "音效音量" },
         ],
       },
       {
@@ -343,7 +285,7 @@ export class 设置界面 extends Phaser.Scene {
     ];
   }
 
-  private 绘制设置分组(x: number, y: number, 宽: number, 配置: 设置分组配置[]): void {
+  private 绘制设置分组(x: number, y: number, 宽: number, 配置: 设置分组配置[]): 界面布局 {
     const 外观 = this.获取外观();
     const 中心X = x + 宽 / 2;
     const 布局 = new 界面布局(this, 中心X, y, {
@@ -363,16 +305,15 @@ export class 设置界面 extends Phaser.Scene {
         const 行 =
           行配置.类型 === "options"
             ? this.创建选项行(行配置.标题, 行配置.选项, 宽)
-            : 行配置.类型 === "volume"
-              ? this.创建音量行(行配置.标题, 行配置.值, 行配置.键, 宽)
-              : 行配置.类型 === "language"
-                ? this.创建语言行(行配置.值, 宽)
-                : this.创建背景行(行配置.值, 宽);
+            : 行配置.类型 === "language"
+              ? this.创建语言行(行配置.值, 宽)
+              : this.创建背景行(行配置.值, 宽);
         分组.添加行(行, 行.获取首选尺寸().高, 6);
       }
       布局.添加(分组, { 宽, 高: 分组.getContentHeight() });
     }
     布局.重新排列().setPosition(中心X, y + 布局.height / 2);
+    return 布局;
   }
 
   private 重建界面 = (): void => {
@@ -382,16 +323,21 @@ export class 设置界面 extends Phaser.Scene {
     const 宽 = this.scale.width;
     const 高 = this.scale.height;
     const 面板宽 = Math.min(740, 宽 - 32);
-    const 面板高 = Math.min(500, 高 - 28);
     const 左 = (宽 - 面板宽) / 2;
-    const 上 = (高 - 面板高) / 2;
 
     this.children.removeAll(true);
     this.cameras.main.setBackgroundColor("rgba(0,0,0,0)");
+    const 内容X = 左 + 28;
+    const 内容宽 = 面板宽 - 56;
+    // 先量出内容真实高度再定面板高度与页脚位置，避免窄屏时下拉行被页脚按钮压住
+    const 内容布局 = this.绘制设置分组(内容X + 4, 0, 内容宽 - 8, this.创建设置分组(设置, 文案));
+    const 内容高 = 内容布局.height;
+    const 面板高 = Math.min(高 - 24, Math.max(460, 内容高 + 72 + 38 + 26));
+    const 上 = (高 - 面板高) / 2;
     this.add
       .rectangle(宽 / 2, 高 / 2, 宽, 高, this.色值(外观.遮罩), 0.76)
       .setInteractive()
-      .setDepth(-1)
+      .setDepth(-2)
       .on(
         "pointerdown",
         (
@@ -403,9 +349,9 @@ export class 设置界面 extends Phaser.Scene {
       );
     this.add
       .rectangle(宽 / 2, 高 / 2, 面板宽, 面板高, this.色值(获取游戏背景色(设置)), 0.98)
-      .setStrokeStyle(1, this.色值(外观.强调色), 0.75);
-    const 内容X = 左 + 28;
-    const 内容宽 = 面板宽 - 56;
+      .setStrokeStyle(1, this.色值(外观.强调色), 0.75)
+      .setDepth(-1);
+    内容布局.setPosition(内容X + 4 + (内容宽 - 8) / 2, 上 + 72 + 内容高 / 2);
     const 标题布局 = new 界面布局(this, 宽 / 2, 上 + 31, {
       方向: "水平",
       宽: 内容宽,
@@ -426,7 +372,6 @@ export class 设置界面 extends Phaser.Scene {
       { 宽: 42, 高: 38 },
     );
 
-    this.绘制设置分组(内容X + 4, 上 + 72, 内容宽 - 8, this.创建设置分组(设置, 文案));
     const 页脚 = new 界面布局(this, 宽 / 2, 上 + 面板高 - 32, {
       方向: "水平",
       宽: 内容宽,

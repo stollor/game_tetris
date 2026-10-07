@@ -44,6 +44,14 @@ export class 界面控件 extends Phaser.GameObjects.Container {
     this.setSize(宽, 高);
   }
 
+  protected 创建矩形命中区域(宽 = this.width, 高 = this.height): Phaser.Geom.Rectangle {
+    return new Phaser.Geom.Rectangle(0, 0, 宽, 高);
+  }
+
+  protected 更新矩形命中区域(宽 = this.width, 高 = this.height): void {
+    if (this.input) this.input.hitArea = this.创建矩形命中区域(宽, 高);
+  }
+
   protected 布局尺寸变化(_宽: number, _高: number): void {}
 }
 

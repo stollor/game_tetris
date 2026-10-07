@@ -8,6 +8,7 @@ export interface 游戏设置 {
   背景音乐: boolean;
   音乐音量: number;
   音效音量: number;
+  旋转180: boolean;
   主题: 主题选择;
   语言: 语言选择;
   屏幕适配: 屏幕适配选择;
@@ -19,6 +20,7 @@ export const 默认设置: 游戏设置 = {
   背景音乐: true,
   音乐音量: 60,
   音效音量: 80,
+  旋转180: true,
   主题: "跟随系统",
   语言: "跟随系统",
   屏幕适配: "自动",
@@ -40,13 +42,15 @@ function 是对象(值: unknown): 值 is Record<string, unknown> {
 export function 读取设置(): 游戏设置 {
   try {
     const 原文 = localStorage.getItem(存储键);
-    if (!原文) return { ...默认设置 };
+    const 旧半转 = localStorage.getItem("neon-pulse:rotation-180");
+    if (!原文) return { ...默认设置, 旋转180: 旧半转 !== "false" };
     const 内容: unknown = JSON.parse(原文);
-    if (!是对象(内容)) return { ...默认设置 };
+    if (!是对象(内容)) return { ...默认设置, 旋转180: 旧半转 !== "false" };
     return {
       背景音乐: typeof 内容.背景音乐 === "boolean" ? 内容.背景音乐 : 默认设置.背景音乐,
       音乐音量: 有效音量(内容.音乐音量) ? 内容.音乐音量 : 默认设置.音乐音量,
       音效音量: 有效音量(内容.音效音量) ? 内容.音效音量 : 默认设置.音效音量,
+      旋转180: typeof 内容.旋转180 === "boolean" ? 内容.旋转180 : 旧半转 !== "false",
       主题: 内容.主题 === "深色" || 内容.主题 === "浅色" ? 内容.主题 : "跟随系统",
       语言: 内容.语言 === "简体中文" || 内容.语言 === "English" ? 内容.语言 : "跟随系统",
       屏幕适配:

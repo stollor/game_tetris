@@ -16,6 +16,7 @@ export interface 滑块配置 {
 
 /** Phaser 交互容器实现的水平数值滑块，拖动期间持续回报预览值。 */
 export class 界面滑块 extends 界面控件 {
+  private readonly 视觉: Phaser.GameObjects.Graphics;
   private readonly 轨道: Phaser.GameObjects.Rectangle;
   private readonly 填充: Phaser.GameObjects.Rectangle;
   private readonly 滑块头: Phaser.GameObjects.Arc;
@@ -40,20 +41,24 @@ export class 界面滑块 extends 界面控件 {
     this.强调色值 = this.颜色值(配置.强调色);
     this.当前值 = this.规范值(配置.值);
 
-    this.轨道 = scene.add.rectangle(0, 0, this.轨道宽, 8, this.颜色值(配置.轨道色));
+    this.视觉 = scene.add.graphics();
+    this.轨道 = scene.add.rectangle(0, 0, this.轨道宽, 8, this.颜色值(配置.轨道色)).setAlpha(0.001);
     this.填充 = scene.add
       .rectangle(-this.轨道宽 / 2, 0, this.轨道宽 * this.比例(this.当前值), 8, this.强调色值)
-      .setOrigin(0, 0.5);
-    this.滑块头 = scene.add.circle(
-      -this.轨道宽 / 2 + this.轨道宽 * this.比例(this.当前值),
-      0,
-      this.命中高 < 30 ? 8 : 9,
-      this.强调色值,
-    );
-    this.add([this.轨道, this.填充, this.滑块头]);
+      .setOrigin(0, 0.5)
+      .setAlpha(0.001);
+    this.滑块头 = scene.add
+      .circle(
+        -this.轨道宽 / 2 + this.轨道宽 * this.比例(this.当前值),
+        0,
+        this.命中高 < 30 ? 8 : 9,
+        this.强调色值,
+      )
+      .setAlpha(0.001);
+    this.add([this.视觉, this.轨道, this.填充, this.滑块头]);
     this.setInteractive({
       useHandCursor: true,
-      hitArea: new Phaser.Geom.Rectangle(0, 0, this.轨道宽, this.命中高),
+      hitArea: this.创建矩形命中区域(this.轨道宽, this.命中高),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
     });
     this.on("pointerdown", (指针: Phaser.Input.Pointer) => {
@@ -87,7 +92,7 @@ export class 界面滑块 extends 界面控件 {
     this.轨道宽 = 宽;
     this.轨道.setSize(宽, 8);
     this.命中高 = 高;
-    if (this.input) this.input.hitArea = new Phaser.Geom.Rectangle(0, 0, 宽, 高);
+    this.更新矩形命中区域(宽, 高);
     this.填充.setX(-宽 / 2);
     this.更新图形();
   }
@@ -120,6 +125,37 @@ export class 界面滑块 extends 界面控件 {
     const 比例值 = this.比例(this.当前值);
     this.填充.setSize(this.轨道宽 * 比例值, 8);
     this.滑块头.setX(-this.轨道宽 / 2 + this.轨道宽 * 比例值);
+    this.重绘视觉(比例值);
+  }
+
+  /** 玻璃质感轨道 + 辉光滑块头（视觉层，不影响命中区域）。 */
+  private 重绘视觉(比例值: number): void {
+    const 宽 = this.轨道宽;
+    const 左 = -宽 / 2;
+    const 轨道高 = 7;
+    this.视觉.clear();
+    this.视觉
+      .fillStyle(0x0a1122, 0.85)
+      .fillRoundedRect(左, -轨道高 / 2, 宽, 轨道高, 轨道高 / 2)
+      .fillStyle(0x2a3c5e, 0.9)
+      .fillRoundedRect(左, -轨道高 / 2, 宽, 轨道高 * 0.55, 轨道高 / 2);
+    if (比例值 > 0) {
+      this.视觉
+        .fillStyle(this.强调色值, 0.95)
+        .fillRoundedRect(左, -轨道高 / 2, Math.max(轨道高, 宽 * 比例值), 轨道高, 轨道高 / 2);
+    }
+    const 头X = 左 + 宽 * 比例值;
+    const 头半径 = this.命中高 < 30 ? 8 : 9;
+    for (let 层 = 2; 层 >= 1; 层 -= 1) {
+      this.视觉.fillStyle(this.强调色值, 0.16 / 层).fillCircle(头X, 0, 头半径 * (1 + 层 * 0.5));
+    }
+    this.视觉
+      .fillStyle(this.强调色值, 1)
+      .fillCircle(头X, 0, 头半径)
+      .fillStyle(0xffffff, 0.55)
+      .fillCircle(头X - 头半径 * 0.25, -头半径 * 0.28, 头半径 * 0.34)
+      .lineStyle(1, 0xffffff, 0.35)
+      .strokeCircle(头X, 0, 头半径);
   }
 
   private 规范值(值: number): number {

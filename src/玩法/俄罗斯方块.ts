@@ -1,9 +1,15 @@
+import { 游戏外观 } from "../配置/游戏外观";
+
 export const 棋盘宽度 = 10;
 export const 可见高度 = 20;
 export const 隐藏高度 = 2;
 export type 方块类型 = "I" | "O" | "T" | "S" | "Z" | "J" | "L";
 export type 游戏模式 = "马拉松" | "冲刺" | "极限" | "每日挑战";
 export type 游戏阶段 = "进行中" | "暂停" | "结束";
+/** 每日挑战继承马拉松结算规则，包括结束后的显式重开等待。 */
+export function 是否使用马拉松结算重开锁(模式: 游戏模式): boolean {
+  return 模式 === "马拉松" || 模式 === "每日挑战";
+}
 export interface 方块格子 {
   列2: number;
   行2: number;
@@ -43,16 +49,9 @@ export interface 俄罗斯方块状态 {
   内部重力: number;
   有效用时: number;
   最后踢墙编号: number;
+  最后踢墙候选数: number;
 }
-export const 方块颜色: Record<方块类型, number> = {
-  I: 0x00e5ff,
-  O: 0xffee58,
-  T: 0x7c4dff,
-  S: 0x00e676,
-  Z: 0xff2d9b,
-  J: 0x2979ff,
-  L: 0xff8a00,
-};
+export const 方块颜色: Record<方块类型, number> = 游戏外观.方块.颜色;
 const 方块出生格: Record<方块类型, [number, number][]> = {
   I: [
     [3, -1],
@@ -259,6 +258,14 @@ export function 每日方块序列(date: string, count = 14): 方块类型[] {
   while (out.length < count) out.push(...洗牌(rand));
   return out.slice(0, count);
 }
+/**
+ * 每局开始时按模式取用的随机源。
+ * 每日挑战每次调用都回到当日种子，保证同日重开方块序列完全一致；
+ * 其他模式使用游戏随机源。
+ */
+export function 创建模式随机源(模式: 游戏模式, 日期: string): () => number {
+  return 模式 === "每日挑战" ? 创建每日随机源(每日种子(日期)) : Math.random;
+}
 export function 创建新局(
   rand: () => number = Math.random,
   固定序列: 方块类型[] = [],
@@ -293,6 +300,7 @@ export function 创建新局(
     内部重力: 0,
     有效用时: 0,
     最后踢墙编号: 0,
+    最后踢墙候选数: 1,
   };
   s.当前方块 = 创建活动(抽块(s, rand));
   s.下一个方块 = 抽块(s, rand);
@@ -401,6 +409,7 @@ export function 旋转方块(
       s.当前方块 = next;
       s.最后旋转 = true;
       s.最后踢墙编号 = kickIndex;
+      s.最后踢墙候选数 = kicks.length;
       地面操作(s, rand, true);
       return true;
     }
@@ -411,6 +420,10 @@ export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math
   if (s.阶段 !== "进行中") return;
   const cells = 读取格子(s.当前方块);
   if (cells.every(([, y]) => y < 0)) {
+    // Lock Out：本次不消行，但已累积的软降/硬降分仍计入最终成绩。
+    s.分数 += s.软降分 + s.硬降分;
+    s.软降分 = 0;
+    s.硬降分 = 0;
     结束(s);
     return;
   }
@@ -447,7 +460,7 @@ export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math
   ][s.当前方块.旋转] ?? [0, 1];
   const fullSpin =
     tSpin &&
-    (s.最后踢墙编号 === 4 ||
+    (s.最后踢墙编号 === s.最后踢墙候选数 - 1 ||
       filled >= 2 ||
       frontCorners.every((corner) => corners[corner] === true));
   const oldLevel = s.等级,

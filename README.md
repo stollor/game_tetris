@@ -37,10 +37,10 @@ bun run build
 bun run test:browser -- http://localhost:3000
 ```
 
-正式版状态流程由 GameMaker 执行：
+正式版状态流程由外部 GameMaker CLI（`gm`，需单独安装）执行：
 
 ```sh
-bun run gm -- browser test 俄罗斯方块 http://localhost:3000 测试/正式版核心流程/状态机.json
+gm browser test 俄罗斯方块 http://localhost:3000 测试/正式版核心流程/状态机.json
 ```
 
 浏览器验收截图保存在 `测试/正式版浏览器验收/`，菜单、场景状态、键盘长按和游戏字段断言证据保存在 `测试/正式版核心流程/`。固定序列测试接口只在 localhost 暴露。

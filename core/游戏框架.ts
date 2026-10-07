@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { 连接游戏测试桥接 } from "../src/common/测试桥接";
 import { 解析语言 } from "./多语言";
 import { 应用样式, type 游戏界面色彩, 获取样式背景色, 获取游戏界面色彩 } from "./样式";
 import { type 游戏设置, 获取游戏设置 } from "./设置";
@@ -59,6 +58,5 @@ export function 创建游戏框架(选项: 游戏框架选项): Phaser.Game {
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
     scene: 选项.页面,
   });
-  连接游戏测试桥接(游戏);
   return 游戏;
 }

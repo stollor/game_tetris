@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { 界面布局 } from "./布局";
 import { 界面按钮 } from "./按钮";
 import { 界面控件 } from "./控件";
+import { 绘制玻璃面板 } from "./玻璃绘制";
 
 export interface 下拉选项 {
   name: string;
@@ -26,6 +27,7 @@ export interface 下拉菜单配置 {
 /** 使用 Phaser 容器、按钮和垂直布局组成的下拉菜单。 */
 export class 界面下拉菜单 extends 界面控件 {
   private readonly 面板: Phaser.GameObjects.Rectangle;
+  private readonly 视觉: Phaser.GameObjects.Graphics;
   private readonly 标签: Phaser.GameObjects.Text;
   private readonly 配置: 下拉菜单配置;
   private readonly 初始层级: number;
@@ -37,9 +39,11 @@ export class 界面下拉菜单 extends 界面控件 {
     this.name = 配置.name;
     this.初始层级 = this.depth;
     this.配置 = 配置;
+    this.视觉 = scene.add.graphics();
     this.面板 = scene.add
-      .rectangle(0, 0, 配置.宽, 配置.高, this.颜色值(配置.面板色), 0.92)
-      .setStrokeStyle(1, this.颜色值(配置.强调色), 0.7);
+      .rectangle(0, 0, 配置.宽, 配置.高, this.颜色值(配置.面板色), 0.001)
+      .setStrokeStyle(1, this.颜色值(配置.强调色), 0.001);
+    this.重绘视觉(配置.宽, 配置.高);
     this.标签 = scene.add
       .text(-配置.宽 / 2 + 14, 0, 配置.文案, {
         fontFamily: "sans-serif",
@@ -56,10 +60,10 @@ export class 界面下拉菜单 extends 界面控件 {
         color: 配置.强调色,
       })
       .setOrigin(0.5);
-    this.add([this.面板, this.标签, 箭头]);
+    this.add([this.视觉, this.面板, this.标签, 箭头]);
     this.setInteractive({
       useHandCursor: true,
-      hitArea: new Phaser.Geom.Rectangle(0, 0, 配置.宽, 配置.高),
+      hitArea: this.创建矩形命中区域(配置.宽, 配置.高),
       hitAreaCallback: Phaser.Geom.Rectangle.Contains,
     });
     this.on("pointerdown", this.切换展开);
@@ -73,9 +77,21 @@ export class 界面下拉菜单 extends 界面控件 {
 
   protected 布局尺寸变化(宽: number, 高: number): void {
     this.面板.setSize(宽, 高);
+    this.重绘视觉(宽, 高);
     this.标签.setPosition(-宽 / 2 + 14, 0).setWordWrapWidth(Math.max(0, 宽 - 46));
-    if (this.input) this.input.hitArea = new Phaser.Geom.Rectangle(0, 0, 宽, 高);
+    this.更新矩形命中区域(宽, 高);
     if (this.展开中) this.更新选项位置();
+  }
+
+  private 重绘视觉(宽: number, 高: number): void {
+    this.视觉.clear();
+    绘制玻璃面板(this.视觉, -宽 / 2, -高 / 2, 宽, 高, {
+      圆角: 10,
+      填色: this.颜色值(this.配置.面板色),
+      透明度: 0.94,
+      边色: this.颜色值(this.配置.强调色),
+      边透明度: 0.6,
+    });
   }
 
   private 切换展开 = (): void => {

@@ -55,7 +55,7 @@ export class 界面音量控制 extends 界面控件 {
       .setSize(36, 42)
       .setInteractive({
         useHandCursor: true,
-        hitArea: new Phaser.Geom.Rectangle(0, 0, 36, 42),
+        hitArea: this.创建矩形命中区域(36, 42),
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
       })
       .setName(`${配置.名称}.mute`)
@@ -78,7 +78,7 @@ export class 界面音量控制 extends 界面控件 {
   }
 
   protected 布局尺寸变化(宽: number, 高: number): void {
-    if (this.input) this.input.hitArea = new Phaser.Geom.Rectangle(0, 0, 宽, 高);
+    this.更新矩形命中区域(宽, 高);
   }
 
   private 切换静音 = (): void => {

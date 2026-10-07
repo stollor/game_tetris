@@ -1,12 +1,12 @@
 {
   "version": 1,
   "name": "设置界面功能流程",
-  "initialState": "主界面",
+  "initialState": "开始菜单",
   "timeoutMs": 5000,
   "steps": [
     {
       "name": "打开设置",
-      "from": "主界面",
+      "from": "开始菜单",
       "action": "menu.settings",
       "to": "设置界面"
     },
@@ -20,6 +20,7 @@
           "背景音乐": true,
           "音乐音量": 60,
           "音效音量": 80,
+          "旋转180": true,
           "主题": "跟随系统",
           "语言": "跟随系统",
           "样式": "夜空鎏金"
@@ -27,92 +28,30 @@
       }
     },
     {
-      "name": "关闭背景音乐",
+      "name": "关闭 180° 旋转",
       "from": "设置界面",
-      "action": "settings.music.off",
+      "action": "settings.rotation180.off",
       "to": "设置界面",
       "expectStorage": {
         "gamemaker:settings": {
-          "背景音乐": false
+          "旋转180": false,
+          "背景音乐": true,
+          "音乐音量": 60,
+          "音效音量": 80
         }
       }
     },
     {
-      "name": "打开背景音乐",
+      "name": "重新开启 180° 旋转",
       "from": "设置界面",
-      "action": "settings.music.on",
+      "action": "settings.rotation180.on",
       "to": "设置界面",
       "expectStorage": {
         "gamemaker:settings": {
-          "背景音乐": true
-        }
-      }
-    },
-    {
-      "name": "通过滑块设置音乐音量",
-      "from": "设置界面",
-      "action": "settings.music-volume.slider",
-      "value": 45,
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音乐音量": 45
-        }
-      }
-    },
-    {
-      "name": "调低音乐音量",
-      "from": "设置界面",
-      "action": "settings.music-volume.down",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音乐音量": 35
-        }
-      }
-    },
-    {
-      "name": "调高音乐音量",
-      "from": "设置界面",
-      "action": "settings.music-volume.up",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音乐音量": 45
-        }
-      }
-    },
-    {
-      "name": "通过滑块设置音效音量",
-      "from": "设置界面",
-      "action": "settings.sfx-volume.slider",
-      "value": 65,
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音效音量": 65
-        }
-      }
-    },
-    {
-      "name": "调低音效音量",
-      "from": "设置界面",
-      "action": "settings.sfx-volume.down",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音效音量": 55
-        }
-      }
-    },
-    {
-      "name": "调高音效音量",
-      "from": "设置界面",
-      "action": "settings.sfx-volume.up",
-      "to": "设置界面",
-      "expectStorage": {
-        "gamemaker:settings": {
-          "音效音量": 65
+          "旋转180": true,
+          "背景音乐": true,
+          "音乐音量": 60,
+          "音效音量": 80
         }
       }
     },
@@ -164,13 +103,20 @@
       "name": "展开语言下拉菜单",
       "from": "设置界面",
       "action": "settings.language.dropdown",
-      "to": "设置界面"
+      "to": "设置界面",
+      "expectTextIncludes": [
+        "English"
+      ]
     },
     {
       "name": "切换英文界面",
       "from": "设置界面",
       "action": "settings.language.en",
       "to": "设置界面",
+      "expectTextIncludes": [
+        "Gameplay",
+        "180° rotation"
+      ],
       "expectStorage": {
         "gamemaker:settings": {
           "语言": "English"
@@ -181,7 +127,10 @@
       "name": "再次展开语言下拉菜单",
       "from": "设置界面",
       "action": "settings.language.dropdown",
-      "to": "设置界面"
+      "to": "设置界面",
+      "expectTextIncludes": [
+        "简体中文"
+      ]
     },
     {
       "name": "切换中文界面",
@@ -204,6 +153,7 @@
           "背景音乐": true,
           "音乐音量": 60,
           "音效音量": 80,
+          "旋转180": true,
           "主题": "跟随系统",
           "语言": "跟随系统",
           "样式": "夜空鎏金"
@@ -214,7 +164,7 @@
       "name": "完成并关闭",
       "from": "设置界面",
       "action": "settings.done",
-      "to": "主界面"
+      "to": "开始菜单"
     }
   ]
 }

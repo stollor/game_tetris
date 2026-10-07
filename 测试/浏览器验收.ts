@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
+import { 每日方块序列 } from "../src/玩法/俄罗斯方块";
 
 interface 对局测试接口 {
   设置序列: (序列: string[]) => void;
@@ -9,6 +10,7 @@ interface 对局测试接口 {
     分数: number;
     消行数: number;
     当前方块: string;
+    下一个方块: string;
     当前格子: [number, number][];
     当前朝向: number;
     朝向: number;
@@ -186,10 +188,89 @@ try {
     重开后?.阶段 === "进行中" && 重开后.分数 === 0 && 重开后.消行数 === 0,
     "点击重新开始重置整局状态",
   );
+  await 页面.screenshot({ path: "测试/正式版浏览器验收/重新开始.png", fullPage: true });
+
+  // —— 回归：重开后的对局结束时同样写入最佳纪录（结束已存档 必须随重开复位）——
+  await 页面.evaluate(() => localStorage.removeItem("neon-pulse:best:马拉松"));
+  await 页面.evaluate(() => {
+    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
+    测试窗.__俄罗斯方块测试__?.设置序列(Array.from({ length: 30 }, () => "O"));
+  });
+  for (let 次数 = 0; 次数 < 15; 次数 += 1) {
+    if ((await 读取对局())?.阶段 === "结束") break;
+    await 页面.keyboard.press("Space");
+    await 页面.waitForTimeout(70);
+  }
+  const 重开局成绩 = await 读取对局();
+  断言(重开局成绩?.阶段 === "结束", "重开后的对局也能堆叠至结束");
+  const 最佳纪录 = await 页面.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("neon-pulse:best:马拉松") ?? "null") as {
+        分数?: number;
+      } | null,
+  );
+  断言(
+    (重开局成绩?.分数 ?? 0) > 0 && 最佳纪录?.分数 === 重开局成绩?.分数,
+    `重开后的对局结束同样写入最佳纪录（本局 ${重开局成绩?.分数}，纪录 ${最佳纪录?.分数}）`,
+  );
+
+  // —— 回归：结算 3 秒锁在后续对局依旧生效 ——
+  await 点击测试对象("restart");
+  await 页面.waitForTimeout(120);
+  断言((await 读取对局())?.阶段 === "结束", "结算 3 秒内的重新开始被忽略");
+  await 页面.waitForTimeout(3200);
+  await 点击测试对象("restart");
+  await 页面.waitForTimeout(120);
+  断言((await 读取对局())?.阶段 === "进行中", "结算 3 秒后可显式重开");
+
+  // —— 回归：每日挑战同日重开序列不变（每次重开都回到当日种子）——
+  await 点击测试对象("game.leave");
+  await 页面.waitForFunction(() => {
+    const 快照窗 = window as unknown as { __GAMEMAKER_TEST__?: 快照测试接口 };
+    return 快照窗.__GAMEMAKER_TEST__?.getSnapshot().sceneId === "开始菜单";
+  });
+  const 返回菜单快照 = await 页面.evaluate(() => {
+    const 快照窗 = window as unknown as { __GAMEMAKER_TEST__?: 快照测试接口 };
+    return 快照窗.__GAMEMAKER_TEST__?.getSnapshot();
+  });
+  断言(
+    Boolean(
+      返回菜单快照?.interactives.some((项目) => 项目.name === "menu.start") &&
+        !返回菜单快照.interactives.some((项目) => 项目.name.startsWith("mode.")),
+    ),
+    "离开对局后主菜单恢复首屏",
+  );
+  await 点击测试对象("menu.start");
+  await 页面.waitForTimeout(120);
+  await 点击测试对象("mode.每日挑战");
+  await 页面.waitForFunction(() => {
+    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
+    return Boolean(测试窗.__俄罗斯方块测试__);
+  });
+  const 日期 = new Date().toISOString().slice(0, 10);
+  const 当日序列 = 每日方块序列(日期, 14);
+  const 读取序列 = async (): Promise<string[]> => {
+    const 状态 = await 读取对局();
+    return [状态?.当前方块 ?? "", 状态?.下一个方块 ?? ""];
+  };
+  断言(
+    (await 读取序列()).join(",") === 当日序列.slice(0, 2).join(","),
+    "每日挑战使用当日固定种子序列",
+  );
+  for (let 轮次 = 1; 轮次 <= 2; 轮次 += 1) {
+    await 页面.keyboard.press("p");
+    await 页面.waitForTimeout(150);
+    await 点击测试对象("game.pause.restart");
+    await 页面.waitForTimeout(150);
+    断言(
+      (await 读取序列()).join(",") === 当日序列.slice(0, 2).join(","),
+      `每日挑战第 ${轮次} 次重开后方块序列与开局一致`,
+    );
+  }
+  await 页面.screenshot({ path: "测试/正式版浏览器验收/每日重开.png", fullPage: true });
 
   await 页面.waitForTimeout(850);
   断言(页面错误.length === 0, "浏览器控制台与页面无运行时错误");
-  await 页面.screenshot({ path: "测试/正式版浏览器验收/重新开始.png", fullPage: true });
 } finally {
   await 浏览器.close();
 }

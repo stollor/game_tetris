@@ -1,7 +1,9 @@
 import Phaser from "phaser";
+import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
 import { type 背景主题, 获取游戏设置 } from "../../../core/设置";
 import { 打开覆盖页面 } from "../../../core/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
+import { 应用背景文字样式, 背景基调, 背景文字配色 } from "../../视觉/文字可读性";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
 
 const 模式项: { 模式: 游戏模式; 标题: string; 说明: string; 色彩: number }[] = [
@@ -20,6 +22,8 @@ export class 开始菜单 extends Phaser.Scene {
   }
 
   create(): void {
+    // 场景实例会在对局结束后复用；每次进入菜单都从首屏开始。
+    this.选择模式 = false;
     this.cameras.main.setBackgroundColor("#080B18");
     this.绘制背景();
     this.构建();
@@ -59,33 +63,34 @@ export class 开始菜单 extends Phaser.Scene {
     const w = this.scale.width,
       h = this.scale.height,
       c = this.add.container(w / 2, h / 2);
-    c.add(
-      this.add
-        .text(0, -Math.min(230, h * 0.34), "NEON PULSE", {
-          fontFamily: "Arial",
-          fontSize: w < 520 ? "38px" : "58px",
-          fontStyle: "bold",
-          color: "#eaf7ff",
-          letterSpacing: 7,
-        })
-        .setOrigin(0.5),
-    );
-    c.add(
-      this.add
-        .text(0, -Math.min(180, h * 0.26), "俄罗斯方块  ·  霓虹街机", {
-          fontSize: "16px",
-          color: "#8296be",
-          letterSpacing: 2,
-        })
-        .setOrigin(0.5),
-    );
+    const 文字配色 = 背景文字配色(this.背景主题);
+    const 标题字号 = w < 520 ? 38 : 58;
+    const 标题文本 = this.add
+      .text(0, -Math.min(230, h * 0.34), "NEON PULSE", {
+        fontFamily: "Arial",
+        fontSize: `${标题字号}px`,
+        fontStyle: "bold",
+        color: 文字配色.主字,
+        letterSpacing: 7,
+      })
+      .setOrigin(0.5);
+    应用背景文字样式(标题文本, this.背景主题, 标题字号);
+    c.add(标题文本);
+    const 副标题文本 = this.add
+      .text(0, -Math.min(180, h * 0.26), "俄罗斯方块  ·  霓虹街机", {
+        fontSize: "16px",
+        color: 文字配色.次字,
+        letterSpacing: 2,
+      })
+      .setOrigin(0.5);
+    副标题文本.setShadow(0, 1, 文字配色.阴影色, 3, false, true);
+    c.add(副标题文本);
     if (!this.选择模式) {
-      const 启用180旋转 = localStorage.getItem("neon-pulse:rotation-180") !== "false";
-      c.add(
-        this.add
-          .text(0, -55, "选择你的节奏", { fontSize: "21px", color: "#00e5ff", fontStyle: "bold" })
-          .setOrigin(0.5),
-      );
+      const 标语文本 = this.add
+        .text(0, -55, "选择你的节奏", { fontSize: "21px", color: 文字配色.强调, fontStyle: "bold" })
+        .setOrigin(0.5);
+      标语文本.setShadow(0, 1.5, 文字配色.阴影色, 4, false, true);
+      c.add(标语文本);
       this.按钮(
         c,
         0,
@@ -111,34 +116,35 @@ export class 开始菜单 extends Phaser.Scene {
         () => 打开覆盖页面(this, "设置界面"),
         0x7c4dff,
       );
-      this.按钮(
-        c,
-        0,
-        120,
-        300,
-        42,
-        `180°旋转：${启用180旋转 ? "开" : "关"}`,
-        "menu.rotation180",
-        () => {
-          localStorage.setItem("neon-pulse:rotation-180", 启用180旋转 ? "false" : "true");
-          this.重建();
-        },
-        0x8296be,
-      );
-      c.add(
-        this.add
-          .text(0, 178, "← → 移动     ↑ / X 旋转     ↓ 软降     空格 硬降     P 暂停", {
-            fontSize: w < 700 ? "11px" : "13px",
-            color: "#7284a6",
-          })
-          .setOrigin(0.5),
-      );
+      const 操作提示文本 = this.add
+        .text(0, 178, "← → 移动     ↑ / X 旋转     ↓ 软降     空格 硬降     P 暂停", {
+          fontSize: w < 700 ? "11px" : "13px",
+          color: 文字配色.主字,
+        })
+        .setOrigin(0.5);
+      // 海面亮暗变化大，小字加主题自适应底衬保住对比，不用描边避免洗灰字芯
+      const 浅底 = 背景基调(this.背景主题) === "浅底";
+      const 提示宽 = 操作提示文本.width + 26;
+      const 提示高 = 操作提示文本.height + 12;
+      const 提示底衬 = this.add.graphics();
+      提示底衬
+        .fillStyle(浅底 ? 0xf2f8ff : 0x060b16, 浅底 ? 0.66 : 0.52)
+        .fillRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10)
+        .lineStyle(1, 浅底 ? 0xffffff : 0x2c3f66, 0.42)
+        .strokeRoundedRect(-提示宽 / 2, 178 - 提示高 / 2, 提示宽, 提示高, 10);
+      操作提示文本.setShadow(0, 1, 文字配色.阴影色, 3, false, true);
+      c.add(操作提示文本);
+      c.addAt(提示底衬, 0);
     } else {
-      c.add(
-        this.add
-          .text(0, -104, "选择游戏模式", { fontSize: "21px", color: "#00e5ff", fontStyle: "bold" })
-          .setOrigin(0.5),
-      );
+      const 模式标语文本 = this.add
+        .text(0, -104, "选择游戏模式", {
+          fontSize: "21px",
+          color: 文字配色.强调,
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5);
+      模式标语文本.setShadow(0, 1.5, 文字配色.阴影色, 4, false, true);
+      c.add(模式标语文本);
       模式项.forEach((item, i) => {
         const y = -48 + i * 70;
         this.按钮(
@@ -154,7 +160,7 @@ export class 开始菜单 extends Phaser.Scene {
         );
         c.add(
           this.add
-            .text(0, y + 18, item.说明, { fontSize: "11px", color: "#8296be" })
+            .text(0, y + 18, item.说明, { fontSize: "11px", color: "#A9BDD8" })
             .setOrigin(0.5),
         );
       });
@@ -186,24 +192,38 @@ export class 开始菜单 extends Phaser.Scene {
     action: () => void,
     color: number,
   ): void {
+    const 视觉 = this.add.graphics();
+    const 绘制底板 = (悬停: boolean) => {
+      视觉.clear();
+      绘制玻璃按钮(视觉, x, y, w, h, {
+        圆角: 12,
+        填色: 悬停 ? 0x18274a : 0x101a35,
+        强调色: color,
+        透明度: 悬停 ? 1 : 0.95,
+        边透明度: 0.75,
+        悬停,
+      });
+    };
+    绘制底板(false);
     const plate = this.add
-      .rectangle(x, y, w, h, 0x101a35, 0.95)
-      .setStrokeStyle(1, color, 0.75)
+      .rectangle(x, y, w, h, 0x000000, 0.001)
       .setInteractive({ useHandCursor: true })
       .setName(name);
     plate
-      .on("pointerover", () => plate.setFillStyle(0x18274a, 1))
-      .on("pointerout", () => plate.setFillStyle(0x101a35, 0.95))
+      .on("pointerover", () => 绘制底板(true))
+      .on("pointerout", () => 绘制底板(false))
       .on("pointerdown", action);
+    // 紫色文字在深色底板上对比不足，换亮薰衣草白保可读
+    const 文字色值 = color === 0x7c4dff ? 0xe9e2ff : color;
     const text = this.add
       .text(x, y, label, {
         fontSize: h > 45 ? "16px" : "14px",
         fontStyle: "bold",
-        color: `#${color.toString(16).padStart(6, "0")}`,
+        color: `#${文字色值.toString(16).padStart(6, "0")}`,
       })
       .setOrigin(0.5)
       .setDepth(2);
-    c.add([plate, text]);
+    c.add([视觉, plate, text]);
   }
 
   private 开始(模式: 游戏模式): void {
