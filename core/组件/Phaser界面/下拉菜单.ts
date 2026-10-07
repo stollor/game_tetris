@@ -32,6 +32,7 @@ export class 界面下拉菜单 extends 界面控件 {
   private readonly 配置: 下拉菜单配置;
   private readonly 初始层级: number;
   private 选项布局?: 界面布局;
+  private 展开底板?: Phaser.GameObjects.Graphics;
   private 展开中 = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, 配置: 下拉菜单配置) {
@@ -116,6 +117,24 @@ export class 界面下拉菜单 extends 界面控件 {
       间距: 2,
       主轴对齐: "起始",
     });
+    this.展开底板 = this.scene.add.graphics();
+    绘制玻璃面板(
+      this.展开底板,
+      -(this.width + 12) / 2,
+      -(this.选项布局.height + 12) / 2,
+      this.width + 12,
+      this.选项布局.height + 12,
+      {
+        圆角: 10,
+        填色: this.颜色值(外观.面板色),
+        透明度: 1,
+        投影: false,
+        高光: false,
+        边色: this.颜色值(外观.强调色),
+        边透明度: 0.85,
+      },
+    );
+    this.add(this.展开底板);
     for (const 选项 of this.配置.选项) {
       this.选项布局.添加(
         new 界面按钮(this.scene, 0, 0, {
@@ -142,15 +161,18 @@ export class 界面下拉菜单 extends 界面控件 {
   private 收起(): void {
     this.展开中 = false;
     this.setDepth(this.初始层级);
-    if (!this.选项布局) return;
-    this.remove(this.选项布局, true);
+    if (this.选项布局) this.remove(this.选项布局, true);
     this.选项布局 = undefined;
+    if (this.展开底板) this.remove(this.展开底板, true);
+    this.展开底板 = undefined;
   }
 
   private 更新选项位置(): void {
     if (!this.选项布局) return;
     const 方向 = this.配置.展开方向 === "下" ? 1 : -1;
-    this.选项布局.setPosition(0, 方向 * (this.height / 2 + this.选项布局.height / 2 + 2));
+    const 选项中心Y = 方向 * (this.height / 2 + this.选项布局.height / 2 + 2);
+    this.选项布局.setPosition(0, 选项中心Y);
+    this.展开底板?.setPosition(0, 选项中心Y);
   }
 
   private 颜色值(颜色: string): number {
