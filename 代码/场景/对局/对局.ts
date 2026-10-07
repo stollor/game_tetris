@@ -1,20 +1,20 @@
 import Phaser from "phaser";
-import { 获取文案, 解析语言 } from "../../../core/多语言";
-import { 应用文字清晰度 } from "../../../core/文字清晰度";
+import { 获取文案, 解析语言 } from "../../../框架/多语言";
+import { 应用文字清晰度 } from "../../../框架/文字清晰度";
 import {
   播放程序音效,
   解锁程序音频,
   设置程序音乐场景,
   设置程序音乐暂停,
-} from "../../../core/程序音频";
-import { 界面对局设置菜单 } from "../../../core/组件/Phaser界面/对局设置菜单";
-import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
-import { 界面数值面板 } from "../../../core/组件/Phaser界面/数值面板";
-import { 界面暂停菜单 } from "../../../core/组件/Phaser界面/暂停菜单";
-import { 绘制玻璃面板 } from "../../../core/组件/Phaser界面/玻璃绘制";
-import { 界面触屏操作区, type 触屏操作 } from "../../../core/组件/Phaser界面/触屏操作区";
-import { type 背景主题, 获取游戏设置 } from "../../../core/设置";
-import { 绑定音频管理器 } from "../../../core/音频";
+} from "../../../框架/程序音频";
+import { 界面对局设置菜单 } from "../../../框架/组件/Phaser界面/对局设置菜单";
+import { 界面按钮 } from "../../../框架/组件/Phaser界面/按钮";
+import { 界面数值面板 } from "../../../框架/组件/Phaser界面/数值面板";
+import { 界面暂停菜单 } from "../../../框架/组件/Phaser界面/暂停菜单";
+import { 绘制玻璃面板 } from "../../../框架/组件/Phaser界面/玻璃绘制";
+import { 界面触屏操作区, type 触屏操作 } from "../../../框架/组件/Phaser界面/触屏操作区";
+import { type 背景主题, 获取游戏设置 } from "../../../框架/设置";
+import { 绑定音频管理器 } from "../../../框架/音频";
 import {
   type 俄罗斯方块状态,
   切换暂停,

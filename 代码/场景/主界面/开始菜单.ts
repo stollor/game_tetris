@@ -1,10 +1,10 @@
 import Phaser from "phaser";
-import { 应用文字清晰度 } from "../../../core/文字清晰度";
-import { 播放程序音效, 解锁程序音频, 设置程序音乐场景 } from "../../../core/程序音频";
-import { 绘制玻璃按钮 } from "../../../core/组件/Phaser界面/玻璃绘制";
-import { 绑定按钮手势 } from "../../../core/组件/Phaser界面/控件";
-import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../core/设置";
-import { 打开覆盖页面 } from "../../../core/页面切换";
+import { 应用文字清晰度 } from "../../../框架/文字清晰度";
+import { 播放程序音效, 解锁程序音频, 设置程序音乐场景 } from "../../../框架/程序音频";
+import { 绘制玻璃按钮 } from "../../../框架/组件/Phaser界面/玻璃绘制";
+import { 绑定按钮手势 } from "../../../框架/组件/Phaser界面/控件";
+import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../框架/设置";
+import { 打开覆盖页面 } from "../../../框架/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
 import { 应用背景文字样式, 背景文字配色 } from "../../视觉/文字可读性";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";

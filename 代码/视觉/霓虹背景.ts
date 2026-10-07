@@ -1,6 +1,6 @@
 import type Phaser from "phaser";
-import { 亮色, 混色 } from "../../core/组件/Phaser界面/颜色工具";
-import type { 背景主题 } from "../../core/设置";
+import { 亮色, 混色 } from "../../框架/组件/Phaser界面/颜色工具";
+import type { 背景主题 } from "../../框架/设置";
 import { 背景主题选项, 背景主题配置 } from "../配置/背景主题";
 
 export { 背景主题选项 };

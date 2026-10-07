@@ -1,21 +1,23 @@
 import Phaser from "phaser";
 
 const 最大文字分辨率 = 2;
+const 文字测量样例 = "HgÉqgy汉字国語";
 
 function 获取文字分辨率(最低分辨率: number): number {
   return Math.min(最大文字分辨率, Math.max(最低分辨率, window.devicePixelRatio || 1));
 }
 
 function 同步容器文字(对象: Phaser.GameObjects.GameObject, 分辨率: number): void {
-  if (对象 instanceof Phaser.GameObjects.Text && 对象.style.resolution !== 分辨率) {
-    对象.setResolution(分辨率);
+  if (对象 instanceof Phaser.GameObjects.Text) {
+    if (对象.style.testString !== 文字测量样例) 对象.style.setTestString(文字测量样例);
+    if (对象.style.resolution !== 分辨率) 对象.setResolution(分辨率);
   }
   if (对象 instanceof Phaser.GameObjects.Container) {
     for (const 子对象 of 对象.list) 同步容器文字(子对象, 分辨率);
   }
 }
 
-/** Phaser.Text 使用独立 Canvas 纹理；在高 DPI 屏幕上用有限的设备像素倍率绘制。 */
+/** 用中英文混合样例计算 Phaser.Text 画布高度，并以有限的设备像素倍率绘制。 */
 export function 应用文字清晰度(scene: Phaser.Scene, 最低分辨率 = 2): void {
   let 当前分辨率 = 获取文字分辨率(最低分辨率);
   const 处理新对象 = (对象: Phaser.GameObjects.GameObject): void => {

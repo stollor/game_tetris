@@ -8,8 +8,8 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "core/**",
-      "src/**",
+      "框架/**",
+      "代码/**",
       "测试/**",
       "!测试/视觉审查",
       "!测试/视觉快照",
@@ -26,7 +26,7 @@
       "*.json",
       "*.html",
       "*.css",
-      "!dist",
+      "!产物",
       "!.gamemaker-contrast-probe"
     ]
   },

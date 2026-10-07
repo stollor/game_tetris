@@ -1,21 +1,21 @@
 import Phaser from "phaser";
-import { 获取文案, 解析语言 } from "../../../core/多语言";
-import { 应用文字清晰度 } from "../../../core/文字清晰度";
-import { 应用游戏设置, 获取游戏界面外观, 获取游戏背景色 } from "../../../core/游戏框架";
-import { 界面下拉菜单 } from "../../../core/组件/Phaser界面/下拉菜单";
-import { 界面分组 } from "../../../core/组件/Phaser界面/分组";
-import { 界面布局 } from "../../../core/组件/Phaser界面/布局";
-import { 界面按钮 } from "../../../core/组件/Phaser界面/按钮";
-import { 绑定按钮手势, 界面控件, 界面文字 } from "../../../core/组件/Phaser界面/控件";
-import { 界面滑块 } from "../../../core/组件/Phaser界面/滑块";
+import { 获取文案, 解析语言 } from "../../../框架/多语言";
+import { 应用文字清晰度 } from "../../../框架/文字清晰度";
+import { 应用游戏设置, 获取游戏界面外观, 获取游戏背景色 } from "../../../框架/游戏框架";
+import { 界面下拉菜单 } from "../../../框架/组件/Phaser界面/下拉菜单";
+import { 界面分组 } from "../../../框架/组件/Phaser界面/分组";
+import { 界面布局 } from "../../../框架/组件/Phaser界面/布局";
+import { 界面按钮 } from "../../../框架/组件/Phaser界面/按钮";
+import { 绑定按钮手势, 界面控件, 界面文字 } from "../../../框架/组件/Phaser界面/控件";
+import { 界面滑块 } from "../../../框架/组件/Phaser界面/滑块";
 import {
   更新游戏设置,
   type 游戏设置,
   获取游戏设置,
   type 语言选择,
   默认设置,
-} from "../../../core/设置";
-import { 关闭覆盖页面 } from "../../../core/页面切换";
+} from "../../../框架/设置";
+import { 关闭覆盖页面 } from "../../../框架/页面切换";
 import { 背景主题选项 } from "../../视觉/霓虹背景";
 
 const 返回页面 = "开始菜单";

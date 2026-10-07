@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { 绘制方块单元预制体, 绘制方块辉光 } from "../../core/组件/Phaser界面/方块单元预制体";
-import { 绘制玻璃面板 } from "../../core/组件/Phaser界面/玻璃绘制";
-import { 亮色 } from "../../core/组件/Phaser界面/颜色工具";
+import { 绘制方块单元预制体, 绘制方块辉光 } from "../../框架/组件/Phaser界面/方块单元预制体";
+import { 绘制玻璃面板 } from "../../框架/组件/Phaser界面/玻璃绘制";
+import { 亮色 } from "../../框架/组件/Phaser界面/颜色工具";
 import type { 方块类型 } from "../玩法/俄罗斯方块";
 import { 游戏外观 } from "../配置/游戏外观";
 

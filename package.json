@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun ./index.html",
-    "build": "bun build ./index.html --outdir ./dist",
+    "build": "bun build ./index.html --outdir ./产物",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",

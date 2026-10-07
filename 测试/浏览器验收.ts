@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
-import { 每日方块序列 } from "../src/玩法/俄罗斯方块";
+import { 每日方块序列 } from "../代码/玩法/俄罗斯方块";
 
 interface 对局测试接口 {
   设置序列: (序列: string[]) => void;

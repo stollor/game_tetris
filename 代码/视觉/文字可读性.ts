@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import type { 背景主题 } from "../../core/设置";
+import type { 背景主题 } from "../../框架/设置";
 import { 背景主题配置 } from "../配置/背景主题";
 
 /** 背景上文字的可读性配色：浅底主题用深色墨水 + 浅色描边，深底主题反之。 */

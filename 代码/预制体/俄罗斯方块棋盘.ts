@@ -1,6 +1,6 @@
 import Phaser from "phaser";
-import { 绘制方块单元预制体, 绘制方块辉光 } from "../../core/组件/Phaser界面/方块单元预制体";
-import { 亮色, 暗色 } from "../../core/组件/Phaser界面/颜色工具";
+import { 绘制方块单元预制体, 绘制方块辉光 } from "../../框架/组件/Phaser界面/方块单元预制体";
+import { 亮色, 暗色 } from "../../框架/组件/Phaser界面/颜色工具";
 import {
   type 俄罗斯方块状态,
   可以放置,
