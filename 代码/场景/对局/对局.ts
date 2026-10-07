@@ -1,20 +1,11 @@
 import Phaser from "phaser";
-import { 获取文案, 解析语言 } from "../../../框架/多语言";
 import { 应用文字清晰度 } from "../../../框架/文字清晰度";
-import {
-  播放程序音效,
-  解锁程序音频,
-  设置程序音乐场景,
-  设置程序音乐暂停,
-} from "../../../框架/程序音频";
-import { 界面对局设置菜单 } from "../../../框架/组件/Phaser界面/对局设置菜单";
 import { 界面按钮 } from "../../../框架/组件/Phaser界面/按钮";
 import { 界面数值面板 } from "../../../框架/组件/Phaser界面/数值面板";
 import { 界面暂停菜单 } from "../../../框架/组件/Phaser界面/暂停菜单";
 import { 绘制玻璃面板 } from "../../../框架/组件/Phaser界面/玻璃绘制";
-import { 界面触屏操作区, type 触屏操作 } from "../../../框架/组件/Phaser界面/触屏操作区";
-import { type 背景主题, 获取游戏设置 } from "../../../框架/设置";
-import { 绑定音频管理器 } from "../../../框架/音频";
+import { 界面触屏操作区 } from "../../../框架/组件/Phaser界面/触屏操作区";
+import { 播放游戏背景音乐, 播放游戏音效, 绑定音频管理器, 解锁程序音频 } from "../../../框架/音频";
 import {
   type 俄罗斯方块状态,
   切换暂停,
@@ -34,6 +25,13 @@ import {
 } from "../../玩法/俄罗斯方块";
 import { 应用背景文字样式, 背景基调, 背景文字配色 } from "../../视觉/文字可读性";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
+import { 获取文案, 解析语言 } from "../../配置/俄罗斯方块文案";
+import { type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
+import { 设置俄罗斯方块音乐暂停 } from "../../音频/俄罗斯方块程序音频";
+import { 界面对局设置菜单 } from "../../预制体/对局设置菜单";
+
+type 触屏操作 = "左转" | "旋转" | "右转" | "左移" | "软降" | "右移";
+
 import { 游戏外观 } from "../../配置/游戏外观";
 import { 下一个方块栏 } from "../../预制体/下一个方块栏";
 import { 俄罗斯方块棋盘 } from "../../预制体/俄罗斯方块棋盘";
@@ -156,7 +154,7 @@ export class 对局 extends Phaser.Scene {
   create(): void {
     应用文字清晰度(this);
     绑定音频管理器(this.sound);
-    设置程序音乐场景("对局");
+    播放游戏背景音乐("俄罗斯方块.背景音乐", "对局");
     this.input.on("pointerdown", 解锁程序音频);
     this.cameras.main.setBackgroundColor("#080B18");
     this.背景图 = this.add.graphics().setDepth(-2);
@@ -407,7 +405,7 @@ export class 对局 extends Phaser.Scene {
     if (事件.code === "Space") {
       this.硬降处理中 = true;
       const 距离 = 硬降(this.状态, this.当前随机源);
-      if (距离 > 0) 播放程序音效("硬降");
+      if (距离 > 0) 播放游戏音效("俄罗斯方块.硬降");
       this.重置计时器();
     }
     this.更新界面();
@@ -425,7 +423,7 @@ export class 对局 extends Phaser.Scene {
     const 输入 = 方向 < 0 ? this.左移输入 : this.右移输入;
     输入.按住毫秒 = 0;
     输入.下次横移毫秒 = 133;
-    if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放程序音效("移动");
+    if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放游戏音效("俄罗斯方块.移动");
     this.更新界面();
   }
 
@@ -440,7 +438,7 @@ export class 对局 extends Phaser.Scene {
     }
     输入.按住毫秒 += delta;
     while (输入.按住毫秒 >= 输入.下次横移毫秒) {
-      if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放程序音效("移动");
+      if (移动方块(this.状态, 方向, 0, this.当前随机源)) 播放游戏音效("俄罗斯方块.移动");
       输入.下次横移毫秒 += 33;
       this.更新界面();
     }
@@ -799,12 +797,23 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 创建触屏操作区(): void {
-    const 操作区 = new 界面触屏操作区(this, {
-      面板色: 游戏外观.按钮.面板,
-      强调色: 游戏外观.按钮.边框,
-      文字色: 游戏外观.按钮.文字,
-      字号: `${游戏外观.字体.操作图标}px`,
-    });
+    const 操作区 = new 界面触屏操作区(
+      this,
+      [
+        { 键: "左转", 文案: "↺", name: "touch.rotate-left" },
+        { 键: "旋转", 文案: "↑", name: "touch.rotate" },
+        { 键: "右转", 文案: "↻", name: "touch.rotate-right" },
+        { 键: "左移", 文案: "←", name: "touch.left" },
+        { 键: "软降", 文案: "↓", name: "touch.soft-drop" },
+        { 键: "右移", 文案: "→", name: "touch.right" },
+      ],
+      {
+        面板色: 游戏外观.按钮.面板,
+        强调色: 游戏外观.按钮.边框,
+        文字色: 游戏外观.按钮.文字,
+        字号: `${游戏外观.字体.操作图标}px`,
+      },
+    );
     this.触屏操作区 = 操作区;
     操作区.on("control-down", (操作: 触屏操作) => {
       if (this.状态.阶段 !== "进行中") return;
@@ -1100,34 +1109,34 @@ export class 对局 extends Phaser.Scene {
 
   private 操作旋转(方向: 1 | -1, 半转: boolean): void {
     const 成功 = 旋转方块(this.状态, 方向, 半转, this.当前随机源);
-    if (成功) 播放程序音效("旋转");
+    if (成功) 播放游戏音效("俄罗斯方块.旋转");
   }
 
   private 操作软降(): void {
-    if (软降一步(this.状态, this.当前随机源)) 播放程序音效("软降");
+    if (软降一步(this.状态, this.当前随机源)) 播放游戏音效("俄罗斯方块.软降");
   }
 
   private 同步程序音频(): void {
     if (this.状态.消行数 > this.音频上次消行数) {
-      播放程序音效("消行", this.状态.消行数 - this.音频上次消行数);
+      播放游戏音效("俄罗斯方块.消行", this.状态.消行数 - this.音频上次消行数);
     } else if (
       this.状态.下一个方块 !== this.音频上次预告方块 &&
       this.音频上次阶段 === "进行中" &&
       this.状态.阶段 === "进行中" &&
       !this.硬降处理中
     ) {
-      播放程序音效("锁定");
+      播放游戏音效("俄罗斯方块.锁定");
     }
     if (this.状态.阶段 !== this.音频上次阶段) {
       if (this.状态.阶段 === "暂停") {
-        播放程序音效("暂停");
-        设置程序音乐暂停(true);
+        播放游戏音效("俄罗斯方块.暂停");
+        设置俄罗斯方块音乐暂停(true);
       } else if (this.状态.阶段 === "进行中") {
-        播放程序音效("继续");
-        设置程序音乐暂停(false);
+        播放游戏音效("俄罗斯方块.继续");
+        设置俄罗斯方块音乐暂停(false);
       } else {
-        播放程序音效("结束");
-        设置程序音乐暂停(true);
+        播放游戏音效("俄罗斯方块.结束");
+        设置俄罗斯方块音乐暂停(true);
       }
     }
     this.音频上次阶段 = this.状态.阶段;

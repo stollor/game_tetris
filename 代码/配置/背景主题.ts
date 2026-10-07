@@ -1,4 +1,4 @@
-import type { 背景主题 } from "../../框架/设置";
+import type { 背景主题 } from "./俄罗斯方块设置";
 
 /** 背景名称、说明和动画参数以数据表维护；渲染器按名称绑定程序化表现。 */
 export const 背景主题配置: Record<

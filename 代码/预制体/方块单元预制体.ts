@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import { 亮色, 暗色 } from "./颜色工具";
+import { 亮色, 暗色 } from "../../框架/组件/Phaser界面/颜色工具";
 
 export interface 方块单元外观 {
   色值: number;

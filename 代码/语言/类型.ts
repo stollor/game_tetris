@@ -1,46 +1,12 @@
-export interface 游戏文案 {
-  主界面眉题: string;
-  主界面说明: string;
-  开始游戏: string;
-  设置: string;
+import type { 游戏文案 as 通用游戏文案 } from "../../框架/语言/类型";
+
+export interface 俄罗斯方块文案 {
   对局设置: string;
-  退出游戏: string;
-  请求开始说明: string;
-  无法关闭页面: string;
-  关闭设置: string;
-  声音: string;
-  外观: string;
-  语言: string;
-  主题: string;
-  样式: string;
-  背景音乐: string;
-  音乐音量: string;
-  音效音量: string;
   落点影透明度: string;
   旋转180设置: string;
   显示网格: string;
   显示按键说明: string;
   返回暂停菜单: string;
-  开: string;
-  关: string;
-  跟随系统: string;
-  深色: string;
-  浅色: string;
-  夜空鎏金: string;
-  暖纸古典: string;
-  青蓝未来: string;
-  简体中文: string;
-  英文: string;
-  开启背景音乐: string;
-  关闭背景音乐: string;
-  减少音乐音量: string;
-  增加音乐音量: string;
-  减少音效音量: string;
-  增加音效音量: string;
-  恢复默认: string;
-  完成: string;
-  设置已更新: string;
-  已恢复默认: string;
   对局副标题: string;
   操作标题: string;
   操作移动: string;
@@ -81,3 +47,5 @@ export interface 游戏文案 {
   目标达成: string;
   操作半转关闭: string;
 }
+
+export type 游戏文案 = 通用游戏文案 & 俄罗斯方块文案;

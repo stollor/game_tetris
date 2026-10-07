@@ -1,10 +1,10 @@
 import Phaser from "phaser";
-import { 获取文案, 解析语言 } from "../../多语言";
-import { 更新游戏设置, 获取游戏设置 } from "../../设置";
-import { 界面按钮 } from "./按钮";
-import { 界面滑块 } from "./滑块";
-import { 绘制玻璃面板 } from "./玻璃绘制";
-import { Phaser预制体配置 } from "./预制体配置";
+import { 界面按钮 } from "../../框架/组件/Phaser界面/按钮";
+import { 界面滑块 } from "../../框架/组件/Phaser界面/滑块";
+import { 绘制玻璃面板 } from "../../框架/组件/Phaser界面/玻璃绘制";
+import { Phaser预制体配置 } from "../../框架/组件/Phaser界面/预制体配置";
+import { 获取文案, 解析语言 } from "../配置/俄罗斯方块文案";
+import { 更新游戏设置, 获取游戏设置 } from "../配置/俄罗斯方块设置";
 
 /** 暂停期间可调整的对局内显示选项。 */
 export class 界面对局设置菜单 extends Phaser.GameObjects.Container {

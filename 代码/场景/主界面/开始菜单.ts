@@ -1,13 +1,13 @@
 import Phaser from "phaser";
 import { 应用文字清晰度 } from "../../../框架/文字清晰度";
-import { 播放程序音效, 解锁程序音频, 设置程序音乐场景 } from "../../../框架/程序音频";
-import { 绘制玻璃按钮 } from "../../../框架/组件/Phaser界面/玻璃绘制";
 import { 绑定按钮手势 } from "../../../框架/组件/Phaser界面/控件";
-import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../../框架/设置";
+import { 绘制玻璃按钮 } from "../../../框架/组件/Phaser界面/玻璃绘制";
+import { 播放游戏背景音乐, 播放游戏音效, 解锁程序音频 } from "../../../框架/音频";
 import { 打开覆盖页面 } from "../../../框架/页面切换";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
 import { 应用背景文字样式, 背景文字配色 } from "../../视觉/文字可读性";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
+import { type 游戏设置, type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
 
 const 模式项: { 模式: 游戏模式; 标题: string; 说明: string; 色彩: number }[] = [
   { 模式: "马拉松", 标题: "马拉松 MARATHON", 说明: "不断挑战更高等级与分数", 色彩: 0x00e5ff },
@@ -26,7 +26,7 @@ export class 开始菜单 extends Phaser.Scene {
 
   create(): void {
     应用文字清晰度(this);
-    设置程序音乐场景("菜单");
+    播放游戏背景音乐("俄罗斯方块.背景音乐", "菜单");
     this.input.on("pointerdown", 解锁程序音频);
     // 场景实例会在对局结束后复用；每次进入菜单都从首屏开始。
     this.选择模式 = false;
@@ -204,7 +204,7 @@ export class 开始菜单 extends Phaser.Scene {
       .setName(name);
     plate.on("pointerdown", () => {
       解锁程序音频();
-      播放程序音效("开始");
+      播放游戏音效("俄罗斯方块.开始");
     });
     绑定按钮手势(plate, {
       点击: action,
@@ -226,7 +226,7 @@ export class 开始菜单 extends Phaser.Scene {
 
   private 开始(模式: 游戏模式): void {
     const 日期 = new Date().toISOString().slice(0, 10);
-    设置程序音乐场景("对局");
+    播放游戏背景音乐("俄罗斯方块.背景音乐", "对局");
     this.scene.start("俄罗斯方块对局", { 模式, 日期 });
   }
 }

@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { 绘制方块单元预制体, 绘制方块辉光 } from "../../框架/组件/Phaser界面/方块单元预制体";
 import { 亮色, 暗色 } from "../../框架/组件/Phaser界面/颜色工具";
 import {
   type 俄罗斯方块状态,
@@ -13,6 +12,7 @@ import {
   隐藏高度,
 } from "../玩法/俄罗斯方块";
 import { 游戏外观 } from "../配置/游戏外观";
+import { 绘制方块单元预制体, 绘制方块辉光 } from "./方块单元预制体";
 
 /** 游戏棋盘预制体：负责棋盘框体、已落方块、当前方块与投影。 */
 export class 俄罗斯方块棋盘 extends Phaser.GameObjects.Container {
