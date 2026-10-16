@@ -10,6 +10,8 @@ import { 创建节流音效 } from "../../../框架/音频/音效节流";
 import { 播放游戏音效, 绑定音频管理器, 解锁程序音频 } from "../../../框架/音频/音频";
 import { 创建纪录存档, 是否刷新纪录 } from "../../存档/对局纪录";
 import { type 对局奖励输入, 执行收藏操作, 旅行日期 } from "../../存档/旅行收藏";
+import { 同步平台成就 } from "../../平台/平台成就";
+import { 结算后同步平台 } from "../../平台/结算同步";
 import { 创建俄罗斯方块成就, 成就定义, 记录落块成就 } from "../../成就/俄罗斯方块成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import {
@@ -1440,6 +1442,13 @@ export class 对局 extends Phaser.Scene {
         日期: 旅行日期(),
       };
       void this.领取本局奖励();
+      结算后同步平台({
+        模式: this.模式,
+        分数: 新.分数,
+        用时毫秒: this.状态.有效用时,
+        完赛: Boolean(this.状态.完赛),
+        新成就,
+      });
       this.最佳纪录缓存 = undefined;
       this.纪录页脚?.设置值(this.读取最佳文案());
     } catch {
@@ -1490,6 +1499,7 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 提示成就(编号: string[]): void {
+    if (编号.length) 同步平台成就(编号);
     if (!编号.length) return;
     const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
     const 名称 = 编号
