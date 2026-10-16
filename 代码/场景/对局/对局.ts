@@ -901,7 +901,7 @@ export class 对局 extends Phaser.Scene {
     this.标题文字 = this.add.text(
       0,
       0,
-      解析语言(获取游戏设置().语言) === "简体中文" ? "俄罗斯方块 旅行版" : "Tetris · Travel",
+      解析语言(获取游戏设置().语言) === "简体中文" ? "俄罗斯方块 旅行版" : "Block Travel",
       {
         fontFamily: "Arial, sans-serif",
         fontSize: "25px",

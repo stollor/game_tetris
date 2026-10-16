@@ -54,8 +54,9 @@ test("连续四行与完美清场来自真实结算，反馈只显示实际奖�
   if (!e) throw new Error("缺少真实落块事件");
   const 文案 = 获取技巧反馈(e, false);
   expect(文案).toContain("完美清场");
+  expect(文案).toContain("四连消");
   expect(文案).toContain("连击 ×2");
-  expect(文案).toContain("BACK-TO-BACK");
+  expect(文案).toContain("背靠背");
 });
 test("零行 T-Spin 也有技巧反馈，普通零行不弹奖励", () => {
   const e = {

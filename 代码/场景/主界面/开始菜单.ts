@@ -304,7 +304,7 @@ export class 开始菜单 extends Phaser.Scene {
     }
     const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
     const t = (zh: string, en: string) => (英文 ? en : zh);
-    document.title = t("俄罗斯方块 旅行版", "Tetris · Travel");
+    document.title = t("俄罗斯方块 旅行版", "Block Travel");
     this.标题层 = this.add.container(0, 0);
     const 描边文字 = (
       x: number,
@@ -328,7 +328,7 @@ export class 开始菜单 extends Phaser.Scene {
       return 对象;
     };
     if (!this.选择模式) {
-      描边文字(宽 / 2, this.标题y(), t("俄罗斯方块", "TETRIS"), 竖屏 && !矮屏 ? 36 : 30);
+      描边文字(宽 / 2, this.标题y(), t("俄罗斯方块", "BLOCKS"), 竖屏 && !矮屏 ? 36 : 30);
       描边文字(宽 / 2, this.副题y(), t("旅行版", "TRAVEL"), 16, "#f0ead3");
     }
     this.金币层 = this.add.container(0, 0);

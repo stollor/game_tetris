@@ -77,7 +77,7 @@ try {
     const 一次 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
     check(
       一次?.技巧反馈.includes(width === 667 ? "PERFECT CLEAR" : "完美清场") &&
-        一次.技巧反馈.includes("TETRIS!"),
+        一次.技巧反馈.includes(width === 667 ? "QUAD!" : "四连消"),
       "真实四行全清显示分层奖励",
     );
     await shot("四行全清");
@@ -86,7 +86,7 @@ try {
     const 二次 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
     check(
       二次?.技巧反馈.includes(width === 667 ? "COMBO ×2" : "连击 ×2") &&
-        二次.技巧反馈.includes("BACK-TO-BACK"),
+        二次.技巧反馈.includes(width === 667 ? "BACK-TO-BACK" : "背靠背"),
       "连续四行显示真实连击和高难奖励",
     );
     await shot("连击技巧");

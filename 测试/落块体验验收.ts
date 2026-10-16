@@ -31,7 +31,7 @@ try {
     await page.addInitScript(() => {
       localStorage.setItem(
         "gamemaker:settings",
-        JSON.stringify({ 样式: "夜空鎏金", 音效音量: 0.8, 音乐音量: 0 }),
+        JSON.stringify({ 样式: "夜空鎏金", 音效音量: 0.8, 音乐音量: 0, 语言: "简体中文" }),
       );
       const 原创建 = AudioContext.prototype.createOscillator;
       (window as unknown as { 发声音符: number }).发声音符 = 0;
@@ -110,7 +110,7 @@ try {
       return window.__俄罗斯方块测试__!.读取界面();
     });
     check(
-      初.技巧反馈.includes("TETRIS!") && !初.技巧反馈.includes("完美清场"),
+      初.技巧反馈.includes("四连消") && !初.技巧反馈.includes("完美清场"),
       "首次四行未全清的真实棋盘",
     );
     check(初.音效事件.at(-1)?.名称 === "俄罗斯方块.四行", "首次四行独立音效实际派发");

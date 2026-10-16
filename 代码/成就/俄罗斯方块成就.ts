@@ -22,7 +22,7 @@ export const 成就定义 = [
     编号: "tetris",
     目标: 1,
     名称: "一举四行",
-    英文: "Tetris!",
+    英文: "Quad Clear!",
     说明: "一次消除四行",
     英文说明: "Clear four lines at once",
   },

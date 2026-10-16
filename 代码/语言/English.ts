@@ -7,7 +7,7 @@ export const 文案: 俄罗斯方块文案 = {
   显示网格: "Show grid",
   显示按键说明: "Show key guide",
   返回暂停菜单: "Back to pause menu",
-  对局副标题: "Tetris · Arcade Mode",
+  对局副标题: "Travel Edition",
   操作标题: "Controls",
   操作移动: "← →   Move",
   操作旋转: "↑ / X Rotate · Hold ↑: swap",

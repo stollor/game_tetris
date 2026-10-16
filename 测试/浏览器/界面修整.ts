@@ -306,7 +306,7 @@ try {
     assert.ok(
       JSON.stringify(
         await 页.evaluate(() => window.__GAMEMAKER_TEST__?.getSnapshot("完整")),
-      ).includes("TETRIS"),
+      ).includes("BLOCKS"),
       "英文标题已翻译",
     );
     await 页.screenshot({ path: join(输出, `英文-${样式}.png`) });

@@ -27,7 +27,7 @@ function 读取模式纪录(模式: 游戏模式, 英文: boolean): string {
             : 英文
               ? "NO FINISH YET"
               : "尚无完赛纪录"
-          : `${纪录项.分数.toLocaleString()} pts`;
+          : `${纪录项.分数.toLocaleString()}${英文 ? " pts" : " 分"}`;
   } catch {
     /* 存储不可用时仍可开始游戏。 */
   }
