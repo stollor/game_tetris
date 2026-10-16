@@ -2,14 +2,22 @@
 <html lang="zh-CN" data-style="夜空鎏金" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#080B18" />
-    <title>NEON PULSE · 俄罗斯方块</title>
-    <link rel="stylesheet" href="./框架/宿主样式.css" />
+    <title>俄罗斯方块 旅行版</title>
+    <link rel="stylesheet" href="./框架/样式/宿主样式.css" />
     <link rel="stylesheet" href="./框架/样式/样式.css" />
+    <style>
+      #游戏容器 {
+        inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+          env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+        width: auto;
+        height: auto;
+      }
+    </style>
   </head>
   <body>
-    <main id="游戏容器" aria-label="俄罗斯方块"></main>
+    <main id="游戏容器" aria-label="俄罗斯方块 旅行版"></main>
     <script type="module" src="./代码/启动.ts"></script>
   </body>
 </html>

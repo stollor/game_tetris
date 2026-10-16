@@ -1,4 +1,4 @@
-import type { 游戏文案 as 通用游戏文案 } from "../../框架/语言/类型";
+import type { 游戏文案 as 通用游戏文案 } from "../../框架/设置/语言/类型";
 
 export interface 俄罗斯方块文案 {
   对局设置: string;

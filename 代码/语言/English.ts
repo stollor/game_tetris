@@ -10,7 +10,7 @@ export const 文案: 俄罗斯方块文案 = {
   对局副标题: "Tetris · Arcade Mode",
   操作标题: "Controls",
   操作移动: "← →   Move",
-  操作旋转: "↑ / X   Rotate",
+  操作旋转: "↑ / X Rotate · Hold ↑: swap",
   操作半转: "Z       180° Rotate",
   操作软降: "↓       Soft drop",
   操作硬降: "Space   Hard drop",

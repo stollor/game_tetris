@@ -1,6 +1,7 @@
 /** 从真实 Chromium 运行时采集关键界面，并为每张图记录场景、视口和运行版本。 */
-import { mkdir, writeFile } from "node:fs/promises";
+
 import { execFileSync } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
@@ -26,16 +27,18 @@ type 快照 = {
 const 浏览器 = await chromium.launch({ headless: true });
 const 页面 = await 浏览器.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
 const 读快照 = () =>
-  页面.evaluate(
-    () =>
-      (window as unknown as { __GAMEMAKER_TEST__?: { getSnapshot: () => 快照 } }).__GAMEMAKER_TEST__?.getSnapshot(),
+  页面.evaluate(() =>
+    (
+      window as unknown as { __GAMEMAKER_TEST__?: { getSnapshot: () => 快照 } }
+    ).__GAMEMAKER_TEST__?.getSnapshot(),
   );
 
 const 等待场景 = async (sceneId: string) => {
   await 页面.waitForFunction(
     (目标) =>
-      (window as unknown as { __GAMEMAKER_TEST__?: { getSnapshot: () => 快照 } }).__GAMEMAKER_TEST__?.getSnapshot()
-        ?.sceneId === 目标,
+      (
+        window as unknown as { __GAMEMAKER_TEST__?: { getSnapshot: () => 快照 } }
+      ).__GAMEMAKER_TEST__?.getSnapshot()?.sceneId === 目标,
     sceneId,
   );
 };
@@ -53,7 +56,12 @@ const 点击对象 = async (关键字: string) => {
 
 const 采集 = async (名称: string, 文件名: string, 场景: string, 应有文案: string) => {
   await 等待场景(场景);
-  await 页面.evaluate(() => new Promise<void>((resolveFrame) => requestAnimationFrame(() => requestAnimationFrame(() => resolveFrame()))));
+  await 页面.evaluate(
+    () =>
+      new Promise<void>((resolveFrame) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolveFrame())),
+      ),
+  );
   const 快照 = await 读快照();
   if (!快照) throw new Error(`采集 ${名称} 时测试桥快照不可用`);
   if (!快照.texts.some((文字) => 文字.includes(应有文案))) {
@@ -77,24 +85,27 @@ const 采集 = async (名称: string, 文件名: string, 场景: string, 应有�
 
 try {
   await 页面.goto(地址, { waitUntil: "domcontentloaded" });
-  await 页面.waitForFunction(() => Boolean((window as unknown as { __GAMEMAKER_TEST__?: unknown }).__GAMEMAKER_TEST__));
+  await 页面.waitForFunction(() =>
+    Boolean((window as unknown as { __GAMEMAKER_TEST__?: unknown }).__GAMEMAKER_TEST__),
+  );
 
   const 采集结果: Awaited<ReturnType<typeof 采集>>[] = [];
   if (!仅对局) 采集结果.push(await 采集("A-首页", "A-首页.png", "开始菜单", "开始游戏"));
 
   await 点击对象("menu.settings");
-  if (!仅对局) 采集结果.push(await 采集("E-设置", "E-设置.png", "设置界面", "180°旋转"));
+  if (!仅对局) 采集结果.push(await 采集("E-设置", "E-设置.png", "设置界面", "设置"));
   await 点击对象("settings.done");
   await 等待场景("开始菜单");
 
   await 点击对象("menu.start");
-  if (!仅对局) 采集结果.push(await 采集("B-模式选择", "B-模式选择.png", "开始菜单", "选择游戏模式"));
+  if (!仅对局)
+    采集结果.push(await 采集("B-模式选择", "B-模式选择.png", "开始菜单", "选择游戏模式"));
   await 点击对象("mode.马拉松");
   采集结果.push(await 采集("C-桌面对局", "C-对局.png", "俄罗斯方块对局", "最佳纪录"));
 
   if (!仅对局) {
     await 页面.keyboard.press("p");
-    采集结果.push(await 采集("F-暂停", "F-暂停.png", "俄罗斯方块对局", "继续游戏"));
+    采集结果.push(await 采集("F-暂停", "F-暂停.png", "俄罗斯方块对局", "继续"));
     await 页面.keyboard.press("p");
   }
   await 页面.setViewportSize({ width: 430, height: 860 });
@@ -110,22 +121,37 @@ try {
   const 旧元数据路径 = resolve(输出目录, "视觉快照.json");
   const 旧元数据存在 = 仅对局 && (await Bun.file(旧元数据路径).exists());
   const 旧元数据 = 旧元数据存在
-    ? (JSON.parse(await Bun.file(旧元数据路径).text()) as { 采集时间: string; 快照: typeof 采集结果 })
+    ? (JSON.parse(await Bun.file(旧元数据路径).text()) as {
+        采集时间: string;
+        快照: typeof 采集结果;
+      })
     : undefined;
   const 保留快照时间 = 旧元数据
     ? [
         ...new Set(
           旧元数据.快照
-            .filter((项) => ["A-首页.png", "B-模式选择.png", "E-设置.png", "F-暂停.png"].includes(项.文件名))
+            .filter((项) =>
+              ["A-首页.png", "B-模式选择.png", "E-设置.png", "F-暂停.png"].includes(项.文件名),
+            )
             .map((项) => 项.采集时刻)
             .filter(Boolean),
         ),
       ].join("、")
     : "上次记录";
   const 文件快照 = 旧元数据
-    ? [...旧元数据.快照.filter((旧) => !采集结果.some((新) => 新.文件名 === 旧.文件名)), ...采集结果]
+    ? [
+        ...旧元数据.快照.filter((旧) => !采集结果.some((新) => 新.文件名 === 旧.文件名)),
+        ...采集结果,
+      ]
     : 采集结果;
-  const 顺序 = ["A-首页.png", "B-模式选择.png", "C-对局.png", "D-对局竖屏.png", "E-设置.png", "F-暂停.png"];
+  const 顺序 = [
+    "A-首页.png",
+    "B-模式选择.png",
+    "C-对局.png",
+    "D-对局竖屏.png",
+    "E-设置.png",
+    "F-暂停.png",
+  ];
   文件快照.sort((a, b) => 顺序.indexOf(a.文件名) - 顺序.indexOf(b.文件名));
   for (const 项 of 文件快照) {
     if (!项.采集时刻) 项.采集时刻 = 旧元数据?.采集时间 ?? 时间;
@@ -135,7 +161,8 @@ try {
     地址,
     应用版本: 包.version,
     Git提交: 头部,
-    工作区有未提交改动: execFileSync("git", ["status", "--short"], { encoding: "utf8" }).trim().length > 0,
+    工作区有未提交改动:
+      execFileSync("git", ["status", "--short"], { encoding: "utf8" }).trim().length > 0,
     浏览器: `Chromium ${浏览器.version()} / Playwright ${Playwright版本}`,
     无头模式: true,
     deviceScaleFactor: 1,
@@ -147,9 +174,16 @@ try {
       "截图只核对可见布局，不替代规则交互和完整浏览器回归。",
     ],
   };
-  await writeFile(resolve(输出目录, "视觉快照.json"), `${JSON.stringify(元数据, null, 2)}\n`, "utf8");
+  await writeFile(
+    resolve(输出目录, "视觉快照.json"),
+    `${JSON.stringify(元数据, null, 2)}\n`,
+    "utf8",
+  );
 
-  const 行 = 文件快照.map((项) => `| ${项.名称} | ${项.场景} | ${项.浏览器视口} | ${项.采集时刻} | [${项.文件名}](./${项.文件名}) |`);
+  const 行 = 文件快照.map(
+    (项) =>
+      `| ${项.名称} | ${项.场景} | ${项.浏览器视口} | ${项.采集时刻} | [${项.文件名}](./${项.文件名}) |`,
+  );
   const 报告 = [
     "# 当前版本视觉快照",
     "",
@@ -161,7 +195,8 @@ try {
     "",
     "## 核对结果",
     "",
-    `A/B/C/D/E/F 文件名已用场景 ID 和画面文案双重核对。${仅对局 ? `本次只重采 C/D；A/B/E/F 保留 ${保留快照时间} 的截图。` : "本次重采 A-F。"} 手机竖屏是 Chromium 430×860 视口，不是真实手机设备。C/D 中棋盘上方重复的“马拉松”小字已消失；D 最后预览卡与最佳纪录之间约 57px。当前对局截图中的“最佳纪录 / 暂无纪录”未见错位重影；旧证据 \`测试/_放大核对/Z1-手机记录区-3x.png\`（2026-10-06）存在明显横向重影。当前截图与旧图相比，问题未复现；因旧运行缺少当时浏览器版本、提交号和渲染参数记录，不能确认具体根因。`,
+    "各图片已按场景 ID 和可见文案核对。手机截图为 Chromium 模拟视口；布局与可读性请查看本次截图，交互结果由独立浏览器验收确认。",
+    仅对局 ? `本次仅重采对局，其他图片保留 ${保留快照时间} 的记录。` : "本次重新采集全部六张界面。",
     "",
     "## 未覆盖范围",
     "",

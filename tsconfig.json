@@ -14,7 +14,11 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "Phaser框架/*": ["./框架/*"]
+    }
   },
-  "include": ["代码", "框架", "测试"]
+  "include": ["代码", "运行", "框架", "组件", "测试"],
+  "exclude": ["node_modules"]
 }

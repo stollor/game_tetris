@@ -8,6 +8,7 @@ interface 对局测试接口 {
   读取状态: () => {
     阶段: string;
     分数: number;
+    有效用时: number;
     消行数: number;
     当前方块: string;
     下一个方块: string;
@@ -46,7 +47,7 @@ const 页面错误: string[] = [];
 try {
   const 响应 = await 页面.goto(地址, { waitUntil: "domcontentloaded" });
   断言(响应?.ok() === true, "页面以 HTTP 200 启动");
-  await mkdir("测试/正式版浏览器验收", { recursive: true });
+  await mkdir("reports/core-gameplay", { recursive: true });
   await 页面.waitForFunction(() =>
     Boolean((window as unknown as { __GAMEMAKER_TEST__?: 快照测试接口 }).__GAMEMAKER_TEST__),
   );
@@ -107,8 +108,14 @@ try {
     "左方向键即时移动一格",
   );
 
+  const 横移开始 = (await 读取对局())?.有效用时 ?? 0;
   await 页面.keyboard.down("ArrowRight");
-  await 页面.waitForTimeout(350);
+  // Phaser 的平滑 delta 与墙钟时间不同；等待实际对局时间覆盖 DAS + ARR。
+  await 页面.waitForFunction(
+    (开始) => (window.__俄罗斯方块测试__?.读取状态().有效用时 ?? 0) >= 开始 + 350,
+    横移开始,
+    { timeout: 3000 },
+  );
   await 页面.keyboard.up("ArrowRight");
   const 连续横移后 = await 读取对局();
   const 最左格列 = 连续横移后?.当前格子[0]?.[0] ?? -100;
@@ -144,7 +151,7 @@ try {
     JSON.stringify(暂停时?.当前格子) === JSON.stringify(暂停后等待?.当前格子),
     "暂停期间方块位置冻结",
   );
-  await 页面.screenshot({ path: "测试/正式版浏览器验收/暂停.png", fullPage: true });
+  await 页面.screenshot({ path: "reports/core-gameplay/暂停.png", fullPage: true });
   await 页面.keyboard.press("Escape");
   断言((await 读取对局())?.阶段 === "进行中", "Esc 键恢复对局");
 
@@ -167,7 +174,7 @@ try {
     await 页面.waitForTimeout(70);
   }
   断言((await 读取对局())?.阶段 === "结束", "堆叠至出生碰撞后进入游戏结束");
-  await 页面.screenshot({ path: "测试/正式版浏览器验收/结束.png", fullPage: true });
+  await 页面.screenshot({ path: "reports/core-gameplay/结束.png", fullPage: true });
 
   const 快照 = await 页面.evaluate(() => {
     const 测试窗 = window as unknown as { __GAMEMAKER_TEST__?: 快照测试接口 };
@@ -188,7 +195,7 @@ try {
     重开后?.阶段 === "进行中" && 重开后.分数 === 0 && 重开后.消行数 === 0,
     "点击重新开始重置整局状态",
   );
-  await 页面.screenshot({ path: "测试/正式版浏览器验收/重新开始.png", fullPage: true });
+  await 页面.screenshot({ path: "reports/core-gameplay/重新开始.png", fullPage: true });
 
   // —— 回归：重开后的对局结束时同样写入最佳纪录（结束已存档 必须随重开复位）——
   await 页面.evaluate(() => localStorage.removeItem("neon-pulse:best:马拉松"));
@@ -215,13 +222,34 @@ try {
   );
 
   // —— 回归：结算 3 秒锁在后续对局依旧生效 ——
+  // 用新结算和固定系统时间验证边界，避免浏览器调度延迟先耗尽 3 秒。
+  const 结算测试时刻 = Date.now();
+  await 页面.evaluate((时刻) => {
+    const 测试窗 = window as unknown as { __验收原时间__?: () => number };
+    测试窗.__验收原时间__ = Date.now;
+    Date.now = () => 时刻;
+  }, 结算测试时刻);
+  await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(false));
   await 点击测试对象("restart");
   await 页面.waitForTimeout(120);
   断言((await 读取对局())?.阶段 === "结束", "结算 3 秒内的重新开始被忽略");
-  await 页面.waitForTimeout(3200);
+  await 页面.evaluate((时刻) => {
+    Date.now = () => 时刻;
+  }, 结算测试时刻 + 2999);
+  await 点击测试对象("restart");
+  断言((await 读取对局())?.阶段 === "结束", "结算 2999ms 仍不可重开");
+  await 页面.evaluate((时刻) => {
+    Date.now = () => 时刻;
+  }, 结算测试时刻 + 3001);
+  await 页面.waitForTimeout(120);
   await 点击测试对象("restart");
   await 页面.waitForTimeout(120);
   断言((await 读取对局())?.阶段 === "进行中", "结算 3 秒后可显式重开");
+  await 页面.evaluate(() => {
+    const 测试窗 = window as unknown as { __验收原时间__?: () => number };
+    Date.now = 测试窗.__验收原时间__ ?? Date.now;
+    delete 测试窗.__验收原时间__;
+  });
 
   // —— 回归：每日挑战同日重开序列不变（每次重开都回到当日种子）——
   await 点击测试对象("game.leave");
@@ -267,7 +295,7 @@ try {
       `每日挑战第 ${轮次} 次重开后方块序列与开局一致`,
     );
   }
-  await 页面.screenshot({ path: "测试/正式版浏览器验收/每日重开.png", fullPage: true });
+  await 页面.screenshot({ path: "reports/core-gameplay/每日重开.png", fullPage: true });
 
   await 页面.waitForTimeout(850);
   断言(页面错误.length === 0, "浏览器控制台与页面无运行时错误");

@@ -16,3 +16,7 @@ node_modules/
 测试/MVP浏览器验收/
 截图/
 .gamemaker-contrast-probe/
+
+# 本地验收看板
+reports/
+.gamemaker/

@@ -1,7 +1,33 @@
-import { 播放程序噪声, 播放程序音符, type 程序音频环境 } from "../../框架/程序音频";
-import { 注册程序背景音乐, 注册程序音效 } from "../../框架/音频";
+import type { 程序音频环境 } from "../../框架/音频/程序音频";
+import type { 音效谱 } from "../../框架/音频/音效目录";
+import { 演奏音效 } from "../../框架/音频/音效编排";
+import {
+  停止游戏背景音乐,
+  播放游戏背景音乐,
+  注册程序音效,
+  注册音乐库,
+  注册音效库,
+  获取程序音频环境,
+} from "../../框架/音频/音频";
+import { 场景氛围表, type 氛围主题 } from "../框架配置/场景氛围";
+import { 查找地点 } from "../框架配置/旅行地点";
+import { 生成旅行音效谱 } from "../框架配置/旅行音效";
+import { 音乐库 } from "../框架配置/音乐";
+import { 消行谱, 连击谱, 音效库 } from "../框架配置/音效";
+import { 获取游戏设置 } from "../配置/俄罗斯方块设置";
+
+declare global {
+  interface Window {
+    __俄罗斯方块音乐__?: () => { 曲目: string | null; 试听: string | null };
+  }
+}
 
 type 音效名称 =
+  | "四行"
+  | "暂存"
+  | "技巧"
+  | "连击"
+  | "全清"
   | "开始"
   | "移动"
   | "旋转"
@@ -16,6 +42,11 @@ type 音效名称 =
 type 音乐场景 = "菜单" | "对局";
 
 const 音效列表: 音效名称[] = [
+  "四行",
+  "暂存",
+  "技巧",
+  "连击",
+  "全清",
   "开始",
   "移动",
   "旋转",
@@ -28,182 +59,196 @@ const 音效列表: 音效名称[] = [
   "结束",
   "返回",
 ];
-const 音高 = (半音: number): number => 440 * 2 ** ((半音 - 69) / 12);
-const 和弦 = [45, 45, 41, 43, 48, 43, 41, 40];
+
+/** 合成谱按名称索引；消行与连击在播放时按参数重建，见下方说明。 */
+const 静态谱 = new Map<string, 音效谱>();
+for (const 项 of 音效库) if (项.类型 === "合成") 静态谱.set(项.名称, 项.谱);
+
 const 最近音效 = new Map<音效名称, number>();
-let 音乐暂停 = false;
-let 恢复音乐拍点: (() => void) | null = null;
 
-function 播放合成音效(环境: 程序音频环境, 名称: 音效名称, 消行数 = 1): void {
-  const 现在 = 环境.上下文.currentTime;
-  const 上次 = 最近音效.get(名称) ?? -1;
-  if (现在 - 上次 < (名称 === "移动" || 名称 === "软降" ? 0.045 : 0.025)) return;
-  最近音效.set(名称, 现在);
-
-  const 起点 = 现在 + 0.004;
-  const T = (
-    起频: number,
-    终频: number,
-    时长: number,
-    音量: number,
-    波形: OscillatorType = "sine",
-    延迟 = 0,
-  ) =>
-    播放程序音符(环境, {
-      频率: 起频,
-      结束频率: 终频,
-      时长,
-      音量: 音量 * 0.82,
-      波形,
-      延迟: 起点 + 延迟 - 现在,
-      声道: "音效",
-    });
-  const N = (时长: number, 音量: number, 滤波: BiquadFilterType, 频率: number, 延迟 = 0) =>
-    播放程序噪声(环境, {
-      时长,
-      音量: 音量 * 0.82,
-      滤波,
-      频率,
-      延迟: 起点 + 延迟 - 现在,
-      声道: "音效",
-    });
-
-  switch (名称) {
-    case "移动":
-      T(1500, 1250, 0.03, 0.11, "square");
-      N(0.02, 0.065, "bandpass", 3600);
-      break;
-    case "旋转":
-      T(1150, 1550, 0.055, 0.12, "triangle");
-      N(0.018, 0.045, "bandpass", 4500);
-      break;
-    case "软降":
-      N(0.014, 0.11, "bandpass", 5200);
-      break;
-    case "硬降":
-      N(0.12, 0.13, "bandpass", 1200);
-      T(150, 52, 0.3, 0.28, "sawtooth", 0.085);
-      N(0.02, 0.09, "highpass", 1800, 0.085);
-      break;
-    case "锁定":
-      N(0.03, 0.075, "bandpass", 2500);
-      T(110, 70, 0.12, 0.18, "triangle");
-      break;
-    case "消行": {
-      const 音符表 = [
-        [69, 76],
-        [69, 73, 76],
-        [64, 69, 73, 76],
-        [57, 64, 69, 73, 76],
-      ];
-      const 索引 = Math.max(0, Math.min(3, 消行数 - 1));
-      const 时长 = [0.32, 0.42, 0.52, 0.75][索引] ?? 0.32;
-      N(
-        时长,
-        消行数 >= 4 ? 0.15 : 0.11,
-        消行数 >= 4 ? "bandpass" : "highpass",
-        消行数 >= 4 ? 900 : 2600,
-      );
-      for (const 音符 of 音符表[索引] ?? [69, 76]) {
-        const 频率 = 音高(音符);
-        T(频率, 频率, 时长, 0.075, "sawtooth");
-      }
-      T(90, 55, 时长, 消行数 >= 4 ? 0.24 : 0.14, "triangle");
-      if (消行数 >= 2) T(音高(81), 音高(81), 时长 * 0.8, 0.065, "sine");
-      break;
-    }
-    case "开始":
-      T(523, 523, 0.12, 0.12, "triangle");
-      T(784, 880, 0.18, 0.12, "triangle", 0.09);
-      break;
-    case "暂停":
-      T(520, 494, 0.1, 0.1, "triangle");
-      T(330, 311, 0.22, 0.1, "triangle", 0.1);
-      break;
-    case "继续":
-      T(330, 349, 0.09, 0.1, "triangle");
-      T(523, 554, 0.2, 0.11, "triangle", 0.09);
-      break;
-    case "结束":
-      T(440, 42, 0.9, 0.21, "triangle", 0.1);
-      [440, 349, 294, 220].forEach((频率, 索引) => {
-        T(频率, 频率, 0.5, 0.07, "triangle", 索引 * 0.16);
-      });
-      break;
-    case "返回":
-      T(392, 392, 0.08, 0.1, "sine");
-      T(294, 294, 0.14, 0.1, "sine", 0.08);
-      break;
-  }
+/** 渲染单个音效；消行与连击把消行数代入谱，其余用登记的代表谱。 */
+export function 播放合成音效(环境: 程序音频环境, 名称: 音效名称, 消行数 = 1): void {
+  const 谱 = 名称 === "消行" ? 消行谱(消行数) : 名称 === "连击" ? 连击谱(消行数) : 静态谱.get(名称);
+  const 地点 = 查找地点(获取游戏设置().旅行音效);
+  if (谱) 演奏音效(环境, 地点 ? 生成旅行音效谱(谱, 地点) : 谱);
 }
 
+// 先统一登记静态谱，供看板与目录读取；再按名称注册带节流的动态覆盖，覆盖同名 id：
+// 移动/软降限频 45ms、其余 25ms，保持迁移前的去重行为。
+注册音效库(音效库);
 for (const 名称 of 音效列表) {
   注册程序音效<number>(`俄罗斯方块.${名称}`, (环境, 消行数) => {
+    const 现在 = 环境.上下文.currentTime;
+    const 上次 = 最近音效.get(名称) ?? -1;
+    if (现在 - 上次 < (名称 === "移动" || 名称 === "软降" ? 0.045 : 0.025)) return;
+    最近音效.set(名称, 现在);
     播放合成音效(环境, 名称, 消行数);
   });
 }
 
-注册程序背景音乐<音乐场景>("俄罗斯方块.背景音乐", (环境, 场景 = "菜单") => {
-  const { 上下文 } = 环境;
-  let 音乐步数 = 0;
-  let 下次拍点 = 上下文.currentTime + 0.04;
-  const 重置拍点 = (): void => {
-    下次拍点 = 上下文.currentTime + 0.04;
-  };
-  恢复音乐拍点 = 重置拍点;
+注册音乐库(音乐库);
+
+let 当前曲目: string | null = null;
+let 当前场景: 音乐场景 = "菜单";
+let 音乐暂停 = false;
+let 页面有焦点 = typeof document !== "undefined" && document.hasFocus();
+let 播放中曲目: string | null = null;
+let 试听曲目: string | null = null;
+let 试听计时: ReturnType<typeof setTimeout> | undefined;
+
+function 同步音乐(): void {
+  const 设置 = 获取游戏设置();
+  const 目标 =
+    音乐暂停 || document.hidden || !页面有焦点 || !设置.背景音乐 || 设置.音乐音量 <= 0
+      ? null
+      : (试听曲目 ?? 当前曲目);
+  if (目标 === 播放中曲目) return;
+  播放中曲目 = 目标;
+  if (目标) 播放游戏背景音乐(目标);
+  else 停止游戏背景音乐();
+}
+
+export function 停止旅行音乐试听(): void {
+  clearTimeout(试听计时);
+  试听曲目 = null;
+  同步音乐();
+}
+
+export function 试听旅行音乐(名称: string): void {
+  clearTimeout(试听计时);
+  试听曲目 = `旅行.${名称}`;
+  同步音乐();
+  试听计时 = setTimeout(停止旅行音乐试听, 18000);
+}
+
+/** 播放菜单或对局背景曲，并记住当前曲目供暂停后恢复。 */
+export function 播放俄罗斯方块音乐(场景: 音乐场景): void {
   音乐暂停 = false;
+  当前场景 = 场景;
+  当前曲目 = 获取游戏设置().旅行音乐 ? `旅行.${获取游戏设置().旅行音乐}` : `俄罗斯方块.${场景}`;
+  clearTimeout(试听计时);
+  试听曲目 = null;
+  同步音乐();
+}
 
-  const 排一拍 = (): void => {
-    if (音乐暂停) return;
-    const 拍速 = 场景 === "菜单" ? 100 : Math.min(180, 112 + Math.floor(音乐步数 / 128) * 4);
-    const 步长 = 60 / 拍速 / 4;
-    const 琶音 = [0, 2, 1, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3];
-    const 和弦音 = [0, 3, 7, 12];
-    while (下次拍点 < 上下文.currentTime + 0.14) {
-      const 步 = 音乐步数;
-      const 根音 = 和弦[Math.floor(步 / 16) % 和弦.length] ?? 45;
-      const 小节内步 = 步 % 16;
-      const 音程 = 和弦音[琶音[小节内步] ?? 0] ?? 0;
-      const 低音量 = 场景 === "菜单" ? 0.045 : 0.035;
-      播放程序音符(环境, {
-        频率: 音高(根音 + 12 + 音程),
-        时长: 0.16,
-        波形: "triangle",
-        音量: 低音量 * 0.22,
-        延迟: Math.max(0, 下次拍点 - 上下文.currentTime),
-        声道: "音乐",
-      });
-      if (场景 === "对局" && 小节内步 % 8 === 0) {
-        播放程序音符(环境, {
-          频率: 音高(根音 - 12),
-          时长: 0.22,
-          波形: "sawtooth",
-          音量: 0.075 * 0.22,
-          延迟: Math.max(0, 下次拍点 - 上下文.currentTime),
-          声道: "音乐",
-        });
-        播放程序音符(环境, {
-          频率: 音高(根音 - 24),
-          时长: 0.12,
-          波形: "sine",
-          音量: 0.055 * 0.22,
-          延迟: Math.max(0, 下次拍点 - 上下文.currentTime),
-          声道: "音乐",
-        });
-      }
-      下次拍点 += 步长;
-      音乐步数++;
-    }
-  };
-
-  const 调度器 = window.setInterval(排一拍, 40);
-  return () => {
-    window.clearInterval(调度器);
-    if (恢复音乐拍点 === 重置拍点) 恢复音乐拍点 = null;
-  };
-});
-
+/**
+ * 框架曲谱没有暂停，只能整体停止。暂停时停止背景音乐，
+ * 恢复时重新播放当前曲目，循环从头开始（见 文档/音频接入.md）。
+ */
 export function 设置俄罗斯方块音乐暂停(暂停: boolean): void {
   音乐暂停 = 暂停;
-  if (!暂停) 恢复音乐拍点?.();
+  同步音乐();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("blur", () => {
+    页面有焦点 = false;
+    同步音乐();
+  });
+  window.addEventListener("focus", () => {
+    页面有焦点 = true;
+    同步音乐();
+  });
+  document.addEventListener("visibilitychange", 同步音乐);
+  window.addEventListener("gamemaker:settings-change", () => {
+    if (!当前曲目 && !试听曲目) return;
+    const 曲目 = 获取游戏设置().旅行音乐
+      ? `旅行.${获取游戏设置().旅行音乐}`
+      : `俄罗斯方块.${当前场景}`;
+    当前曲目 = 曲目;
+    同步音乐();
+  });
+}
+
+let 当前氛围: 氛围主题 | null = null;
+let 氛围停止: (() => void) | undefined;
+let 氛围点缀: ReturnType<typeof setInterval> | undefined;
+
+function 循环噪声(
+  环境: 程序音频环境,
+  频率: number,
+  音量: number,
+  滤波: BiquadFilterType,
+): () => void {
+  const { 上下文 } = 环境;
+  const 时长 = 3.2;
+  const 缓冲 = 上下文.createBuffer(1, Math.floor(上下文.sampleRate * 时长), 上下文.sampleRate);
+  const 样本 = 缓冲.getChannelData(0);
+  for (let i = 0; i < 样本.length; i++) 样本[i] = Math.random() * 2 - 1;
+  const 声源 = 上下文.createBufferSource();
+  const 器 = 上下文.createBiquadFilter();
+  const 增益 = 上下文.createGain();
+  声源.buffer = 缓冲;
+  声源.loop = true;
+  器.type = 滤波;
+  器.frequency.value = 频率;
+  增益.gain.value = 音量;
+  声源.connect(器).connect(增益).connect(环境.音效输出);
+  声源.start();
+  return () => {
+    try {
+      声源.stop();
+    } catch {
+      /* 已停 */
+    }
+    声源.disconnect();
+    器.disconnect();
+    增益.disconnect();
+  };
+}
+
+function 启动场景氛围(环境: 程序音频环境, 主题: 氛围主题): void {
+  if (!主题) return;
+  const 比例 = 获取游戏设置().背景音效音量 / 100;
+  if (比例 === 0) return;
+  const 配方 = 场景氛围表[主题];
+  if (!配方) return;
+  const 氛围输出 = 环境.上下文.createGain();
+  氛围输出.gain.value = 比例;
+  氛围输出.connect(环境.上下文.destination);
+  环境 = { ...环境, 音效输出: 氛围输出 };
+  const 停止项 = 配方.循环.map((层) => 循环噪声(环境, 层.频率, 层.音量, 层.滤波));
+  if (配方.点缀) {
+    const 点缀 = 配方.点缀;
+    const 拍 = () => 演奏音效(环境, 点缀.谱);
+    氛围点缀 = setInterval(拍, 点缀.间隔秒 * 1000);
+  }
+  氛围停止 = () => {
+    for (const 停 of 停止项) 停();
+    氛围输出.disconnect();
+    if (氛围点缀) clearInterval(氛围点缀);
+    氛围点缀 = undefined;
+  };
+}
+
+export function 停止场景氛围(): void {
+  氛围停止?.();
+  氛围停止 = undefined;
+  if (氛围点缀) clearInterval(氛围点缀);
+  氛围点缀 = undefined;
+  当前氛围 = null;
+}
+
+/** 按当前风景循环环境声，使用独立输出，与交互音效、背景音乐分别调节。 */
+export function 播放场景氛围(主题: 氛围主题): void {
+  if (当前氛围 === 主题 && 氛围停止) return;
+  停止场景氛围();
+  当前氛围 = 主题;
+  const 环境 = 获取程序音频环境();
+  if (环境) 启动场景氛围(环境, 主题);
+}
+
+export function 停止俄罗斯方块音乐(): void {
+  当前曲目 = null;
+  停止旅行音乐试听();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("gamemaker:settings-change", () => {
+    const 主题 = 当前氛围;
+    if (!主题) return;
+    停止场景氛围();
+    播放场景氛围(主题);
+  });
+  window.__俄罗斯方块音乐__ = () => ({ 曲目: 播放中曲目, 试听: 试听曲目 });
 }

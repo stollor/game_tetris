@@ -1,0 +1,138 @@
+{
+  "格式版本": 1,
+  "编号": "tetris",
+  "名称": "NEON PULSE · 俄罗斯方块",
+  "说明": "单机网页俄罗斯方块。现行功能策划由原策划案与当前实现逐项补录；不将补录稿伪装为历史原稿。",
+  "分组": [
+    {
+      "id": "core",
+      "名称": "共用玩法",
+      "说明": "棋盘、方块、随机、输入与所有模式共用的规则"
+    },
+    {
+      "id": "modes",
+      "名称": "游戏模式",
+      "说明": "马拉松、冲刺、极限与每日挑战"
+    },
+    {
+      "id": "experience",
+      "名称": "界面与设置",
+      "说明": "主菜单、对局界面、设置与触屏操作"
+    },
+    {
+      "id": "presentation",
+      "名称": "视觉与音频",
+      "说明": "项目画风、动态反馈、音乐与音效"
+    },
+    {
+      "id": "progress",
+      "名称": "成就与纪录",
+      "说明": "成就解锁、本地成绩与存档保护"
+    }
+  ],
+  "功能文件": [
+    "core-rules.json",
+    "controls.json",
+    "marathon.json",
+    "sprint.json",
+    "ultra.json",
+    "daily-challenge.json",
+    "menus-settings.json",
+    "visual-feedback.json",
+    "audio.json",
+    "achievements-records.json",
+    "travel-collection.json"
+  ],
+  "关系": [
+    {
+      "source": "core-rules",
+      "target": "controls",
+      "label": "提供操作状态规则"
+    },
+    {
+      "source": "core-rules",
+      "target": "marathon",
+      "label": "共用棋盘与结算规则"
+    },
+    {
+      "source": "core-rules",
+      "target": "sprint",
+      "label": "共用棋盘与结算规则"
+    },
+    {
+      "source": "core-rules",
+      "target": "ultra",
+      "label": "共用棋盘与结算规则"
+    },
+    {
+      "source": "core-rules",
+      "target": "daily-challenge",
+      "label": "提供每日种子以外的共用规则"
+    },
+    {
+      "source": "marathon",
+      "target": "daily-challenge",
+      "label": "继承马拉松规则与成绩口径"
+    },
+    {
+      "source": "menus-settings",
+      "target": "controls",
+      "label": "提供桌面/触屏设置入口"
+    },
+    {
+      "source": "core-rules",
+      "target": "visual-feedback",
+      "label": "提供真实落块与消行事件"
+    },
+    {
+      "source": "core-rules",
+      "target": "audio",
+      "label": "提供操作和结算事件"
+    },
+    {
+      "source": "marathon",
+      "target": "achievements-records",
+      "label": "提供分数纪录与成长事件"
+    },
+    {
+      "source": "sprint",
+      "target": "achievements-records",
+      "label": "提供冲刺完赛结果"
+    },
+    {
+      "source": "ultra",
+      "target": "achievements-records",
+      "label": "提供极限结束结果"
+    },
+    {
+      "source": "daily-challenge",
+      "target": "achievements-records",
+      "label": "提供按日隔离的成绩"
+    },
+    {
+      "source": "core-rules",
+      "target": "travel-collection",
+      "label": "提供有效对局成绩与落块计数"
+    },
+    {
+      "source": "achievements-records",
+      "target": "travel-collection",
+      "label": "提供一次性成就与破纪录奖励"
+    },
+    {
+      "source": "menus-settings",
+      "target": "travel-collection",
+      "label": "提供商店、纯享及穿戴入口"
+    },
+    {
+      "source": "visual-feedback",
+      "target": "travel-collection",
+      "label": "提供地域背景与方块表现"
+    },
+    {
+      "source": "audio",
+      "target": "travel-collection",
+      "label": "提供每套音乐与音效"
+    }
+  ]
+}

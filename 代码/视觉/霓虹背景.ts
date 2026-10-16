@@ -1,7 +1,9 @@
 import type Phaser from "phaser";
-import { 亮色, 混色 } from "../../框架/组件/Phaser界面/颜色工具";
+import { 亮色, 混色 } from "../../框架/界面/颜色工具";
+import { 查找地点 } from "../框架配置/旅行地点";
 import type { 背景主题 } from "../配置/俄罗斯方块设置";
 import { 背景主题选项, 背景主题配置 } from "../配置/背景主题";
+import { 绘制旅行动态, 绘制旅行风景 } from "./旅行风景";
 
 export { 背景主题选项 };
 
@@ -16,8 +18,14 @@ export function 绘制霓虹背景(
   宽: number,
   高: number,
   主题: 背景主题 = "晨光海岸",
+  静态主体 = true,
 ): void {
-  图形.clear();
+  图形.clear().setScale(1);
+  const 地点 = 查找地点(主题);
+  if (地点) {
+    绘制旅行风景(图形, 宽, 高, 地点, 静态主体);
+    return;
+  }
   if (主题 === "晨光海岸") 绘制海岸底图(图形, 宽, 高);
   else if (主题 === "云海山岚") 绘制山岚底图(图形, 宽, 高);
   else if (主题 === "极光原野") 绘制原野底图(图形, 宽, 高);
@@ -32,8 +40,16 @@ export function 绘制动态霓虹细节(
   高: number,
   时间: number,
   主题: 背景主题 = "晨光海岸",
+  播放 = true,
 ): void {
-  图形.clear();
+  图形.clear().setScale(1);
+  if (!播放) return;
+  const 地点 = 查找地点(主题);
+  if (地点) {
+    绘制旅行动态(图形, 宽, 高, 时间, 地点);
+    图形.setAlpha(1);
+    return;
+  }
   const 配置 = 背景主题配置[主题];
   const 动画时间 = 时间 * 配置.动画速度;
   if (主题 === "晨光海岸") 绘制海面动画(图形, 宽, 高, 动画时间);

@@ -1,11 +1,12 @@
 import Phaser from "phaser";
-import { 绘制玻璃面板 } from "../../框架/组件/Phaser界面/玻璃绘制";
-import { 亮色 } from "../../框架/组件/Phaser界面/颜色工具";
+import { 绘制玻璃面板 } from "../../框架/界面/玻璃绘制";
+import { 亮色 } from "../../框架/界面/颜色工具";
 import type { 方块类型 } from "../玩法/俄罗斯方块";
+import { 绘制方块单元预制体, 绘制方块辉光 } from "../界面/方块单元";
 import { 游戏外观 } from "../配置/游戏外观";
-import { 绘制方块单元预制体, 绘制方块辉光 } from "./方块单元预制体";
+import { 界面主题, 颜色值 } from "../配置/界面主题";
 
-const 出生格: Record<方块类型, [number, number][]> = {
+export const 出生格: Record<方块类型, [number, number][]> = {
   I: [
     [0, 1],
     [1, 1],
@@ -65,6 +66,7 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
   private readonly 辉光层: Phaser.GameObjects.Graphics;
   private readonly 标题: Phaser.GameObjects.Text;
   private 方块序列: 方块类型[] = [];
+  private 绘制签名 = "";
   private 当前布局?: 方块预览布局;
 
   constructor(scene: Phaser.Scene) {
@@ -76,7 +78,7 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
       fontFamily: 游戏外观.字体.家族,
       fontSize: `${游戏外观.字体.辅助}px`,
       fontStyle: "bold",
-      color: "#A9BDD8",
+      color: 界面主题().文字.次要,
       letterSpacing: 2,
     });
     this.add([this.绘图, this.辉光层, this.标题]);
@@ -85,7 +87,11 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
   }
 
   显示(方块序列: 方块类型[], 布局: 方块预览布局): this {
-    this.方块序列 = 方块序列.slice(0, 3);
+    const 序列 = 方块序列.slice(0, 3);
+    const 签名 = JSON.stringify([序列, 布局, 界面主题().元信息.名称, 游戏外观.方块.颜色]);
+    if (签名 === this.绘制签名) return this;
+    this.绘制签名 = 签名;
+    this.方块序列 = 序列;
     this.当前布局 = 布局;
     this.重绘();
     return this;
@@ -97,20 +103,24 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
     const { 类型, 视口宽, 左, 顶, 宽, 高 } = 布局;
     const 手机 = 类型 === "手机";
     const 紧凑 = 类型 === "紧凑";
+    const 矮侧栏 = !手机 && !紧凑 && 高 < 320;
+    const 桌面顶距 = 矮侧栏 ? 28 : 46;
+    const 桌面间距 = 矮侧栏 ? 6 : 12;
     const 卡片间距 = 游戏外观.方块.预览格间距;
-    const 卡片顶 = 手机 ? 顶 + 28 : 紧凑 ? 顶 + 22 : 顶 + 46;
+    const 卡片顶 = 手机 ? 顶 + 28 : 紧凑 ? 顶 + 22 : 顶 + 桌面顶距;
     const 卡片高 = 手机
-      ? Math.max(40, (高 - 28 - 92 - 24) / 3)
+      ? Math.max(34, (高 - 28 - 92 - 24) / 3)
       : 紧凑
         ? 0
-        : Math.max(72, (高 - 46 - 92 - 24) / 3);
+        : Math.max(30, (高 - 桌面顶距 - (矮侧栏 ? 70 : 92) - 桌面间距 * 2) / 3);
     const 格子 = 手机
-      ? Math.max(12, Math.min(30, (宽 - 24) / 4, (卡片高 - 20) / 2))
+      ? Math.max(8, Math.min(30, (宽 - 24) / 4, (卡片高 - 8) / 2))
       : 紧凑
         ? 11
-        : Math.max(14, Math.min(22, (卡片高 - 20) / 2, (宽 - 40) / 4));
+        : Math.max(8, Math.min(22, (卡片高 - (矮侧栏 ? 8 : 20)) / 2, (宽 - 40) / 4));
     const 预览宽 = 格子 * 4;
     this.标题
+      .setColor(界面主题().文字.次要)
       .setPosition(
         手机 ? 左 + 8 : 紧凑 ? 视口宽 - 108 : 左 + 18,
         手机 ? 顶 + 8 : 紧凑 ? 顶 : 顶 + 16,
@@ -120,7 +130,7 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
     this.辉光层.clear();
 
     this.方块序列.forEach((方块, 索引) => {
-      const 当前Y = 卡片顶 + 索引 * (紧凑 ? 62 : 卡片高 + (手机 ? 卡片间距 : 12));
+      const 当前Y = 卡片顶 + 索引 * (紧凑 ? 62 : 卡片高 + (手机 ? 卡片间距 : 桌面间距));
       const 点集 = 出生格[方块];
       const 最小列 = Math.min(...点集.map(([列]) => 列));
       const 最小行 = Math.min(...点集.map(([, 行]) => 行));
@@ -134,9 +144,11 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
       if (手机 || !紧凑) {
         绘制玻璃面板(this.绘图, 卡片X, 当前Y, 卡片宽, 卡片高, {
           圆角: 12,
-          填色: 首位 ? 0x27406b : 0x1b2c4c,
-          透明度: 首位 ? 0.9 : 0.66,
-          边色: 首位 ? 亮色(游戏外观.方块.颜色[方块], 0.35) : 0x35496f,
+          填色: 首位
+            ? 颜色值(界面主题().面板.次级面板.背景)
+            : 颜色值(界面主题().面板.次级面板.背景),
+          透明度: 0.98,
+          边色: 首位 ? 亮色(游戏外观.方块.颜色[方块], 0.35) : 颜色值(界面主题().面板.分组线),
           边透明度: 首位 ? 0.55 : 0.38,
           投影: false,
           高光: 手机,

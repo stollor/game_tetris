@@ -1,4 +1,4 @@
-import { 游戏外观 } from "../配置/游戏外观";
+import { 模式配置, 节奏配置, 速度表 } from "../项目配置/模式";
 
 export const 棋盘宽度 = 10;
 export const 可见高度 = 20;
@@ -22,8 +22,23 @@ export interface 活动方块 {
   旋转: number;
 }
 export interface 俄罗斯方块状态 {
+  /** 最近一次真实消行的显示快照，不参与计分与规则。 */
+  消行事件?: { 序号: number; 行: number[]; 格子: [number, number, 方块类型][] };
   棋盘: (方块类型 | null)[][];
   当前方块: 活动方块;
+  暂存方块: 方块类型 | null;
+  本块已暂存: boolean;
+  落块事件?: {
+    序号: number;
+    格子: [number, number][];
+    类型: 方块类型;
+    行数: number;
+    T旋: "无" | "迷你" | "完整";
+    全清: boolean;
+    连击: number;
+    连续高难: boolean;
+    得分: number;
+  };
   下一个方块: 方块类型;
   后续方块: 方块类型[];
   袋子: 方块类型[];
@@ -51,7 +66,7 @@ export interface 俄罗斯方块状态 {
   最后踢墙编号: number;
   最后踢墙候选数: number;
 }
-export const 方块颜色: Record<方块类型, number> = 游戏外观.方块.颜色;
+
 const 方块出生格: Record<方块类型, [number, number][]> = {
   I: [
     [3, -1],
@@ -105,9 +120,6 @@ const 中心: Record<方块类型, [number, number]> = {
   J: [8, -2],
   L: [8, -2],
 };
-const 速度表 = [
-  0, 0.5, 0.8, 1.2, 1.8, 2.4, 3, 4.5, 6, 8, 10, 12, 16, 22, 30, 60, 120, 300, 600, 1200,
-];
 export const JL: Record<string, [number, number][]> = {
   "0>1": [
     [0, 0],
@@ -275,6 +287,8 @@ export function 创建新局(
   const s: 俄罗斯方块状态 = {
     棋盘: 空棋盘(),
     当前方块: 创建活动("I"),
+    暂存方块: null,
+    本块已暂存: false,
     下一个方块: "I",
     后续方块: [],
     袋子: [],
@@ -289,7 +303,7 @@ export function 创建新局(
     背靠背: false,
     起始时间: now,
     暂停时长: 0,
-    剩余时间: 120000,
+    剩余时间: 模式配置.极限毫秒,
     完赛: false,
     锁定毫秒: 0,
     锁定重置: 0,
@@ -322,6 +336,26 @@ function 抽块(s: 俄罗斯方块状态, rand: () => number): 方块类型 {
   if (!s.袋子.length) s.袋子 = 洗牌(rand);
   return s.袋子.shift() ?? "I";
 }
+/** 每次落块前最多换一次；交换已有暂存不消耗后续序列。 */
+export function 暂存换块(s: 俄罗斯方块状态, rand: () => number = Math.random): boolean {
+  if (s.阶段 !== "进行中" || s.本块已暂存) return false;
+  const 换入 = s.暂存方块;
+  s.暂存方块 = s.当前方块.类型;
+  s.当前方块 = 创建活动(换入 ?? s.下一个方块);
+  if (!换入) {
+    s.下一个方块 = s.后续方块.shift() ?? 抽块(s, rand);
+    s.后续方块.push(抽块(s, rand));
+  }
+  s.本块已暂存 = true;
+  s.锁定毫秒 = 0;
+  s.锁定重置 = 0;
+  s.内部重力 = 0;
+  s.最后旋转 = false;
+  s.最后踢墙编号 = 0;
+  s.最后踢墙候选数 = 1;
+  if (!可以放置(s, s.当前方块)) 结束(s);
+  return true;
+}
 export function 读取格子(p: 活动方块): [number, number][] {
   return p.格子.map((c) => [c.列2 / 2, c.行2 / 2]);
 }
@@ -345,7 +379,7 @@ function 落地(s: 俄罗斯方块状态): boolean {
 }
 function 地面操作(s: 俄罗斯方块状态, rand: () => number, 可重置: boolean): void {
   if (落地(s)) {
-    if (可重置 && s.锁定重置 < 15) {
+    if (可重置 && s.锁定重置 < 节奏配置.锁定重置上限) {
       s.锁定毫秒 = 0;
       s.锁定重置++;
     } else if (可重置) 锁定方块(s, rand);
@@ -419,6 +453,7 @@ export function 旋转方块(
 export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math.random): void {
   if (s.阶段 !== "进行中") return;
   const cells = 读取格子(s.当前方块);
+  const 原分数 = s.分数;
   if (cells.every(([, y]) => y < 0)) {
     // Lock Out：本次不消行，但已累积的软降/硬降分仍计入最终成绩。
     s.分数 += s.软降分 + s.硬降分;
@@ -435,7 +470,19 @@ export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math
     const row = s.棋盘[y + 2];
     if (row) row[x] = s.当前方块.类型;
   }
-  const filled = s.棋盘.filter((row) => row.every(Boolean)).length;
+  const 消除行 = s.棋盘.flatMap((row, i) => (row.every(Boolean) ? [i - 隐藏高度] : []));
+  if (消除行.length) {
+    s.消行事件 = {
+      序号: (s.消行事件?.序号 ?? 0) + 1,
+      行: 消除行,
+      格子: 消除行.flatMap((行) =>
+        (s.棋盘[行 + 隐藏高度] ?? []).flatMap((类型, 列) =>
+          类型 ? [[列, 行, 类型] as [number, number, 方块类型]] : [],
+        ),
+      ),
+    };
+  }
+  const filled = 消除行.length;
   const corners = [
     [s.当前方块.中心列2 / 2 - 1, s.当前方块.中心行2 / 2 - 1],
     [s.当前方块.中心列2 / 2 + 1, s.当前方块.中心行2 / 2 - 1],
@@ -497,15 +544,26 @@ export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math
     s.软降分 +
     s.硬降分 +
     (pc ? 1000 * oldLevel : 0);
+  s.落块事件 = {
+    序号: (s.落块事件?.序号 ?? 0) + 1,
+    格子: cells,
+    类型: s.当前方块.类型,
+    行数: filled,
+    T旋: tSpin ? (fullSpin ? "完整" : "迷你") : "无",
+    全清: pc,
+    连击: s.连击,
+    连续高难: b2bMult > 1,
+    得分: s.分数 - 原分数,
+  };
   s.软降分 = 0;
   s.硬降分 = 0;
   if (eligible) s.背靠背 = true;
   else if (filled > 0) s.背靠背 = false;
   s.消行数 += filled;
   s.等级 = 1 + Math.floor(s.消行数 / 10);
-  if (s.模式 === "冲刺" && s.等级 > 5) s.等级 = 5;
-  if (s.消行数 >= 140) s.目标达成 = true;
-  if (s.模式 === "冲刺" && s.消行数 >= 40) {
+  if (s.模式 === "冲刺" && s.等级 > 模式配置.冲刺等级上限) s.等级 = 模式配置.冲刺等级上限;
+  if (s.消行数 >= 模式配置.马拉松目标行数) s.目标达成 = true;
+  if (s.模式 === "冲刺" && s.消行数 >= 模式配置.冲刺目标行数) {
     s.完赛 = true;
     结束(s);
     return;
@@ -513,6 +571,7 @@ export function 锁定方块(s: 俄罗斯方块状态, rand: () => number = Math
   s.最后旋转 = false;
   s.锁定毫秒 = 0;
   s.锁定重置 = 0;
+  s.本块已暂存 = false;
   s.当前方块 = 创建活动(s.下一个方块);
   s.下一个方块 = s.后续方块.shift() ?? 抽块(s, rand);
   s.后续方块.push(抽块(s, rand));
@@ -576,7 +635,7 @@ export function 更新时钟(
   }
   if (落地(s)) {
     s.锁定毫秒 += dt;
-    if (s.锁定毫秒 >= 500) 锁定方块(s, rand);
+    if (s.锁定毫秒 >= 节奏配置.锁定延迟毫秒) 锁定方块(s, rand);
   }
 }
 export function 切换暂停(s: 俄罗斯方块状态): void {
