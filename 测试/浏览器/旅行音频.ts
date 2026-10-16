@@ -90,7 +90,7 @@ try {
       return { 名称, 时长, 峰值, 均方根: Math.sqrt(能量 / 音乐.length), 音乐, 音效 };
     }, 地点.名称);
     assert.ok(采样.峰值 > 0.005 && 采样.峰值 < 0.98, `${地点.名称} 音乐非静音且无削波`);
-    assert.equal(采样.音效.length, 16);
+    assert.equal(采样.音效.length, 17);
     for (const 音 of 采样.音效)
       assert.ok(音.峰值 > 0.003 && 音.峰值 < 0.98, `${音.名称} 非静音且无削波`);
     const 写声音 = async (名称: string, 样本: number[]) => {
@@ -124,7 +124,7 @@ try {
   }
   await Bun.write(join(输出, "采样结果.json"), JSON.stringify(数据, null, 2));
   console.log(
-    "12首旅行音乐、192项音效真实Web Audio离线采样通过：非静音、无削波，音乐和消行试听文件已输出。",
+    "12首旅行音乐、204项音效真实Web Audio离线采样通过：非静音、无削波，音乐和消行试听文件已输出。",
   );
 } finally {
   await 浏览器.close();

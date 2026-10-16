@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { 场景氛围表 } from "../代码/框架配置/场景氛围";
 import { 音乐库 } from "../代码/框架配置/音乐";
 import { 消行谱, 连击谱, 音效库 } from "../代码/框架配置/音效";
+import { 结算音效名称 } from "../代码/音频/结算音效";
 import { 模式配置, 节奏配置, 速度表 } from "../代码/项目配置/模式";
 import { 校验音乐库 } from "../框架/音频/音乐目录";
 import { 校验音效库 } from "../框架/音频/音效目录";
@@ -32,7 +33,7 @@ describe("框架配置音频表", () => {
     expect(() => 校验音效库(音效库)).not.toThrow();
   });
 
-  test("十六种音效全部登记", () => {
+  test("十七种音效全部登记", () => {
     const 名称 = 音效库
       .filter((项) => 项.id.startsWith("俄罗斯方块."))
       .map((项) => 项.名称)
@@ -54,6 +55,7 @@ describe("框架配置音频表", () => {
         "暂停",
         "继续",
         "结束",
+        "胜利",
         "返回",
       ].sort(),
     );
@@ -84,6 +86,10 @@ describe("框架配置音频表", () => {
     expect(new Set(指纹).size).toBe(16);
   });
 
+  test("冲刺完赛用胜利音，未完赛用结束音", () => {
+    expect(结算音效名称(true)).toBe("胜利");
+    expect(结算音效名称(false)).toBe("结束");
+  });
   test("消行与连击随参数变化", () => {
     expect(消行谱(1).音符?.length).toBeLessThan(消行谱(4).音符?.length ?? 0);
     const 前 = 连击谱(3).音符?.[0]?.起频 ?? 0;

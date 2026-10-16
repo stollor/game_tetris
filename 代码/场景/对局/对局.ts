@@ -40,6 +40,7 @@ import {
   播放场景氛围,
   设置俄罗斯方块音乐暂停,
 } from "../../音频/俄罗斯方块程序音频";
+import { 结算音效名称 } from "../../音频/结算音效";
 import { 界面对局设置菜单 } from "../../预制体/对局设置菜单";
 import { 暂存方块栏 } from "../../预制体/暂存方块栏";
 
@@ -515,7 +516,7 @@ export class 对局 extends Phaser.Scene {
       键位区X: 棋盘左侧 - 206,
       键位区顶: 棋盘顶部 + 28,
       紧凑: this.紧凑布局,
-      可见: 显示键位说明 && this.状态.阶段 === "进行中",
+      可见: 显示键位说明 && this.状态.阶段 !== "结束",
     });
     this.目标达成提示
       ?.setPosition(棋盘中心X, 棋盘顶部 + 棋盘像素高 / 2 - 30)
@@ -615,11 +616,12 @@ export class 对局 extends Phaser.Scene {
     if (事件.code === "ArrowUp") {
       this.上键按住毫秒 = 0;
       this.上键长按已触发 = false;
-      this.操作旋转(1, false);
+      const 上键 = 获取游戏设置().手机上键旋转;
+      this.操作旋转(上键 === "左转" ? -1 : 1, 上键 === "180度");
     }
     if (事件.code === "ArrowDown") this.操作软降();
     if (事件.code === "KeyX") this.操作旋转(-1, false);
-    if (事件.code === "KeyZ" && 获取游戏设置().旋转180) {
+    if (事件.code === "KeyZ") {
       this.操作旋转(1, true);
     }
     if (事件.code === "KeyC") this.操作暂存();
@@ -821,7 +823,7 @@ export class 对局 extends Phaser.Scene {
 
   private 取模式名(): string {
     const 文案 = this.取文案();
-    this.操作说明卡?.设置说明(2, 获取游戏设置().旋转180 ? 文案.操作半转 : 文案.操作半转关闭);
+    this.操作说明卡?.设置说明(2, 文案.操作半转);
     return this.模式 === "马拉松"
       ? 文案.模式马拉松
       : this.模式 === "冲刺"
@@ -911,7 +913,7 @@ export class 对局 extends Phaser.Scene {
       fontSize: "13px",
       color: 界面主题().文字.次要,
     });
-    this.操作说明卡 = 创建对局操作说明(this, this.取文案(), 获取游戏设置().旋转180);
+    this.操作说明卡 = 创建对局操作说明(this, this.取文案(), true);
     this.目标达成提示 = this.add
       .text(0, 0, this.取文案().目标达成, {
         fontSize: "28px",
@@ -981,11 +983,24 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 刷新触屏提示(): void {
-    const 显示 = 获取游戏设置().显示触屏提示;
-    const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
+    const 设置 = 获取游戏设置();
+    const 显示 = 设置.显示按键说明;
+    const 英文 = 解析语言(设置.语言) !== "简体中文";
+    const 上键说明 =
+      设置.手机上键旋转 === "左转"
+        ? 英文
+          ? "Left · hold swap"
+          : "左转 · 长按暂存"
+        : 设置.手机上键旋转 === "右转"
+          ? 英文
+            ? "Right · hold swap"
+            : "右转 · 长按暂存"
+          : 英文
+            ? "180° · hold swap"
+            : "180° · 长按暂存";
     for (const [键, 图标, 中文, 英语] of [
       ["左转", "↺", "左转", "Left turn"],
-      ["旋转", "↑", "旋转 · 长按暂存", "Rotate / hold"],
+      ["旋转", "↑", 上键说明, 上键说明],
       ["右转", "↻", "右转", "Right turn"],
       ["左移", "←", "左移", "Left"],
       ["软降", "↓", "软降 · 双击硬降", "Soft / double drop"],
@@ -1248,6 +1263,8 @@ export class 对局 extends Phaser.Scene {
     this.最佳纪录缓存 = undefined;
     const 设置 = 获取游戏设置();
     this.棋盘预制体?.设置落点影透明度(设置.落点影透明度).设置网格显示(设置.显示网格);
+    this.刷新触屏提示();
+    this.取模式名();
     this.布局界面();
   };
 
@@ -1279,7 +1296,7 @@ export class 对局 extends Phaser.Scene {
       !this.竖屏布局 &&
       this.视口.高 >= 560 &&
       棋盘左侧 >= 220 &&
-      this.状态.阶段 === "进行中";
+      this.状态.阶段 !== "结束";
     this.操作说明卡?.布局({
       宽: this.视口.宽,
       键位区X: 棋盘左侧 - 206,
@@ -1378,7 +1395,7 @@ export class 对局 extends Phaser.Scene {
           for (const tween of this.tweens.getTweensOf(this.消行反馈)) tween.resume();
         设置俄罗斯方块音乐暂停(false);
       } else {
-        this.播放对局音效("结束");
+        this.播放对局音效(结算音效名称(this.状态.完赛));
         this.释放操作();
         设置俄罗斯方块音乐暂停(true);
       }

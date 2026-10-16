@@ -405,6 +405,25 @@ export function 移动方块(
   地面操作(s, rand, dx !== 0);
   return true;
 }
+/** 两套占格是否只差整体平移（含零平移）。I/Z/S/O 的 180° 属于此类，应视为无效半转。 */
+function 占格仅平移(
+  甲: readonly { 列2: number; 行2: number }[],
+  乙: readonly { 列2: number; 行2: number }[],
+): boolean {
+  if (甲.length !== 乙.length || 甲.length === 0) return false;
+  const a = [...甲].sort((p, q) => p.列2 - q.列2 || p.行2 - q.行2);
+  const b = [...乙].sort((p, q) => p.列2 - q.列2 || p.行2 - q.行2);
+  const 首甲 = a[0];
+  const 首乙 = b[0];
+  if (!首甲 || !首乙) return false;
+  const dx = 首乙.列2 - 首甲.列2;
+  const dy = 首乙.行2 - 首甲.行2;
+  return a.every((格, i) => {
+    const 对 = b[i];
+    return Boolean(对) && 对.列2 === 格.列2 + dx && 对.行2 === 格.行2 + dy;
+  });
+}
+
 export function 旋转方块(
   s: 俄罗斯方块状态,
   方向: 1 | -1 = 1,
@@ -415,7 +434,9 @@ export function 旋转方块(
   const p = s.当前方块,
     from = p.旋转,
     to = (from + (半转 ? 2 : 方向) + 4) % 4;
+  // O 的四分之一转仍只改朝向编号（锁延迟等）；180° 外形不变，直接拒绝。
   if (p.类型 === "O") {
+    if (半转) return false;
     p.旋转 = to;
     s.最后旋转 = true;
     return true;
@@ -427,18 +448,22 @@ export function 旋转方块(
       ? { 列2: p.中心列2 - x, 行2: p.中心行2 - y }
       : { 列2: p.中心列2 - y, 行2: p.中心行2 + x };
   });
+  // 180° 只做原地旋转，不做踢墙平移，避免连按 ↑ 半转时借垂直踢墙上漂。
   const kicks = 半转
-    ? [
-        [0, 0],
-        [0, -1],
-      ]
+    ? [[0, 0]]
     : ((p.类型 === "I" ? IK[`${from}>${to}`] : JL[`${from}>${to}`]) ?? [[0, 0]]);
   for (const [kickIndex, [dx, dy]] of kicks.entries()) {
+    const ox = (dx ?? 0) * 2;
+    const oy = (dy ?? 0) * 2;
     const next = {
       ...p,
       旋转: to,
-      格子: rotated.map((c) => ({ 列2: c.列2 + (dx ?? 0) * 2, 行2: c.行2 + (dy ?? 0) * 2 })),
+      中心列2: p.中心列2 + ox,
+      中心行2: p.中心行2 + oy,
+      格子: rotated.map((c) => ({ 列2: c.列2 + ox, 行2: c.行2 + oy })),
     };
+    // I/Z/S 等 180° 相对中心旋转后只是同形平移，拒绝以免视觉上跳格。
+    if (半转 && 占格仅平移(p.格子, next.格子)) return false;
     if (可以放置(s, next)) {
       s.当前方块 = next;
       s.最后旋转 = true;

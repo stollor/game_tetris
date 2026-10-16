@@ -28,7 +28,7 @@ const 对局 = {
   破纪录: true,
   日期: "2026-10-16",
 };
-test("12个地点各自具备背景、主题、独立方块纹样、16种音效与原创曲谱", () => {
+test("12个地点各自具备背景、主题、独立方块纹样、17种音效与原创曲谱", () => {
   expect(地点皮肤表.length).toBe(12);
   expect(new Set(地点皮肤表.map((项) => 项.纹样)).size).toBe(12);
   expect(new Set(地点皮肤表.map((项) => JSON.stringify(项.旋律))).size).toBe(12);
@@ -36,7 +36,7 @@ test("12个地点各自具备背景、主题、独立方块纹样、16种音效�
     expect(背景主题配置[地点.名称]).toBeDefined();
     expect(方块外观方案表.find((项) => 项.名称 === 地点.名称)?.纹样).toBe(地点.纹样);
     expect(音乐库.filter((项) => 项.id === `旅行.${地点.名称}`).length).toBe(1);
-    expect(音效库.filter((项) => 项.id.startsWith(`旅行.${地点.名称}.`)).length).toBe(16);
+    expect(音效库.filter((项) => 项.id.startsWith(`旅行.${地点.名称}.`)).length).toBe(17);
     const 主题 = 旅行主题表[地点.名称];
     for (const 色 of [主题.文字.主要, 主题.文字.次要, 主题.文字.弱化])
       expect(计算颜色对比度(色, 主题.面板.主面板.背景)).toBeGreaterThanOrEqual(4.5);

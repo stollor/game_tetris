@@ -132,23 +132,59 @@ describe("俄罗斯方块 MVP 规则", () => {
     expect(读取格子(状态.当前方块)).toEqual(原格子);
   });
 
-  test("180°旋转使用最后一个踢墙候选时按 Full 计分", () => {
+  test("180°受阻时失败且不会借上踢上漂", () => {
     const 状态 = 创建新局(() => 0, ["T", "I"]);
     expect(移动方块(状态, 0, 3)).toBe(true);
-    // 阻挡零偏移候选，但允许第二个（最后一个）候选 (0,-1)。
-    const 阻挡零偏移 = 状态.棋盘[5];
-    const 阻挡前角 = 状态.棋盘[5];
-    if (!阻挡零偏移 || !阻挡前角) throw new Error("缺少隐藏行棋盘");
-    阻挡零偏移[4] = "J"; // (4,3)：只与零偏移旋转后的方块重叠
-    阻挡前角[3] = "J"; // (3,3)：保证三角占用，但只占一个朝向前角
+    const 原格子 = 读取格子(状态.当前方块);
+    const 原顶 = Math.min(...原格子.map(([, y]) => y));
+    // 阻挡原地 180° 后的占格；上方留空。旧实现会用 (0,-1) 上踢成功并上漂。
+    const 行 = 状态.棋盘[5];
+    if (!行) throw new Error("缺少隐藏行棋盘");
+    行[4] = "J";
 
-    expect(旋转方块(状态, 1, true)).toBe(true);
-    expect(状态.最后踢墙编号).toBe(1);
-    expect(状态.最后踢墙候选数).toBe(2);
-    固定方块(状态, () => 0);
-    expect(状态.分数).toBe(400); // 0 行 T-Spin Full
-    expect(状态.落块事件?.T旋).toBe("完整");
-    expect(状态.落块事件?.行数).toBe(0);
+    expect(旋转方块(状态, 1, true)).toBe(false);
+    expect(读取格子(状态.当前方块)).toEqual(原格子);
+    expect(Math.min(...读取格子(状态.当前方块).map(([, y]) => y))).toBe(原顶);
+  });
+
+  test("180°连按不会向上平移", () => {
+    const 状态 = 创建新局(() => 0, ["T", "J", "L", "S"]);
+    expect(移动方块(状态, 0, 8)).toBe(true);
+    const 顶 = () => Math.min(...读取格子(状态.当前方块).map(([, y]) => y));
+    const 开局顶 = 顶();
+    for (let i = 0; i < 12; i += 1) {
+      expect(旋转方块(状态, 1, true)).toBe(true);
+      expect(顶()).toBeGreaterThanOrEqual(开局顶);
+    }
+  });
+
+  test("I/Z/O 的 180° 视为无效半转，占格与朝向编号均不变", () => {
+    for (const 类型 of ["I", "Z", "O"] as const) {
+      const 状态 = 创建新局(() => 0, [类型, "T"]);
+      expect(移动方块(状态, 0, 6)).toBe(true);
+      const 原格子 = 读取格子(状态.当前方块);
+      const 原旋转 = 状态.当前方块.旋转;
+      const 原顶 = Math.min(...原格子.map(([, y]) => y));
+      const 原左 = Math.min(...原格子.map(([x]) => x));
+      expect(旋转方块(状态, 1, true)).toBe(false);
+      expect(读取格子(状态.当前方块)).toEqual(原格子);
+      expect(状态.当前方块.旋转).toBe(原旋转);
+      expect(Math.min(...读取格子(状态.当前方块).map(([, y]) => y))).toBe(原顶);
+      expect(Math.min(...读取格子(状态.当前方块).map(([x]) => x))).toBe(原左);
+    }
+  });
+
+  test("竖着的 I/Z 半转也不平移", () => {
+    for (const 类型 of ["I", "Z"] as const) {
+      const 状态 = 创建新局(() => 0, [类型, "T"]);
+      expect(移动方块(状态, 0, 6)).toBe(true);
+      expect(旋转方块(状态, 1, false)).toBe(true);
+      const 原格子 = 读取格子(状态.当前方块);
+      const 原旋转 = 状态.当前方块.旋转;
+      expect(旋转方块(状态, 1, true)).toBe(false);
+      expect(读取格子(状态.当前方块)).toEqual(原格子);
+      expect(状态.当前方块.旋转).toBe(原旋转);
+    }
   });
 
   test("硬降固定方块并消行计分", () => {
