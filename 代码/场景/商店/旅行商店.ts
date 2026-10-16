@@ -17,6 +17,7 @@ import { 创建风景裁剪 } from "../../../组件/霓虹街机/风景裁剪";
 import { 执行收藏操作, 旅行收藏 } from "../../存档/旅行收藏";
 import { type 地点皮肤, 地点皮肤表 } from "../../框架配置/旅行地点";
 import type { 方块类型 } from "../../玩法/俄罗斯方块";
+import { 计算目录滚动 } from "../../界面/目录滚动";
 import { 布置纯享层 } from "../../界面/纯享风景";
 import { 布置金币条 } from "../../界面/金币条";
 import { 地点浏览列表, 相邻风景 } from "../../界面/风景浏览";
@@ -43,6 +44,7 @@ export class 旅行商店 extends Phaser.Scene {
   private 视口 = { 宽: 0, 高: 0, 比例: 1 };
   private 地点 = 地点皮肤表[0];
   private 目录?: 界面滚动区域;
+  private 目录滚动?: number;
   private 确认层?: Phaser.GameObjects.Container;
   private 动态层?: Phaser.GameObjects.Graphics;
   private 风景尺寸 = { 宽: 0, 高: 0 };
@@ -479,7 +481,13 @@ export class 旅行商店 extends Phaser.Scene {
           "#315449",
         );
     });
-    列表.设置滚动位置(Math.max(0, 地点皮肤表.indexOf(this.地点) * (卡宽 + 间) - 12));
+    // 重建时保持原滚动位置；只有选中卡越出可视区时才最小幅度滚入，不再跳到最左。
+    const 左 = 地点皮肤表.indexOf(this.地点) * (卡宽 + 间);
+    列表.设置滚动位置(计算目录滚动(this.目录滚动 ?? 左 - 12, 左, 卡宽, 宽));
+    this.目录滚动 = 列表.获取滚动位置();
+    列表.内容容器.on("destroy", () => {
+      this.目录滚动 = 列表.获取滚动位置();
+    });
   }
   private 绘制部件(x: number, y: number, 宽: number, 卡高: number): void {
     const 列 = 3;
