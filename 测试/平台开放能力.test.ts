@@ -193,18 +193,30 @@ test("有 mock 云存档时上传再拉取可写回本地", async () => {
   delete (globalThis as { window?: unknown }).window;
 });
 
-test("周期榜配置：总榜已填，日周月待后台建榜", async () => {
+test("周期榜配置：日周月总均已填入后台 ID", async () => {
   const { 已配置的周期, 取排行榜编号, 排行榜周期顺序 } = await import("../代码/平台/排行榜");
   const { 排行榜编号按周期 } = await import("../代码/平台/配置");
   expect(排行榜周期顺序).toEqual(["日", "周", "月", "总"]);
   expect(取排行榜编号("马拉松", "总")).toBe(排行榜编号按周期.马拉松.总);
-  expect(取排行榜编号("冲刺", "日")).toBe("");
-  expect(已配置的周期("极限")).toEqual(["总"]);
+  expect(取排行榜编号("冲刺", "日")).toBe("ppu0nc3fklanwcbiok");
+  expect(取排行榜编号("极限", "周")).toBe("if044o8sbpsvhwmhdi");
+  expect(取排行榜编号("每日挑战", "月")).toBe("spxfpwkk4li9j5scgb");
+  expect(已配置的周期("极限")).toEqual(["日", "周", "月", "总"]);
+  expect(已配置的周期("马拉松")).toEqual(["日", "周", "月", "总"]);
+  expect(排行榜编号按周期.马拉松.日).toBe("3gzyt8qlnrpvj2isf5");
+  expect(排行榜编号按周期.冲刺.周).toBe("5z3pgj2bu9553gzjva");
+  expect(排行榜编号按周期.极限.月).toBe("ba7azdlt7fr9xrjyas");
+  expect(排行榜编号按周期.每日挑战.日).toBe("57620urtuy8x9sguhd");
 });
 
 test("加载排行榜：未配置周期返回说明；mock 宿主可拉榜", async () => {
   const { 加载排行榜数据 } = await import("../代码/平台/排行榜");
-  const 未配 = await 加载排行榜数据({ 模式: "马拉松", 周期: "日" });
+  // 临时清空冲刺日榜编号，验证未配置提示后还原。
+  const cfg = await import("../代码/平台/配置");
+  const 原日 = (cfg.排行榜编号按周期 as { 冲刺: { 日: string } }).冲刺.日;
+  (cfg.排行榜编号按周期 as { 冲刺: { 日: string } }).冲刺.日 = "";
+  const 未配 = await 加载排行榜数据({ 模式: "冲刺", 周期: "日" });
+  (cfg.排行榜编号按周期 as { 冲刺: { 日: string } }).冲刺.日 = 原日;
   expect(未配.完成).toBe(false);
   expect(未配.原因).toContain("尚未配置");
 

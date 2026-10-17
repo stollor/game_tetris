@@ -26,32 +26,32 @@ export const 排行榜周期标签 = {
 /** 模式 × 周期 → 后台排行榜 ID；空字符串表示尚未在控制台创建该周期榜。 */
 export const 排行榜编号按周期 = {
   马拉松: {
-    日: "",
-    周: "",
-    月: "",
+    日: "3gzyt8qlnrpvj2isf5",
+    周: "fb2r0k4pih33j46ycu",
+    月: "r20kjj9basv76xwgnb",
     总: "np8kxqoitnd91u3zs8",
   },
   冲刺: {
-    日: "",
-    周: "",
-    月: "",
+    日: "ppu0nc3fklanwcbiok",
+    周: "5z3pgj2bu9553gzjva",
+    月: "11aqzuq3qax3utw1ho",
     总: "goxljcidqfnlfynjbu",
   },
   极限: {
-    日: "",
-    周: "",
-    月: "",
+    日: "7jbuglncc24ovgkx7i",
+    周: "if044o8sbpsvhwmhdi",
+    月: "ba7azdlt7fr9xrjyas",
     总: "bcbtf3vycr5ff16je0",
   },
   每日挑战: {
-    日: "",
-    周: "",
-    月: "",
+    日: "57620urtuy8x9sguhd",
+    周: "tagu3o5oe1tbb1b3f2",
+    月: "spxfpwkk4li9j5scgb",
     总: "la22thsyes0hz9kd9s",
   },
 } as const;
 
-/** 兼容旧代码：默认取总榜 ID（提交成绩也优先写总榜）。 */
+/** 兼容旧代码：默认取总榜 ID；结算提交会写入该模式全部已配置周期榜。 */
 export const 排行榜编号 = {
   马拉松: 排行榜编号按周期.马拉松.总,
   冲刺: 排行榜编号按周期.冲刺.总,
