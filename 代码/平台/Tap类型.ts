@@ -39,21 +39,72 @@ export interface Tap云存档管理器 {
   }): void;
 }
 
+export interface Tap排行榜用户 {
+  name?: string;
+  openid?: string;
+  avatar?: { url?: string; smallUrl?: string };
+}
+
+export interface Tap排行榜分数 {
+  rank?: number;
+  rankDisplay?: string;
+  score?: number;
+  scoreDisplay?: string;
+  user?: Tap排行榜用户;
+}
+
+export interface Tap排行榜周期 {
+  display?: string;
+  periodToken?: string;
+}
+
+export interface Tap排行榜信息 {
+  id?: string;
+  name?: string;
+  period?: Tap排行榜周期 | null;
+  availablePeriods?: Tap排行榜周期[];
+}
+
+export interface Tap排行榜分数结果 {
+  leaderboard?: Tap排行榜信息;
+  scores?: Tap排行榜分数[];
+  isTruncated?: boolean;
+  nextContinuationToken?: string;
+}
+
+export interface Tap当前玩家分数结果 {
+  currentUserScore?: Tap排行榜分数 | null;
+  leaderboard?: Tap排行榜信息;
+}
+
+export interface Tap排行榜回调 {
+  onSuccess?: (结果: unknown) => void;
+  onFailure?: (代码: number, 消息: string) => void;
+}
+
 export interface Tap排行榜管理器 {
   submitScores(选项: {
     scores: { leaderboardId: string; score: number }[];
-    callback?: {
-      onSuccess?: (结果: unknown) => void;
-      onFailure?: (代码: number, 消息: string) => void;
-    };
+    callback?: Tap排行榜回调;
   }): void;
   openLeaderboard(选项: {
     leaderboardId: string;
     collection?: string;
-    callback?: {
-      onSuccess?: () => void;
-      onFailure?: (代码: number, 消息: string) => void;
-    };
+    callback?: Tap排行榜回调;
+  }): void;
+  loadLeaderboardScores?(选项: {
+    leaderboardId: string;
+    continuationToken?: string;
+    maxSize?: number;
+    collection?: string;
+    periodToken?: string;
+    callback?: Tap排行榜回调;
+  }): void;
+  loadCurrentPlayerLeaderboardScore?(选项: {
+    leaderboardId: string;
+    collection?: string;
+    periodToken?: string;
+    callback?: Tap排行榜回调;
   }): void;
 }
 
@@ -82,7 +133,13 @@ export interface Tap宿主 {
   getCloudSaveManager?: () => Tap云存档管理器;
   getLeaderboardManager?: () => Tap排行榜管理器;
   createAchievementManager?: (选项?: { toastEnable?: boolean }) => Tap成就管理器;
-  login?: (选项: Record<string, unknown>) => void;
+  login?: (选项: {
+    timeout?: number;
+    success?: (结果: { code?: string; errMsg?: string }) => void;
+    fail?: (错误: { errMsg?: string; errno?: number }) => void;
+    complete?: () => void;
+  }) => void;
+  checkSession?: (选项: { success?: () => void; fail?: () => void; complete?: () => void }) => void;
 }
 
 declare global {

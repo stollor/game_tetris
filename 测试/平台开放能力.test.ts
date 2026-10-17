@@ -192,3 +192,108 @@ test("有 mock 云存档时上传再拉取可写回本地", async () => {
   expect(目标.getItem("旅行版:收藏")).toContain("7");
   delete (globalThis as { window?: unknown }).window;
 });
+
+test("周期榜配置：总榜已填，日周月待后台建榜", async () => {
+  const { 已配置的周期, 取排行榜编号, 排行榜周期顺序 } = await import("../代码/平台/排行榜");
+  const { 排行榜编号按周期 } = await import("../代码/平台/配置");
+  expect(排行榜周期顺序).toEqual(["日", "周", "月", "总"]);
+  expect(取排行榜编号("马拉松", "总")).toBe(排行榜编号按周期.马拉松.总);
+  expect(取排行榜编号("冲刺", "日")).toBe("");
+  expect(已配置的周期("极限")).toEqual(["总"]);
+});
+
+test("加载排行榜：未配置周期返回说明；mock 宿主可拉榜", async () => {
+  const { 加载排行榜数据 } = await import("../代码/平台/排行榜");
+  const 未配 = await 加载排行榜数据({ 模式: "马拉松", 周期: "日" });
+  expect(未配.完成).toBe(false);
+  expect(未配.原因).toContain("尚未配置");
+
+  const scores = [
+    { rank: 1, score: 100, user: { name: "A" } },
+    { rank: 2, score: 80, user: { name: "B" } },
+  ];
+  const 宿主 = {
+    getLeaderboardManager() {
+      return {
+        loadLeaderboardScores({
+          leaderboardId,
+          periodToken,
+          callback,
+        }: {
+          leaderboardId: string;
+          periodToken?: string;
+          callback?: {
+            onSuccess?: (r: unknown) => void;
+            onFailure?: (c: number, m: string) => void;
+          };
+        }) {
+          callback?.onSuccess?.({
+            scores,
+            leaderboard: {
+              id: leaderboardId,
+              period: { display: periodToken ? "历史" : "", periodToken: periodToken || "" },
+              availablePeriods: [{ display: "本周", periodToken: "1-2" }],
+            },
+          });
+        },
+        loadCurrentPlayerLeaderboardScore({
+          callback,
+        }: {
+          callback?: { onSuccess?: (r: unknown) => void };
+        }) {
+          callback?.onSuccess?.({ currentUserScore: { rank: 2, score: 80, user: { name: "B" } } });
+        },
+        submitScores() {},
+        openLeaderboard() {},
+      };
+    },
+  };
+  (globalThis as { window?: { tap?: typeof 宿主 } }).window = { tap: 宿主 };
+  const 有 = await 加载排行榜数据({ 模式: "马拉松", 周期: "总", 条数: 10 });
+  expect(有.完成).toBe(true);
+  expect(有.分数列表).toHaveLength(2);
+  expect(有.我的?.rank).toBe(2);
+  delete (globalThis as { window?: unknown }).window;
+});
+
+test("成就解锁走 Tap API 并记录同步状态", async () => {
+  const { 解锁平台成就, 读取成就同步状态 } = await import("../代码/平台/平台成就");
+  let 收到 = "";
+  const 宿主 = {
+    createAchievementManager() {
+      return {
+        unlockAchievement({
+          achievementId,
+          callback,
+        }: {
+          achievementId: string;
+          callback?: {
+            onAchievementSuccess?: () => void;
+            onAchievementFailure?: (e: unknown) => void;
+          };
+        }) {
+          收到 = achievementId;
+          callback?.onAchievementSuccess?.();
+        },
+      };
+    },
+  };
+  (globalThis as { window?: { tap?: typeof 宿主 } }).window = { tap: 宿主 };
+  const r = await 解锁平台成就("first-lock");
+  expect(r.完成).toBe(true);
+  expect(收到).toBe("FIRST_LOCK");
+  expect(读取成就同步状态("first-lock").状态).toBe("已同步");
+  delete (globalThis as { window?: unknown }).window;
+});
+
+test("云同步状态文案覆盖主要状态", async () => {
+  const { 更新云同步状态, 格式化云同步文案, 读取云同步状态 } = await import(
+    "../代码/平台/云存档状态"
+  );
+  更新云同步状态({ 状态: "同步中", 原因: "" });
+  expect(格式化云同步文案(读取云同步状态())).toContain("同步中");
+  更新云同步状态({ 状态: "失败", 原因: "网络错误" });
+  expect(格式化云同步文案(读取云同步状态())).toContain("网络错误");
+  更新云同步状态({ 状态: "未登录", 原因: "" });
+  expect(格式化云同步文案(读取云同步状态())).toContain("未登录");
+});

@@ -1,6 +1,6 @@
 import type Phaser from "phaser";
 
-export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | "成就" | "商店";
+export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | "成就" | "商店" | "排行";
 
 /** 图标作为真实纹理交给框架按钮，命中与交互仍使用通用按钮。 */
 export function 获取旅行图标(场景: Phaser.Scene, 名称: 旅行图标名称): string {
@@ -61,6 +61,14 @@ export function 获取旅行图标(场景: Phaser.Scene, 名称: 旅行图标名
     g.arc(16, 10, 4, Math.PI, 0, false);
     g.lineTo(20, 13);
     g.strokePath();
+  }
+  if (名称 === "排行") {
+    // 简易奖杯 / 柱状排名
+    g.lineStyle(2.2, 0xffe7a8);
+    g.strokeRoundedRect(7, 14, 5, 12, 1);
+    g.strokeRoundedRect(14, 8, 5, 18, 1);
+    g.strokeRoundedRect(21, 11, 5, 15, 1);
+    g.lineBetween(6, 26, 26, 26);
   }
   g.generateTexture(键, 32, 32);
   g.destroy();

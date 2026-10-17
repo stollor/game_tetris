@@ -16,6 +16,8 @@ import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
 import { 创建外观选择列表, type 外观卡配置 } from "../../../组件/霓虹街机/外观卡";
 import { 基础背景已解锁, 是基础背景 } from "../../存档/基础背景解锁";
 import { 旅行收藏 } from "../../存档/旅行收藏";
+import { 立即同步云存档 } from "../../平台/云存档";
+import { 格式化云同步文案, 订阅云同步状态, 读取云同步状态 } from "../../平台/云存档状态";
 import { 清除实测低端 } from "../../性能/画质";
 import { 旅行主题表 } from "../../框架配置/旅行主题";
 import { 地点皮肤表, 查找地点 } from "../../框架配置/旅行地点";
@@ -49,6 +51,8 @@ export class 设置界面 extends Phaser.Scene {
   private 视口 = { 宽: 0, 高: 0, 比例: 1 };
   private 结构签名 = "";
   private 滚动区?: 界面滚动区域;
+  private 取消云订阅?: () => void;
+  private 云同步中 = false;
   private readonly 设置更新 = (): void => {
     if (this.获取结构签名() !== this.结构签名) this.重建界面();
   };
@@ -80,10 +84,14 @@ export class 设置界面 extends Phaser.Scene {
     this.scale.on("resize", this.重建界面, this);
     window.addEventListener("gamemaker:settings-change", this.设置更新);
     window.addEventListener("keydown", this.处理关闭键);
+    this.取消云订阅 = 订阅云同步状态(() => {
+      if (this.sys.isActive()) this.重建界面();
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener("keydown", this.处理关闭键);
       this.scale.off("resize", this.重建界面, this);
       window.removeEventListener("gamemaker:settings-change", this.设置更新);
+      this.取消云订阅?.();
     });
   }
 
@@ -621,22 +629,74 @@ export class 设置界面 extends Phaser.Scene {
       { 宽: 42, 高: 38 },
     );
 
+    const 英文 = 解析语言(设置.语言) !== "简体中文";
+    const 云状态 = 读取云同步状态();
+    const 云文案 = this.云同步中 ? (英文 ? "Syncing…" : "同步中…") : 格式化云同步文案(云状态, 英文);
     const 页脚 = new 界面布局(this, 宽 / 2, 上 + 面板高 - 32, {
       方向: "水平",
       宽: 内容宽,
       高: 38,
       间距: 8,
-      主轴对齐: "末尾",
+      主轴对齐: "起始",
       交叉轴对齐: "居中",
     });
-    页脚.添加(this.创建按钮(0, 0, 80, 38, 文案.恢复默认, "settings.defaults", this.恢复默认), {
+    const 云行 = new 界面布局(this, 0, 0, {
+      方向: "水平",
+      宽: 内容宽 - 150,
+      高: 38,
+      间距: 8,
+      交叉轴对齐: "居中",
+    });
+    云行.添加(
+      new 界面文字(this, 0, 0, {
+        宽: 0,
+        高: 34,
+        文案: 云文案,
+        字号: "12px",
+        颜色: 外观.次要文字 ?? 外观.正文,
+        对齐: "左",
+      }),
+      { 高: 34, 伸展: 1 },
+    );
+    云行.添加(
+      this.创建按钮(
+        0,
+        0,
+        英文 ? 96 : 88,
+        34,
+        英文 ? "Sync now" : "立即同步",
+        "settings.cloud-sync",
+        () => {
+          if (this.云同步中) return;
+          this.云同步中 = true;
+          this.重建界面();
+          void 立即同步云存档()
+            .catch(() => undefined)
+            .finally(() => {
+              this.云同步中 = false;
+              if (this.sys.isActive()) this.重建界面();
+            });
+        },
+      ),
+      { 宽: 英文 ? 96 : 88, 高: 34 },
+    );
+    页脚.添加(云行, { 高: 38, 伸展: 1 });
+    const 右钮 = new 界面布局(this, 0, 0, {
+      方向: "水平",
+      宽: 144,
+      高: 38,
+      间距: 8,
+      交叉轴对齐: "居中",
+    });
+    右钮.添加(this.创建按钮(0, 0, 80, 38, 文案.恢复默认, "settings.defaults", this.恢复默认), {
       宽: 80,
       高: 38,
     });
-    页脚.添加(
+    右钮.添加(
       this.创建按钮(0, 0, 56, 38, 文案.完成, "settings.done", () => this.关闭(), true),
       { 宽: 56, 高: 38 },
     );
+    页脚.添加(右钮, { 宽: 144, 高: 38 });
   };
 
   private 更新(变化: Partial<游戏设置>): void {

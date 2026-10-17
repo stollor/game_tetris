@@ -10,7 +10,7 @@ import { 创建节流音效 } from "../../../框架/音频/音效节流";
 import { 播放游戏音效, 绑定音频管理器, 解锁程序音频 } from "../../../框架/音频/音频";
 import { 创建纪录存档, 是否刷新纪录 } from "../../存档/对局纪录";
 import { type 对局奖励输入, 执行收藏操作, 旅行日期 } from "../../存档/旅行收藏";
-import { 同步平台成就 } from "../../平台/平台成就";
+import { 同步平台成就并回报 } from "../../平台/平台成就";
 import { 结算后同步平台 } from "../../平台/结算同步";
 import { 是省电模式 } from "../../性能/画质";
 import { 创建俄罗斯方块成就, 成就定义, 记录落块成就 } from "../../成就/俄罗斯方块成就";
@@ -1526,7 +1526,6 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 提示成就(编号: string[]): void {
-    if (编号.length) 同步平台成就(编号);
     if (!编号.length) return;
     const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
     const 名称 = 编号
@@ -1535,8 +1534,20 @@ export class 对局 extends Phaser.Scene {
       .map((a) => (英文 ? a.英文 : a.名称));
     const 提示文案 = `${英文 ? "Achievement unlocked" : "成就解锁"} · ${名称.slice(0, 2).join(" / ")}${名称.length > 2 ? ` +${名称.length - 2}` : ""}`;
     void 同步成就金币().then((结果) => {
-      if (结果.新增 && this.成就提示?.active && this.成就提示.text === 提示文案)
+      if (结果.新增 && this.成就提示?.active && this.成就提示.text.startsWith(提示文案))
         this.成就提示.setText(`${提示文案} · +${结果.新增} 方块币`);
+    });
+    void 同步平台成就并回报(编号).then((结果列表) => {
+      if (!this.成就提示?.active) return;
+      const 成功 = 结果列表.filter((r) => r.完成).length;
+      const 失败 = 结果列表.filter((r) => !r.完成 && r.原因 !== "未配置平台成就 ID");
+      let 后缀 = "";
+      if (成功) 后缀 = 英文 ? " · Synced to TapTap" : " · 已同步到 TapTap";
+      else if (失败.length) 后缀 = 英文 ? ` · Tap sync failed` : ` · Tap 同步失败`;
+      if (后缀 && this.成就提示.text.startsWith(提示文案)) {
+        this.成就提示.setText(`${this.成就提示.text}${后缀}`);
+        this.成就提示剩余 = Math.max(this.成就提示剩余, 2800);
+      }
     });
     this.成就提示剩余 = 2400;
     this.成就提示?.setText(提示文案).setAlpha(1).setVisible(true);

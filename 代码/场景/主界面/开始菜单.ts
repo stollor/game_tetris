@@ -13,7 +13,7 @@ import { 创建菜单按钮 } from "../../界面/按钮";
 import { 创建模式选择卡 } from "../../界面/模式卡";
 import { 布置纯享层 } from "../../界面/纯享风景";
 import { 布置金币条 } from "../../界面/金币条";
-import { 相邻风景 } from "../../界面/风景浏览";
+import { 已解锁风景列表, 相邻已解锁风景 } from "../../界面/风景浏览";
 import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
 import { 布置烘焙底图 } from "../../视觉/风景缩略";
 import { 解析语言 } from "../../配置/俄罗斯方块文案";
@@ -88,13 +88,15 @@ export class 开始菜单 extends Phaser.Scene {
       );
   }
   private 切纯享(方向: -1 | 1): void {
-    this.纯享主题 = 相邻风景(this.纯享主题, 方向);
+    this.纯享主题 = 相邻已解锁风景(this.纯享主题, 方向);
     this.重建();
   }
   private 进入纯享(): void {
     if (this.纯享背景) return;
     this.选择模式 = false;
-    this.纯享主题 = 获取游戏设置().背景主题;
+    const 解锁 = 已解锁风景列表();
+    const 当前 = 获取游戏设置().背景主题;
+    this.纯享主题 = 解锁.includes(当前) ? 当前 : (解锁[0] ?? 当前);
     this.纯享背景 = true;
     this.过场 = "进入纯享";
     this.重建();
@@ -131,6 +133,7 @@ export class 开始菜单 extends Phaser.Scene {
     if (this.纯享背景) {
       布置纯享层(this, this.视口.宽, this.视口.高, {
         主题: this.纯享主题,
+        范围: 已解锁风景列表(),
         返回名称: "menu.scenery.exit",
         返回文案: "返回",
         返回: () => this.退出纯享(),
@@ -432,6 +435,7 @@ export class 开始菜单 extends Phaser.Scene {
           高: 卡高,
           英文,
           点击: () => this.开始(模式),
+          排行点击: () => 打开覆盖页面(this, "排行榜界面", { 模式 }),
         });
       });
       this.按钮(宽 / 2, 高 - 42, 168, 40, t("返回", "BACK"), "mode.back", () =>
