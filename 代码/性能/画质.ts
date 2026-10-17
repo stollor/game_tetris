@@ -26,12 +26,17 @@ export interface 设备信息 {
   实测低端?: boolean;
 }
 
+let 实测低端缓存: boolean | undefined;
+
 export function 读取设备信息(): 设备信息 {
   const 导航 = typeof navigator === "undefined" ? undefined : navigator;
-  let 实测低端 = false;
-  try {
-    实测低端 = localStorage.getItem(实测低端键) === "1";
-  } catch {}
+  if (实测低端缓存 === undefined) {
+    实测低端缓存 = false;
+    try {
+      实测低端缓存 = localStorage.getItem(实测低端键) === "1";
+    } catch {}
+  }
+  const 实测低端 = 实测低端缓存;
   return {
     核心数: 导航?.hardwareConcurrency,
     内存GB: (导航 as { deviceMemory?: number } | undefined)?.deviceMemory,
@@ -104,6 +109,7 @@ export function 接入画质管理(游戏: Phaser.Game): void {
         if (帧率 < 画质参数.实测低帧阈值) {
           运行时降级 = true;
           try {
+            实测低端缓存 = true;
             localStorage.setItem(实测低端键, "1");
           } catch {}
           应用帧率(游戏);
@@ -119,6 +125,7 @@ export function 接入画质管理(游戏: Phaser.Game): void {
 
 export function 清除实测低端(): void {
   运行时降级 = false;
+  实测低端缓存 = false;
   try {
     localStorage.removeItem(实测低端键);
   } catch {}

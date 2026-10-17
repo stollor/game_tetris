@@ -34,7 +34,8 @@ import {
   软降一步,
 } from "../../玩法/俄罗斯方块";
 import { 获取技巧反馈 } from "../../视觉/技巧反馈";
-import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
+import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
+import { 布置烘焙底图 } from "../../视觉/风景缩略";
 import { 获取文案, 解析语言 } from "../../配置/俄罗斯方块文案";
 import { type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
@@ -168,7 +169,7 @@ export class 对局 extends Phaser.Scene {
   private 消行反馈?: Phaser.GameObjects.Text;
   private 重开锁可用?: boolean;
   private 绘图?: Phaser.GameObjects.Graphics;
-  private 背景图?: Phaser.GameObjects.Graphics;
+  private 背景图?: Phaser.GameObjects.Image;
   private 背景动画层?: Phaser.GameObjects.Graphics;
   private 背景主题: 背景主题 = 获取游戏设置().背景主题;
   private 信息栏?: 界面数值面板;
@@ -250,9 +251,15 @@ export class 对局 extends Phaser.Scene {
     this.input.on("pointerdown", this.解锁对局音频);
     this.解锁对局音频();
     this.cameras.main.setBackgroundColor("#080B18");
-    this.背景图 = this.add.graphics().setDepth(-2);
     this.背景主题 = 获取游戏设置().背景主题;
-    绘制霓虹背景(this.背景图, this.视口.宽, this.视口.高, this.背景主题, !获取游戏设置().背景动态);
+    this.背景图 = 布置烘焙底图(
+      this,
+      undefined,
+      this.视口.宽,
+      this.视口.高,
+      this.背景主题,
+      !获取游戏设置().背景动态,
+    );
     this.背景动画层 = this.add.graphics().setDepth(-1);
     绘制动态霓虹细节(
       this.背景动画层,
@@ -444,7 +451,15 @@ export class 对局 extends Phaser.Scene {
     );
     const 棋盘像素宽 = 棋盘宽度 * 格子大小;
     const 棋盘像素高 = 可见高度 * 格子大小;
-    if (this.背景图) 绘制霓虹背景(this.背景图, 宽, 高, this.背景主题, !获取游戏设置().背景动态);
+    if (this.背景图)
+      this.背景图 = 布置烘焙底图(
+        this,
+        this.背景图,
+        宽,
+        高,
+        this.背景主题,
+        !获取游戏设置().背景动态,
+      );
     if (this.竖屏布局) {
       if (宽 < 640) {
         棋盘左侧 = 14;

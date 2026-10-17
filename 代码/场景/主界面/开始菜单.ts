@@ -14,7 +14,8 @@ import { 创建模式选择卡 } from "../../界面/模式卡";
 import { 布置纯享层 } from "../../界面/纯享风景";
 import { 布置金币条 } from "../../界面/金币条";
 import { 相邻风景 } from "../../界面/风景浏览";
-import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
+import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
+import { 布置烘焙底图 } from "../../视觉/风景缩略";
 import { 解析语言 } from "../../配置/俄罗斯方块文案";
 import { type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
 import { 游戏外观, 游戏模式顺序 } from "../../配置/游戏外观";
@@ -116,8 +117,9 @@ export class 开始菜单 extends Phaser.Scene {
     this.金币层 = undefined;
     for (const 对象 of [...this.children.list]) 对象.destroy();
     this.背景主题 = this.纯享背景 ? this.纯享主题 : 获取游戏设置().背景主题;
-    绘制霓虹背景(
-      this.add.graphics().setDepth(-2),
+    布置烘焙底图(
+      this,
+      undefined,
       this.视口.宽,
       this.视口.高,
       this.背景主题,

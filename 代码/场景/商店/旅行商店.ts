@@ -13,7 +13,6 @@ import { 绘制霓虹玻璃 } from "../../../组件/霓虹街机/底板";
 import { 绘制方块单元预制体, 绘制方块辉光 } from "../../../组件/霓虹街机/方块单元";
 import { 绘制地点纹样 } from "../../../组件/霓虹街机/旅行纹样";
 import { 设置预览界面样式 } from "../../../组件/霓虹街机/调色板";
-import { 创建风景裁剪 } from "../../../组件/霓虹街机/风景裁剪";
 import { 执行收藏操作, 旅行收藏 } from "../../存档/旅行收藏";
 import { type 地点皮肤, 地点皮肤表 } from "../../框架配置/旅行地点";
 import type { 方块类型 } from "../../玩法/俄罗斯方块";
@@ -22,6 +21,7 @@ import { 布置纯享层 } from "../../界面/纯享风景";
 import { 布置金币条 } from "../../界面/金币条";
 import { 地点浏览列表, 相邻风景 } from "../../界面/风景浏览";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
+import { 添加风景缩略 } from "../../视觉/风景缩略";
 import { 穿戴旅行外观, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
 import { 设置预览方块外观 } from "../../配置/方块外观";
 import { 颜色值 } from "../../配置/界面主题";
@@ -184,8 +184,11 @@ export class 旅行商店 extends Phaser.Scene {
     动画 = false,
     地点 = this.地点,
   ): void {
-    const 图 =
-      根 && !动画 ? 创建风景裁剪(this, 根, x, y, 宽, 高) : this.add.graphics().setPosition(x, y);
+    if (根 && !动画) {
+      添加风景缩略(this, 根, x, y, 宽, 高, 地点.名称);
+      return;
+    }
+    const 图 = this.add.graphics().setPosition(x, y);
     绘制霓虹背景(图, 宽, 高, 地点.名称, !动画 || !this.动态);
     if (动画) 根?.add(图);
     if (动画) {
@@ -583,8 +586,7 @@ export class 旅行商店 extends Phaser.Scene {
   ): void {
     g.fillStyle(手机 ? 0x122824 : 0xcfc6ad, 0.9).fillRoundedRect(x, y, 宽, 高, 6);
     if (部位 === "静态背景" || 部位 === "动态背景") {
-      const 预览 = 创建风景裁剪(this, 根, x + 2, y + 2, 宽 - 4, 高 - 4);
-      绘制霓虹背景(预览, 宽 - 4, 高 - 4, this.地点.名称, true);
+      添加风景缩略(this, 根, x + 2, y + 2, 宽 - 4, 高 - 4, this.地点.名称);
       if (部位 === "动态背景")
         g.fillStyle(0xe5b96d, 0.9).fillRoundedRect(x + 宽 - 22, y + 4, 18, 12, 3);
     } else if (部位 === "界面样式") {
