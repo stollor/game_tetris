@@ -12,7 +12,10 @@ const check = (ok: unknown, 文案: string) => {
   console.log(`通过：${文案}`);
 };
 try {
-  const build = await Bun.build({ entrypoints: ["测试/输入隔离浏览器夹具.ts"], target: "browser" });
+  const build = await Bun.build({
+    entrypoints: ["测试/浏览器/输入隔离浏览器夹具.ts"],
+    target: "browser",
+  });
   if (!build.success) throw new Error(String(build.logs));
   const 脚本 = await build.outputs[0]!.text();
   const fixture = await browser.newPage({ viewport: { width: 400, height: 400 } });

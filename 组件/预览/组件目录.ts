@@ -1,7 +1,7 @@
+import type { 预览库 } from "GM预览协议";
 import { 方块外观方案表, 设置预览方块外观 } from "../../代码/配置/方块外观";
 import { 设置预览界面样式, 霓虹界面主题 } from "../霓虹街机/调色板";
 import { 霓虹街机样品 } from "./霓虹街机样品";
-import type { 预览库 } from "./预览协议";
 
 const 配方文件: Record<string, string> = {
   方块单元: "方块单元",

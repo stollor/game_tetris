@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
-import { 每日方块序列 } from "../代码/玩法/俄罗斯方块";
+import { 每日方块序列 } from "../../代码/玩法/俄罗斯方块";
 
 interface 对局测试接口 {
   设置序列: (序列: string[]) => void;
@@ -127,7 +127,7 @@ try {
 
   await 页面.keyboard.press("ArrowUp");
   const 旋转后 = await 读取对局();
-  断言(旋转后?.当前朝向 === 1, `上方向键顺时针旋转（实际朝向 ${旋转后?.当前朝向}）`);
+  断言(旋转后?.当前朝向 === 3, `上方向键按默认左转旋转（实际朝向 ${旋转后?.当前朝向}）`);
 
   await 页面.keyboard.down("ArrowDown");
   await 页面.waitForTimeout(240);

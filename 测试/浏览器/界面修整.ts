@@ -25,6 +25,11 @@ try {
     isMobile: true,
   });
   await 页.addInitScript(() => {
+    // 以老存档保留全部基础背景，保证背景行有足够卡片可横向拖动；新档只解锁云海山岚与极光原野。
+    localStorage.setItem(
+      "旅行版:基础背景保留",
+      JSON.stringify(["晨光海岸", "云海山岚", "极光原野", "霓虹天际"]),
+    );
     window.__音频连接__ = new WeakMap();
     window.__循环声源__ = [];
     window.__音乐声源__ = [];
@@ -242,6 +247,8 @@ try {
       旧设置,
       "拖动不误选",
     );
+    // 本行横向惯性还在滑行时，下一次比较会把它的位移误判成相邻行被带动。
+    await 页.waitForTimeout(700);
   }
   const 竖拖前 = (await 快照())?.interactives.find(
     (x) => x.name === "settings.background.晨光海岸",

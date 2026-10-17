@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { 界面按钮 } from "../框架/界面/按钮";
-import { 界面滚动区域 } from "../框架/界面/滚动区域";
-import { 注册模态界面 } from "../框架/界面/输入隔离";
+import { 界面按钮 } from "../../框架/界面/按钮";
+import { 界面滚动区域 } from "../../框架/界面/滚动区域";
+import { 注册模态界面 } from "../../框架/界面/输入隔离";
 
 declare global {
   interface Window {

@@ -13,10 +13,12 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "skipLibCheck": true,
     "paths": {
-      "Phaser框架/*": ["./框架/*"]
+      "Phaser框架/*": ["./框架/*"],
+      "GM预览协议": ["./GM预览协议.ts"]
     }
   },
   "include": ["代码", "运行", "框架", "组件", "测试"],

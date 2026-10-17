@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
-import { 游戏主题表 } from "../框架/样式/主题";
+import { 游戏主题表 } from "../../框架/样式/主题";
 
 const 输出 = "测试/视觉快照/样式特效验收";
 await mkdir(输出, { recursive: true });

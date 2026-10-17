@@ -1,3 +1,4 @@
+import type { 样品设定, 预览样品 } from "GM预览协议";
 import { 选取对比文字色, 颜色字符串 } from "Phaser框架/界面/颜色工具";
 import Phaser from "phaser";
 import type { 方块类型 } from "../../代码/玩法/俄罗斯方块";
@@ -21,7 +22,6 @@ import { 绘制方块单元预制体, 绘制方块辉光 } from "../霓虹街机
 import { 霓虹模式卡 } from "../霓虹街机/模式卡";
 import { 霓虹结算面板 } from "../霓虹街机/结算面板";
 import { 读取霓虹调色板, 霓虹界面主题 } from "../霓虹街机/调色板";
-import type { 样品设定, 预览样品 } from "./预览协议";
 
 function 是开(设定: 样品设定, 键: string): boolean {
   return 设定[键] !== "关";

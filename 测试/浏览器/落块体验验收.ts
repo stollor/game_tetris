@@ -63,7 +63,7 @@ try {
     await page.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
     await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O", "J"]));
     await page.keyboard.press("ArrowUp");
-    check((await state()).当前朝向 === 1 && (await state()).暂存方块 === null, "短按 ↑ 只旋转");
+    check((await state()).当前朝向 === 3 && (await state()).暂存方块 === null, "短按 ↑ 只旋转");
     await page.keyboard.down("ArrowUp");
     await page.waitForFunction(() => window.__俄罗斯方块测试__!.读取状态().暂存方块 === "T");
     check((await state()).当前方块 === "I", "长按 ↑ 暂存");
