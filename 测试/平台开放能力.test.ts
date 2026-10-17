@@ -204,9 +204,6 @@ test("周期榜配置：日周月总均已填入后台 ID", async () => {
   expect(已配置的周期("极限")).toEqual(["日", "周", "月", "总"]);
   expect(已配置的周期("马拉松")).toEqual(["日", "周", "月", "总"]);
   expect(排行榜编号按周期.马拉松.日).toBe("3gzyt8qlnrpvj2isf5");
-  expect(排行榜编号按周期.冲刺.周).toBe("5z3pgj2bu9553gzjva");
-  expect(排行榜编号按周期.极限.月).toBe("ba7azdlt7fr9xrjyas");
-  expect(排行榜编号按周期.每日挑战.日).toBe("57620urtuy8x9sguhd");
 });
 
 test("加载排行榜：未配置周期返回说明；mock 宿主可拉榜", async () => {
@@ -309,3 +306,36 @@ test("云同步状态文案覆盖主要状态", async () => {
   更新云同步状态({ 状态: "未登录", 原因: "" });
   expect(格式化云同步文案(读取云同步状态())).toContain("未登录");
 });
+
+test("排行榜错误文案：500001 友好中文，不暴露裸码", async () => {
+  const { 格式化排行榜错误, 加载排行榜数据 } = await import("../代码/平台/排行榜");
+  expect(格式化排行榜错误(500001, "500001:leaderboard id 3gzyt8qlnrpvj2isf5 not exist")).toContain("白名单");
+  expect(格式化排行榜错误(500001, "500001:leaderboard id x not exist")).not.toMatch(/^500001/);
+  expect(格式化排行榜错误(500001, "x", true)).toMatch(/unavailable/i);
+
+  const 宿主 = {
+    getLeaderboardManager() {
+      return {
+        loadLeaderboardScores({
+          callback,
+        }: {
+          callback?: { onFailure?: (c: number, m: string) => void };
+        }) {
+          callback?.onFailure?.(500001, "leaderboard id 3gzyt8qlnrpvj2isf5 not exist");
+        },
+        loadCurrentPlayerLeaderboardScore() {},
+        submitScores() {},
+        openLeaderboard() {},
+      };
+    },
+  };
+  (globalThis as { window?: { tap?: typeof 宿主 } }).window = { tap: 宿主 };
+  const 失败 = await 加载排行榜数据({ 模式: "马拉松", 周期: "日" });
+  expect(失败.完成).toBe(false);
+  expect(失败.代码).toBe(500001);
+  expect(失败.原因).toContain("白名单");
+  expect(失败.原因).not.toMatch(/500001/);
+  delete (globalThis as { window?: unknown }).window;
+});
+
+

@@ -5,7 +5,7 @@ import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 界面滚动区域 } from "../../../框架/界面/滚动区域";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
 import type { Tap排行榜分数 } from "../../平台/Tap类型";
-import { 加载排行榜数据, type 排行榜周期, 排行榜周期顺序, 格式化榜分数 } from "../../平台/排行榜";
+import { 加载排行榜数据, type 排行榜周期, 排行榜周期顺序, 格式化榜分数, 格式化排行榜错误 } from "../../平台/排行榜";
 import { 请求Tap登录 } from "../../平台/登录";
 import { 排行榜周期标签 } from "../../平台/配置";
 import type { 游戏模式 } from "../../玩法/俄罗斯方块";
@@ -108,13 +108,13 @@ export class 排行榜界面 extends Phaser.Scene {
     });
 
     this.add
-      .text(w / 2, 104, this.缓存.状态文案, {
-        fontSize: "13px",
+      .text(w / 2, 112, this.缓存.状态文案, {
+        fontSize: "12px",
         color: theme.文字.次要,
-        wordWrap: { width: w - 40 },
+        wordWrap: { width: Math.max(160, w - 48) },
         align: "center",
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5, 0)
       .setName("leaderboard.status");
 
     const 行高 = 52;
@@ -211,7 +211,7 @@ export class 排行榜界面 extends Phaser.Scene {
       this.缓存 = {
         状态文案: 结果.需登录
           ? this.t("尚未登录 TapTap，请点下方登录后再查看。", "Please sign in to TapTap first.")
-          : 结果.原因,
+          : 格式化排行榜错误(结果.代码, 结果.原因, this.英文()),
         分数列表: [],
         需登录: 结果.需登录,
       };
