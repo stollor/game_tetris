@@ -1,6 +1,12 @@
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import { 亮色, 混色 } from "../../框架/界面/颜色工具";
-import { 设为烘焙动画层 } from "../性能/图形烘焙";
+import {
+  type 替身项,
+  获取替身贴图,
+  获取烘焙贴图,
+  设为烘焙动画层,
+  设置替身贴图,
+} from "../性能/图形烘焙";
 import { 应重绘动态背景 } from "../性能/画质";
 import { 查找地点 } from "../框架配置/旅行地点";
 import type { 背景主题 } from "../配置/俄罗斯方块设置";
@@ -48,6 +54,7 @@ export function 绘制动态霓虹细节(
   设为烘焙动画层(图形);
   if (播放 && !应重绘动态背景(图形, 时间, 允许闲置降频)) return;
   图形.clear().setScale(1);
+  if (!播放 || 主题 !== "云海山岚") 设置替身贴图(图形, undefined);
   if (!播放) return;
   const 地点 = 查找地点(主题);
   if (地点) {
@@ -58,8 +65,9 @@ export function 绘制动态霓虹细节(
   const 配置 = 背景主题配置[主题];
   const 动画时间 = 时间 * 配置.动画速度;
   if (主题 === "晨光海岸") 绘制海面动画(图形, 宽, 高, 动画时间);
-  else if (主题 === "云海山岚") 绘制云层动画(图形, 宽, 高, 动画时间);
-  else if (主题 === "极光原野") 绘制极光动画(图形, 宽, 高, 动画时间);
+  else if (主题 === "云海山岚") {
+    if (!移动云层替身(图形, 宽, 高, 动画时间)) 绘制云层动画(图形, 宽, 高, 动画时间);
+  } else if (主题 === "极光原野") 绘制极光动画(图形, 宽, 高, 动画时间);
   else 绘制城市动画(图形, 宽, 高, 动画时间);
   图形.setAlpha(配置.动画亮度);
 }
@@ -396,6 +404,61 @@ function 绘制山岚底图(图形: Phaser.GameObjects.Graphics, 宽: number, �
       );
   }
   图形.fillStyle(0x24414f, 0.5).fillRect(0, 高 * 0.95, 宽, 高 * 0.05);
+}
+
+/** 云层参数与「绘制云层动画」一致；每朵云只烘焙一次成贴图，之后每次只移动位置。 */
+function 云朵参数(i: number, 宽: number, 高: number, 时间: number) {
+  const 尺寸 = 宽 * (0.05 + 随机值(i + 81) * 0.06);
+  const x =
+    ((随机值(i + 17) * (宽 + 尺寸 * 3) + 时间 * (0.004 + i * 0.0016)) % (宽 + 尺寸 * 3)) -
+    尺寸 * 1.5;
+  const y = 高 * (0.12 + 随机值(i + 41) * 0.3);
+  return { 尺寸, x, y };
+}
+
+const 云替身签名 = new WeakMap<Phaser.GameObjects.Graphics, string>();
+
+function 移动云层替身(
+  图形: Phaser.GameObjects.Graphics,
+  宽: number,
+  高: number,
+  时间: number,
+  颜色 = 0xffffff,
+  透明度 = 0.5,
+): boolean {
+  const 场景 = 图形.scene;
+  if (!场景 || 场景.game.renderer.type !== Phaser.WEBGL) return false;
+  const 签名 = `${宽}x${高}@${场景.cameras.main.zoom}`;
+  let 列表 = 获取替身贴图(图形);
+  if (!列表 || 云替身签名.get(图形) !== 签名) {
+    const 新列表: 替身项[] = [];
+    for (let i = 0; i < 5; i += 1) {
+      const { 尺寸 } = 云朵参数(i, 宽, 高, 0);
+      const 暗部 = 混色(颜色, 0x6d87a8, 0.45);
+      const 贴 = 获取烘焙贴图(场景, `云朵.${尺寸.toFixed(2)}.${颜色}.${透明度}`, (g) =>
+        绘制云朵(g, 0, 0, 尺寸, 颜色, 暗部, 透明度),
+      );
+      if (!贴) {
+        for (const 项 of 新列表) 项.贴图.destroy();
+        return false;
+      }
+      const 图 = 场景.make.image(
+        { key: 贴.键 } as Phaser.Types.GameObjects.Sprite.SpriteConfig,
+        false,
+      );
+      图.setOrigin((-贴.左 * 贴.比) / 图.width, (-贴.顶 * 贴.比) / 图.height).setScale(1 / 贴.比);
+      新列表.push({ 贴图: 图, x: 0, y: 0, 透明度: 1 });
+    }
+    设置替身贴图(图形, 新列表);
+    云替身签名.set(图形, 签名);
+    列表 = 新列表;
+  }
+  列表.forEach((项, i) => {
+    const { x, y } = 云朵参数(i, 宽, 高, 时间);
+    项.x = x;
+    项.y = y;
+  });
+  return true;
 }
 
 function 绘制云层动画(

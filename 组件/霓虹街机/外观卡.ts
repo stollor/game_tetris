@@ -3,14 +3,13 @@ import { 界面滚动区域 } from "Phaser框架/界面/滚动区域";
 import { 选取对比文字色, 颜色字符串 } from "Phaser框架/界面/颜色工具";
 import type Phaser from "phaser";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
-import { 绘制霓虹背景 } from "../../代码/视觉/霓虹背景";
+import { 添加风景缩略 } from "../../代码/视觉/风景缩略";
 import type { 背景主题 } from "../../代码/配置/俄罗斯方块设置";
 import { type 方块外观名称, 解析方块外观 } from "../../代码/配置/方块外观";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import type { 样式选择 } from "../../框架/设置/设置";
 import { 绘制方块单元预制体 } from "./方块单元";
 import { 读取霓虹调色板 } from "./调色板";
-import { 创建风景裁剪 } from "./风景裁剪";
 
 /** 设置页竖排标题牌：中文逐字竖排，英文整句旋转。 */
 export class 外观标题牌 extends 界面控件 {
@@ -107,8 +106,8 @@ export class 外观选择卡片 extends 界面控件 {
           色值: 方案.颜色[类型],
         });
     } else if (配置.类型 === "背景" && 配置.背景值) {
-      const 风景 = 创建风景裁剪(场景, this, x, y, 预览宽, 预览高);
-      绘制霓虹背景(风景, 预览宽, 预览高, 配置.背景值);
+      // 缩略图烘焙成恰好卡片大小的纹理：无需裁剪区域，设置页滚动时也不再逐帧绘制风景
+      添加风景缩略(场景, this, x, y, 预览宽, 预览高, 配置.背景值);
     } else if (配置.类型 === "背景") {
       this.预览
         .fillGradientStyle(配置.背景色, 配置.背景色, 配置.强调色, 配置.强调色, 1, 1, 0.8, 0.8)

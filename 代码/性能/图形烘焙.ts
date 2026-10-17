@@ -15,7 +15,16 @@ type 图形 = Phaser.GameObjects.Graphics & {
   __烘焙中?: boolean;
   __总是烘焙?: boolean;
   __禁止烘焙?: boolean;
+  __替身?: 替身项[];
 };
+
+/** 用若干预烘焙贴图代替 Graphics 渲染（位置相对 Graphics 本地坐标），动画只改位置不重绘。 */
+export interface 替身项 {
+  贴图: Phaser.GameObjects.Image;
+  x: number;
+  y: number;
+  透明度: number;
+}
 
 interface 烘焙记录 {
   签名: string;
@@ -388,6 +397,57 @@ function 烘焙(g: 图形): void {
   烘焙统计.烘焙次数++;
 }
 
+const 贴图键缓存 = new Map<string, { 键: string; 左: number; 顶: number; 比: number }>();
+
+/**
+ * 把一段矢量绘制烘焙成独立纹理（同键只烘焙一次），返回贴图键与局部原点信息。
+ * 用于“形状不变、只移动”的动画元素（例如云朵）：之后只移动贴图，不再逐帧细分。
+ */
+export function 获取烘焙贴图(
+  场景: Phaser.Scene,
+  键: string,
+  绘制: (g: Phaser.GameObjects.Graphics) => void,
+): { 键: string; 左: number; 顶: number; 比: number } | null {
+  const 比 = 场景.cameras.main.zoom || 1;
+  const 全键 = `烘焙贴图.${键}@${比.toFixed(3)}`;
+  const 缓存 = 贴图键缓存.get(全键);
+  if (缓存 && 场景.sys.textures.exists(缓存.键)) return 缓存;
+  const g = 场景.make.graphics({ x: 0, y: 0 }, false) as 图形;
+  g.__禁止烘焙 = true;
+  绘制(g);
+  const 边界 = 计算命令边界(g.commandBuffer as number[]);
+  if (!边界) {
+    g.destroy();
+    return null;
+  }
+  const 宽 = Math.max(1, Math.ceil((边界.右 - 边界.左) * 比));
+  const 高 = Math.max(1, Math.ceil((边界.底 - 边界.顶) * 比));
+  const 纹理 = 场景.sys.textures.addDynamicTexture(全键, 宽, 高);
+  if (!纹理) {
+    g.destroy();
+    return null;
+  }
+  g.__烘焙中 = true;
+  g.setPosition(-边界.左 * 比, -边界.顶 * 比).setScale(比);
+  纹理.draw(g).render();
+  g.destroy();
+  const 结果 = { 键: 全键, 左: 边界.左, 顶: 边界.顶, 比 };
+  贴图键缓存.set(全键, 结果);
+  return 结果;
+}
+
+/** 设置/清除 Graphics 的替身贴图；旧替身中不再使用的贴图会被销毁。 */
+export function 设置替身贴图(g: Phaser.GameObjects.Graphics, 列表?: 替身项[]): void {
+  const 图 = g as 图形;
+  const 旧 = 图.__替身;
+  if (旧 && 旧 !== 列表) for (const 项 of 旧) if (!列表?.includes(项)) 项.贴图.destroy();
+  图.__替身 = 列表;
+}
+
+export function 获取替身贴图(g: Phaser.GameObjects.Graphics): 替身项[] | undefined {
+  return (g as 图形).__替身;
+}
+
 /** 标记一个 Graphics 为动画层：每次内容变化都直接烘焙，渲染从不逐帧细分。 */
 export function 设为烘焙动画层(g: Phaser.GameObjects.Graphics): void {
   (g as 图形).__总是烘焙 = true;
@@ -410,6 +470,21 @@ export function 安装图形烘焙(游戏: Phaser.Game): void {
     const 原渲染 = 原型.renderWebGL;
     原型.renderWebGL = function (renderer, src, ctx, parentMatrix) {
       if (src.__烘焙中) return 原渲染.call(this, renderer, src, ctx, parentMatrix);
+      if (src.__替身) {
+        for (const 项 of src.__替身) {
+          const 图 = 项.贴图;
+          图.setPosition(src.x + 项.x * src.scaleX, src.y + 项.y * src.scaleY);
+          图.alpha = src.alpha * 项.透明度;
+          图.setScrollFactor(src.scrollFactorX, src.scrollFactorY);
+          (图 as unknown as { renderWebGL: typeof 原渲染 }).renderWebGL(
+            renderer,
+            图 as never,
+            ctx,
+            parentMatrix,
+          );
+        }
+        return;
+      }
       候选.add(src);
       const 记录 = src.__烘焙;
       const 现签名 = 签名(src);
@@ -437,6 +512,7 @@ export function 安装图形烘焙(游戏: Phaser.Game): void {
     const 原销毁 = 原型.preDestroy;
     原型.preDestroy = function (this: 图形) {
       释放(this);
+      设置替身贴图(this, undefined);
       候选.delete(this);
       原销毁?.call(this);
     };
