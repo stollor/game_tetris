@@ -4,7 +4,7 @@ export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | 
 
 /** 图标作为真实纹理交给框架按钮，命中与交互仍使用通用按钮。 */
 export function 获取旅行图标(场景: Phaser.Scene, 名称: 旅行图标名称): string {
-  const 键 = `旅行图标.${名称}`;
+  const 键 = 名称 === "排行" ? `旅行图标.${名称}.v2` : `旅行图标.${名称}`;
   if (场景.textures.exists(键)) return 键;
   const g = 场景.make.graphics({}, false);
   if (名称 === "关闭")
@@ -63,12 +63,16 @@ export function 获取旅行图标(场景: Phaser.Scene, 名称: 旅行图标名
     g.strokePath();
   }
   if (名称 === "排行") {
-    // 简易奖杯 / 柱状排名
-    g.lineStyle(2.2, 0xffe7a8);
-    g.strokeRoundedRect(7, 14, 5, 12, 1);
-    g.strokeRoundedRect(14, 8, 5, 18, 1);
-    g.strokeRoundedRect(21, 11, 5, 15, 1);
-    g.lineBetween(6, 26, 26, 26);
+    // 深描边 + 浅填充，亮/暗背景下都易辨认
+    const 画柱 = (x: number, y: number, w: number, h: number) => {
+      g.fillStyle(0xffe7a8, 0.95).fillRoundedRect(x, y, w, h, 1.5);
+      g.lineStyle(2, 0x1a2430, 0.95).strokeRoundedRect(x, y, w, h, 1.5);
+    };
+    画柱(6, 14, 6, 12);
+    画柱(13, 7, 6, 19);
+    画柱(20, 11, 6, 15);
+    g.lineStyle(2.4, 0x1a2430, 0.95).lineBetween(5, 27, 27, 27);
+    g.lineStyle(1.6, 0xffe7a8, 0.9).lineBetween(5, 27, 27, 27);
   }
   g.generateTexture(键, 32, 32);
   g.destroy();

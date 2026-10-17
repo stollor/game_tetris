@@ -8,6 +8,7 @@ import type {
 } from "./Tap类型";
 import { 是未登录错误 } from "./登录";
 import { type 排行榜周期, 排行榜周期顺序, 排行榜编号, 排行榜编号按周期 } from "./配置";
+import { 记录Tap用户身份 } from "./用户身份";
 
 export type { 排行榜周期 };
 export { 排行榜周期顺序 };
@@ -276,6 +277,13 @@ export async function 加载排行榜数据(选项: 加载排行榜选项): Prom
           管理器.loadCurrentPlayerLeaderboardScore!(参数);
         });
         我的 = 我.currentUserScore ?? null;
+        if (我的?.user?.openid || 我的?.user?.name) {
+          记录Tap用户身份({
+            openid: 我的.user.openid,
+            nickName: 我的.user.name,
+            来源: "leaderboard",
+          });
+        }
       } catch {
         我的 = null;
       }

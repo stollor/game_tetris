@@ -5,7 +5,12 @@ import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 界面滚动区域 } from "../../../框架/界面/滚动区域";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
 import { 旅行收藏 } from "../../存档/旅行收藏";
-import { 成就同步文案, 读取成就同步状态 } from "../../平台/平台成就";
+import {
+  补同步已解锁成就,
+  成就同步文案,
+  订阅成就同步状态,
+  读取成就同步状态,
+} from "../../平台/平台成就";
 import { 创建俄罗斯方块成就, 成就定义 } from "../../成就/俄罗斯方块成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import { 布置金币条 } from "../../界面/金币条";
@@ -24,6 +29,7 @@ export class 成就界面 extends Phaser.Scene {
   constructor() {
     super("成就界面");
   }
+  private 取消成就订阅?: () => void;
   create(): void {
     应用文字清晰度(this);
     this.cameras.main.fadeIn(150, 8, 18, 25);
@@ -31,9 +37,18 @@ export class 成就界面 extends Phaser.Scene {
     this.布局();
     this.scale.on("resize", this.布局, this);
     window.addEventListener("keydown", this.按键);
+    this.取消成就订阅 = 订阅成就同步状态(() => {
+      if (this.sys.isActive()) this.布局();
+    });
+    const 系统 = 创建俄罗斯方块成就();
+    const 已解锁 = 成就定义.filter((a) => 系统.读取(a.编号).解锁时间 !== null).map((a) => a.编号);
+    void 补同步已解锁成就(已解锁).then(() => {
+      if (this.sys.isActive()) this.布局();
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off("resize", this.布局, this);
       window.removeEventListener("keydown", this.按键);
+      this.取消成就订阅?.();
       delete window.__俄罗斯方块成就__;
     });
   }

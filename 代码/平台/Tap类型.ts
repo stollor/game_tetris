@@ -124,6 +124,10 @@ export interface Tap成就管理器 {
       onAchievementFailure?: (错误: unknown) => void;
     };
   }): void;
+  registerListener?(监听: {
+    onAchievementSuccess?: (代码?: number, 成就?: { achievementId?: string; achievementName?: string }) => void;
+    onAchievementFailure?: (id?: string, 代码?: number, 消息?: string) => void;
+  }): void;
   showAchievementPage?(): void;
 }
 
@@ -140,6 +144,12 @@ export interface Tap宿主 {
     complete?: () => void;
   }) => void;
   checkSession?: (选项: { success?: () => void; fail?: () => void; complete?: () => void }) => void;
+  getUserInfo?: (选项: {
+    success?: (结果: {
+      userInfo?: { nickName?: string; nickname?: string; avatarUrl?: string };
+    }) => void;
+    fail?: (错误?: unknown) => void;
+  }) => void;
 }
 
 declare global {

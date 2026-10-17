@@ -295,6 +295,66 @@ test("成就解锁走 Tap API 并记录同步状态", async () => {
   delete (globalThis as { window?: unknown }).window;
 });
 
+test("成就同步状态会落盘，失败原因可读", async () => {
+  const store = new Map<string, string>();
+  (globalThis as { localStorage?: Storage }).localStorage = {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(k) {
+      return store.has(k) ? store.get(k)! : null;
+    },
+    key(i) {
+      return [...store.keys()][i] ?? null;
+    },
+    removeItem(k) {
+      store.delete(k);
+    },
+    setItem(k, v) {
+      store.set(k, v);
+    },
+  } as Storage;
+  const { 解锁平台成就, 读取成就同步状态, 解释成就失败 } = await import("../代码/平台/平台成就");
+  expect(解释成就失败(undefined, "achievement pending publish")).toContain("待发布");
+  const 宿主 = {
+    createAchievementManager() {
+      return {
+        unlockAchievement({
+          callback,
+        }: {
+          achievementId: string;
+          callback?: {
+            onAchievementSuccess?: () => void;
+            onAchievementFailure?: (e: unknown) => void;
+          };
+        }) {
+          callback?.onAchievementFailure?.(new Error("not login"));
+        },
+      };
+    },
+  };
+  (globalThis as { window?: { tap?: typeof 宿主 } }).window = { tap: 宿主 };
+  const r = await 解锁平台成就("first-clear", true);
+  expect(r.完成).toBe(false);
+  expect(r.原因).toContain("未登录");
+  expect(读取成就同步状态("first-clear").状态).toBe("失败");
+  expect(store.get("旅行版:成就同步") || "").toContain("first-clear");
+  delete (globalThis as { window?: unknown }).window;
+});
+
+test("云同步文案在有用户身份时带上 ID", async () => {
+  const { 记录Tap用户身份 } = await import("../代码/平台/用户身份");
+  const { 更新云同步状态, 格式化云同步文案, 读取云同步状态 } = await import(
+    "../代码/平台/云存档状态"
+  );
+  记录Tap用户身份({ openid: "oid-demo", 来源: "test" });
+  更新云同步状态({ 状态: "已同步", 原因: "", 上次成功时间: null });
+  expect(格式化云同步文案(读取云同步状态())).toContain("oid-demo");
+});
+
 test("云同步状态文案覆盖主要状态", async () => {
   const { 更新云同步状态, 格式化云同步文案, 读取云同步状态 } = await import(
     "../代码/平台/云存档状态"

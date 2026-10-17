@@ -1543,7 +1543,10 @@ export class 对局 extends Phaser.Scene {
       const 失败 = 结果列表.filter((r) => !r.完成 && r.原因 !== "未配置平台成就 ID");
       let 后缀 = "";
       if (成功) 后缀 = 英文 ? " · Synced to TapTap" : " · 已同步到 TapTap";
-      else if (失败.length) 后缀 = 英文 ? ` · Tap sync failed` : ` · Tap 同步失败`;
+      else if (失败.length) {
+        const 原因 = 失败[0]?.原因 || (英文 ? "error" : "未知错误");
+        后缀 = 英文 ? ` · Tap sync failed · ${原因}` : ` · Tap 同步失败 · ${原因}`;
+      }
       if (后缀 && this.成就提示.text.startsWith(提示文案)) {
         this.成就提示.setText(`${this.成就提示.text}${后缀}`);
         this.成就提示剩余 = Math.max(this.成就提示剩余, 2800);

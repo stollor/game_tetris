@@ -12,12 +12,12 @@ import { 界面滚动区域 } from "../../../框架/界面/滚动区域";
 import type { 语言选择 } from "../../../框架/设置/设置";
 import { 解锁程序音频 } from "../../../框架/音频/音频";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
-import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
 import { 创建外观选择列表, type 外观卡配置 } from "../../../组件/霓虹街机/外观卡";
 import { 基础背景已解锁, 是基础背景 } from "../../存档/基础背景解锁";
 import { 旅行收藏 } from "../../存档/旅行收藏";
 import { 立即同步云存档 } from "../../平台/云存档";
 import { 格式化云同步文案, 订阅云同步状态, 读取云同步状态 } from "../../平台/云存档状态";
+import { 刷新Tap用户身份, 订阅Tap用户身份 } from "../../平台/用户身份";
 import { 清除实测低端 } from "../../性能/画质";
 import { 旅行主题表 } from "../../框架配置/旅行主题";
 import { 地点皮肤表, 查找地点 } from "../../框架配置/旅行地点";
@@ -52,6 +52,7 @@ export class 设置界面 extends Phaser.Scene {
   private 结构签名 = "";
   private 滚动区?: 界面滚动区域;
   private 取消云订阅?: () => void;
+  private 取消用户订阅?: () => void;
   private 云同步中 = false;
   private readonly 设置更新 = (): void => {
     if (this.获取结构签名() !== this.结构签名) this.重建界面();
@@ -87,11 +88,18 @@ export class 设置界面 extends Phaser.Scene {
     this.取消云订阅 = 订阅云同步状态(() => {
       if (this.sys.isActive()) this.重建界面();
     });
+    this.取消用户订阅 = 订阅Tap用户身份(() => {
+      if (this.sys.isActive()) this.重建界面();
+    });
+    void 刷新Tap用户身份().then(() => {
+      if (this.sys.isActive()) this.重建界面();
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener("keydown", this.处理关闭键);
       this.scale.off("resize", this.重建界面, this);
       window.removeEventListener("gamemaker:settings-change", this.设置更新);
       this.取消云订阅?.();
+      this.取消用户订阅?.();
     });
   }
 
@@ -598,42 +606,21 @@ export class 设置界面 extends Phaser.Scene {
     滚动区.内容容器.add(内容布局);
     滚动区.设置滚动位置(滚动位置).刷新交互裁剪();
     this.滚动区 = 滚动区;
-    const 标题布局 = new 界面布局(this, 宽 / 2, 上 + 31, {
-      方向: "水平",
+    // 不放右上角关闭：易与小游戏外层关闭误触；仅保留底栏「完成」。
+    new 界面文字(this, 宽 / 2, 上 + 31, {
       宽: 内容宽,
       高: 42,
-      交叉轴对齐: "居中",
-    });
-    const 标题 = new 界面文字(this, 0, 0, {
-      宽: 0,
-      高: 36,
       文案: 文案.设置,
       字号: "25px",
       颜色: 外观.强调色,
       对齐: "左",
     });
-    标题布局.添加(标题, { 高: 38, 伸展: 1 });
-    标题布局.添加(
-      new 界面按钮(this, 0, 0, {
-        宽: 42,
-        高: 38,
-        文案: "",
-        name: "settings.close",
-        图标: 获取旅行图标(this, "关闭"),
-        图标尺寸: 18,
-        面板色: 外观.面板,
-        强调色: 外观.强调色,
-        文字色: 外观.正文,
-        点击: () => this.关闭(),
-      }),
-      { 宽: 42, 高: 38 },
-    );
 
     const 英文 = 解析语言(设置.语言) !== "简体中文";
     const 云状态 = 读取云同步状态();
     const 云文案 = this.云同步中 ? (英文 ? "Syncing…" : "同步中…") : 格式化云同步文案(云状态, 英文);
     // 窄屏：状态独占一行，按钮另起一行，避免「云存档已同步 · 时间」与恢复默认/立即同步/完成重叠。
-    const 页脚高 = 70;
+    const 页脚高 = 78;
     const 页脚 = new 界面布局(this, 宽 / 2, 上 + 面板高 - 页脚高 / 2 - 10, {
       方向: "垂直",
       宽: 内容宽,
@@ -645,13 +632,13 @@ export class 设置界面 extends Phaser.Scene {
     页脚.添加(
       new 界面文字(this, 0, 0, {
         宽: 内容宽,
-        高: 22,
+        高: 28,
         文案: 云文案,
         字号: "11px",
         颜色: 外观.次要文字 ?? 外观.正文,
         对齐: "左",
       }),
-      { 宽: 内容宽, 高: 22 },
+      { 宽: 内容宽, 高: 28 },
     );
     const 钮行 = new 界面布局(this, 0, 0, {
       方向: "水平",

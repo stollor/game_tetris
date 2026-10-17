@@ -2,6 +2,7 @@ import { 发布Tap探针, 探测Tap能力 } from "./Tap环境";
 import { 拉取云存档 } from "./云存档";
 import { 更新云同步状态 } from "./云存档状态";
 import { 记录分析事件 } from "./分析";
+import { 刷新Tap用户身份 } from "./用户身份";
 import { Tap应用 } from "./配置";
 import "./Tap类型";
 
@@ -19,6 +20,7 @@ export function 启动平台能力(): void {
     在Tap容器: 探测.在Tap容器,
     有云存档: 探测.有云存档,
   });
+  if (探测.在Tap容器) void 刷新Tap用户身份();
   if (探测.有云存档) {
     更新云同步状态({ 状态: "同步中", 原因: "启动拉取…", 方向: "下载" });
     void 拉取云存档()
