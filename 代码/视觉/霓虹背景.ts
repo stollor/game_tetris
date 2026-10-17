@@ -1,5 +1,6 @@
 import type Phaser from "phaser";
 import { 亮色, 混色 } from "../../框架/界面/颜色工具";
+import { 应重绘动态背景 } from "../性能/画质";
 import { 查找地点 } from "../框架配置/旅行地点";
 import type { 背景主题 } from "../配置/俄罗斯方块设置";
 import { 背景主题选项, 背景主题配置 } from "../配置/背景主题";
@@ -41,7 +42,9 @@ export function 绘制动态霓虹细节(
   时间: number,
   主题: 背景主题 = "晨光海岸",
   播放 = true,
+  允许闲置降频 = true,
 ): void {
+  if (播放 && !应重绘动态背景(图形, 时间, 允许闲置降频)) return;
   图形.clear().setScale(1);
   if (!播放) return;
   const 地点 = 查找地点(主题);

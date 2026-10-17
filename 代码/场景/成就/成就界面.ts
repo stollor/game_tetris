@@ -48,7 +48,7 @@ export class 成就界面 extends Phaser.Scene {
       t = 界面主题();
     const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
     this.add.rectangle(w / 2, h / 2, w, h, 颜色值(t.面板.主面板.背景));
-    布置金币条(this, {
+    const 金币条 = 布置金币条(this, {
       x: 16,
       y: 12,
       金币: new 旅行收藏(localStorage).读取().金币,
@@ -56,13 +56,16 @@ export class 成就界面 extends Phaser.Scene {
     });
     const 系统 = 创建俄罗斯方块成就();
     const 已得 = 成就定义.filter((a) => 系统.读取(a.编号).解锁时间 !== null).length;
-    this.add
+    const 标题 = this.add
       .text(w / 2, 30, `${英文 ? "ACHIEVEMENTS" : "成就收藏"}  ${已得} / ${成就定义.length}`, {
         fontSize: "24px",
         color: t.文字.主要,
         fontStyle: "bold",
       })
       .setOrigin(0.5);
+    // 窄屏时标题避让左上角金币条，不再与之重叠。
+    const 最小中心 = 16 + 金币条.宽 + 12 + 标题.width / 2;
+    if (标题.x < 最小中心) 标题.setX(Math.min(最小中心, w - 12 - 标题.width / 2));
     this.add
       .text(
         w / 2,

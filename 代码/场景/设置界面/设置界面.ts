@@ -16,6 +16,7 @@ import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
 import { 创建外观选择列表, type 外观卡配置 } from "../../../组件/霓虹街机/外观卡";
 import { 基础背景已解锁, 是基础背景 } from "../../存档/基础背景解锁";
 import { 旅行收藏 } from "../../存档/旅行收藏";
+import { 清除实测低端 } from "../../性能/画质";
 import { 旅行主题表 } from "../../框架配置/旅行主题";
 import { 地点皮肤表, 查找地点 } from "../../框架配置/旅行地点";
 import { 背景主题选项 } from "../../视觉/霓虹背景";
@@ -63,6 +64,7 @@ export class 设置界面 extends Phaser.Scene {
       s.旅行音乐,
       s.旅行音效,
       s.背景动态,
+      s.省电模式,
       s.显示触屏提示,
     ]);
   }
@@ -373,6 +375,22 @@ export class 设置界面 extends Phaser.Scene {
                 this.更新({ 背景动态: false }),
               ),
             ],
+          },
+          {
+            类型: "options",
+            标题: 设置.语言 === "English" ? "Power saving" : "省电模式",
+            选项: (["自动", "开", "关"] as const).map((值) =>
+              单选(
+                `settings.power-saving.${{ 自动: "auto", 开: "on", 关: "off" }[值]}`,
+                设置.语言 === "English" ? { 自动: "Auto", 开: "On", 关: "Off" }[值] : 值,
+                值,
+                设置.省电模式,
+                () => {
+                  if (值 === "关") 清除实测低端();
+                  this.更新({ 省电模式: 值 });
+                },
+              ),
+            ),
           },
           {
             类型: "volume",

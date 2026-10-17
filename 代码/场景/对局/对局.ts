@@ -12,6 +12,7 @@ import { 创建纪录存档, 是否刷新纪录 } from "../../存档/对局纪�
 import { type 对局奖励输入, 执行收藏操作, 旅行日期 } from "../../存档/旅行收藏";
 import { 同步平台成就 } from "../../平台/平台成就";
 import { 结算后同步平台 } from "../../平台/结算同步";
+import { 是省电模式 } from "../../性能/画质";
 import { 创建俄罗斯方块成就, 成就定义, 记录落块成就 } from "../../成就/俄罗斯方块成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import {
@@ -125,6 +126,7 @@ export class 对局 extends Phaser.Scene {
   private 对局编号 = crypto.randomUUID();
   private 本局落块数 = 0;
   private 奖励文案 = "";
+  private 金币奖励?: { 新增: number; 总额: number; 原因: string; 编号: string };
   private 待领奖励?: 对局奖励输入;
   private 领奖中 = false;
   private 视口 = { 宽: 0, 高: 0, 比例: 1 };
@@ -227,6 +229,7 @@ export class 对局 extends Phaser.Scene {
     this.对局编号 = crypto.randomUUID();
     this.本局落块数 = 0;
     this.奖励文案 = "";
+    this.金币奖励 = undefined;
     this.待领奖励 = undefined;
     this.领奖中 = false;
     this.结束时刻 = 0;
@@ -550,6 +553,8 @@ export class 对局 extends Phaser.Scene {
         this.time.now,
         this.背景主题,
         获取游戏设置().背景动态,
+        // 对局中玩家可能只看不点（自动下落），不做闲置降频。
+        this.状态.阶段 !== "进行中",
       );
     }
     if (this.状态.阶段 !== "暂停") this.棋盘预制体?.更新特效(delta);
@@ -848,6 +853,7 @@ export class 对局 extends Phaser.Scene {
     this.对局编号 = crypto.randomUUID();
     this.本局落块数 = 0;
     this.奖励文案 = "";
+    this.金币奖励 = undefined;
     this.待领奖励 = undefined;
     this.领奖中 = false;
     // 新一局结束时要重新存档，并重新起算结算 3 秒重开锁
@@ -1183,6 +1189,8 @@ export class 对局 extends Phaser.Scene {
     this.结算面板.绘制(几何, this.视口.宽, this.视口.高, {
       徽标: this.取结算徽标文案(),
       奖励: this.奖励文案,
+      金币: this.金币奖励,
+      省电: 是省电模式(),
       分数: this.状态.分数.toLocaleString(),
       统计,
     });
@@ -1465,9 +1473,13 @@ export class 对局 extends Phaser.Scene {
       const 输入 = { ...this.待领奖励 };
       const 结果 = await 执行收藏操作((收藏) => 收藏.结算对局(输入));
       if (编号 !== this.对局编号) return;
+      this.金币奖励 =
+        结果.成功 && 结果.新增
+          ? { 新增: 结果.新增, 总额: 结果.金币, 原因: 结果.原因, 编号: 编号 }
+          : undefined;
       this.奖励文案 = 结果.成功
         ? 结果.新增
-          ? `旅行方块币 +${结果.新增}\n${结果.原因}`
+          ? `旅行方块币 +${结果.新增}`
           : 结果.原因
         : `${结果.原因}\n点击这里重试`;
     } catch {

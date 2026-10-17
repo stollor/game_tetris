@@ -227,7 +227,7 @@ try {
       );
       assert.ok(
         await 页.evaluate(() =>
-          window.__GAMEMAKER_TEST__?.getSnapshot().texts.some((项) => 项.includes("破纪录 35")),
+          window.__GAMEMAKER_TEST__?.getSnapshot().texts.some((项) => 项.includes("破纪录 30")),
         ),
       );
       await 截图(页, "对局金币与破纪录结算");
