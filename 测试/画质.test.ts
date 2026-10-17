@@ -19,8 +19,8 @@ test("设置优先于自动判定；省电时像素比封顶 2，标准 3", () =
   expect(是省电模式("开", { 核心数: 16 })).toBe(true);
   expect(是省电模式("关", { 核心数: 2 })).toBe(false);
   expect(是省电模式("自动", { 核心数: 2 })).toBe(true);
-  expect(计算像素比上限(true)).toBe(2);
-  expect(计算像素比上限(false)).toBe(3);
+  expect(计算像素比上限(true)).toBe(1.5);
+  expect(计算像素比上限(false)).toBe(2);
 });
 
 test("动态背景首帧必画，标准模式非闲置时每帧都画", () => {
