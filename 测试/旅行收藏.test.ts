@@ -68,7 +68,7 @@ test("套装按剩余内容折扣补齐，不重复扣除已购内容，动态�
     "first-lock",
     "first-clear",
     "hold",
-    "tetris",
+    "four-lines",
     "spin",
     "perfect",
     "combo",

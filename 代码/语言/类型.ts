@@ -1,13 +1,13 @@
 import type { 游戏文案 as 通用游戏文案 } from "../../框架/设置/语言/类型";
 
-export interface 俄罗斯方块文案 {
+export interface 再消一行文案 {
   对局设置: string;
   落点影透明度: string;
   旋转180设置: string;
   显示网格: string;
   显示按键说明: string;
   返回暂停菜单: string;
-  对局副标题: string;
+  游戏名称: string;
   操作标题: string;
   操作移动: string;
   操作旋转: string;
@@ -48,4 +48,4 @@ export interface 俄罗斯方块文案 {
   操作半转关闭: string;
 }
 
-export type 游戏文案 = 通用游戏文案 & 俄罗斯方块文案;
+export type 游戏文案 = 通用游戏文案 & 再消一行文案;

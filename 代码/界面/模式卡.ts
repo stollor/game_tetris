@@ -2,7 +2,7 @@ import type Phaser from "phaser";
 import { 霓虹模式卡 } from "../../组件/霓虹街机/模式卡";
 import { 读取霓虹调色板 } from "../../组件/霓虹街机/调色板";
 import { 创建纪录存档 } from "../存档/对局纪录";
-import type { 游戏模式 } from "../玩法/俄罗斯方块";
+import type { 游戏模式 } from "../玩法/再消一行";
 import { 游戏外观 } from "../配置/游戏外观";
 
 const 英文标题 = ["MARATHON", "SPRINT", "ULTRA", "DAILY"];

@@ -1,5 +1,6 @@
 import { expect, mock, test } from "bun:test";
 import type Phaser from "phaser";
+import { 获取纹理预算 } from "../代码/性能/纹理缓存";
 
 // 绘制本身依赖 Phaser 运行时；这里只验证烘焙与缓存策略。
 mock.module("../代码/视觉/霓虹背景", () => ({ 绘制霓虹背景: () => {} }));
@@ -18,6 +19,7 @@ function 假场景() {
   let 烘焙次数 = 0;
   const 监听 = new Map<object, () => void>();
   const 场景 = {
+    game: { events: { once: () => {} } },
     cameras: { main: { zoom: 2 } },
     textures: {
       exists: (键: string) => 纹理.has(键),
@@ -65,4 +67,18 @@ test("整屏底图无人引用即释放纹理，同尺寸重排不重烘", () =>
   expect(纹理.size).toBe(1);
   图2.destroy();
   expect(纹理.size).toBe(0);
+});
+
+test("预算全在用时拒绝新缩略纹理，不越限也不删除在用项", () => {
+  const { 场景, 烘焙次数 } = 假场景();
+  const 预算 = 获取纹理预算(场景);
+  let 删除 = false;
+  预算.登记("在用", 24 * 1024 * 1024, () => {
+    删除 = true;
+  });
+  const 释放 = 预算.引用("在用");
+  expect(获取风景缩略(场景, "丽江雪山", 88, 70)).toBeNull();
+  expect(烘焙次数()).toBe(0);
+  expect(删除).toBe(false);
+  释放();
 });

@@ -4,7 +4,7 @@ import { chromium, type Page } from "playwright";
 
 declare global {
   interface Window {
-    __俄罗斯方块音乐__?: () => { 曲目: string | null; 试听: string | null };
+    __再消一行音乐__?: () => { 曲目: string | null; 试听: string | null };
   }
 }
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3330";
@@ -36,7 +36,7 @@ try {
   await 页.goto(地址);
   await 页.waitForFunction(() => window.__GAMEMAKER_TEST__?.getSnapshot().sceneId === "开始菜单");
   await 页.bringToFront();
-  const 读曲 = () => 页.evaluate(() => window.__俄罗斯方块音乐__?.() ?? { 曲目: null, 试听: null });
+  const 读曲 = () => 页.evaluate(() => window.__再消一行音乐__?.() ?? { 曲目: null, 试听: null });
   assert.equal((await 读曲()).曲目, null, "菜单默认不播放背景曲");
   await 点击(页, "menu.shop");
   assert.equal((await 读曲()).试听, "旅行.成都熊猫", "打开商店即试听当前套装音乐");
@@ -66,7 +66,7 @@ try {
   assert.deepEqual(await 读曲(), { 曲目: null, 试听: null }, "关闭商店停止试听且菜单仍无背景曲");
   await 点击(页, "menu.start");
   await 点击(页, "mode.马拉松");
-  await 页.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+  await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
   assert.equal((await 读曲()).曲目, null, "对局默认不播放背景曲");
   assert.deepEqual(错误, []);
   await Bun.write("reports/music-switch/结果.json", JSON.stringify(await 读曲(), null, 2));

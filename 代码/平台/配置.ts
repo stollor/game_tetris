@@ -1,9 +1,11 @@
-/** TapTap 开放能力公开配置。Client Token 等密钥不得写入本文件或仓库。 */
+import 发布配置 from "../../配置/TapTap发布.json";
+
+/** TapTap公开标识与发布页共用配置，Client Token不得写入仓库。 */
 export const Tap应用 = {
   /** 开发者后台 Client ID（公开标识，可进包）。 */
-  ClientID: "ps0g5bb9grmqohjh2z",
-  开发者编号: 363566,
-  应用编号: 977300,
+  ClientID: 发布配置.ClientID,
+  开发者编号: 发布配置.开发者编号,
+  应用编号: 发布配置.应用编号,
 } as const;
 
 /**
@@ -24,32 +26,17 @@ export const 排行榜周期标签 = {
 } as const;
 
 /** 模式 × 周期 → 后台排行榜 ID；空字符串表示尚未在控制台创建该周期榜。 */
+function 读取周期编号(模式: string): Record<排行榜周期, string> {
+  const 编号 = (周期: 排行榜周期) =>
+    发布配置.排行榜.find((项) => 项.键 === 模式 && 项.周期 === 周期)?.编号 ?? "";
+  return { 日: 编号("日"), 周: 编号("周"), 月: 编号("月"), 总: 编号("总") };
+}
 export const 排行榜编号按周期 = {
-  马拉松: {
-    日: "3gzyt8qlnrpvj2isf5",
-    周: "fb2r0k4pih33j46ycu",
-    月: "r20kjj9basv76xwgnb",
-    总: "np8kxqoitnd91u3zs8",
-  },
-  冲刺: {
-    日: "ppu0nc3fklanwcbiok",
-    周: "5z3pgj2bu9553gzjva",
-    月: "11aqzuq3qax3utw1ho",
-    总: "goxljcidqfnlfynjbu",
-  },
-  极限: {
-    日: "7jbuglncc24ovgkx7i",
-    周: "if044o8sbpsvhwmhdi",
-    月: "ba7azdlt7fr9xrjyas",
-    总: "bcbtf3vycr5ff16je0",
-  },
-  每日挑战: {
-    日: "57620urtuy8x9sguhd",
-    周: "tagu3o5oe1tbb1b3f2",
-    月: "spxfpwkk4li9j5scgb",
-    总: "la22thsyes0hz9kd9s",
-  },
-} as const;
+  马拉松: 读取周期编号("马拉松"),
+  冲刺: 读取周期编号("冲刺"),
+  极限: 读取周期编号("极限"),
+  每日挑战: 读取周期编号("每日挑战"),
+};
 
 /** 兼容旧代码：默认取总榜 ID（提交成绩也优先写总榜）。 */
 export const 排行榜编号 = {
@@ -63,23 +50,12 @@ export const 排行榜编号 = {
  * 本地成就编号 → 开发者中心平台成就 ID。
  * 值留空则不同步到平台；后台创建后填入真实 ID。
  */
-export const 平台成就映射: Readonly<Record<string, string>> = {
-  "first-lock": "FIRST_LOCK",
-  "first-clear": "FIRST_CLEAR",
-  tetris: "TETRIS",
-  spin: "SPIN",
-  combo: "COMBO",
-  b2b: "B2B",
-  perfect: "PERFECT",
-  hold: "HOLD",
-  lines: "LINES",
-  level: "LEVEL",
-  sprint: "SPRINT",
-  ultra: "ULTRA",
-};
+export const 平台成就映射: Readonly<Record<string, string>> = Object.fromEntries(
+  发布配置.成就.map((项) => [项.本地编号, 项.平台编号]),
+);
 
 /** 云存档槽位名（不可含空格/中文）。 */
-export const 云存档槽名 = "slot_travel_v1";
+export const 云存档槽名 = 发布配置.云存档.槽位;
 
 export const 分析开关 = {
   /** 浏览器直连 TapDB REST 可能遇 CORS；默认关闭，仅打本地探针。 */

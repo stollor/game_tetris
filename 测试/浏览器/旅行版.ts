@@ -117,7 +117,7 @@ try {
     });
     await 页.goto(服务.url.href);
     await 等页面(页, "开始菜单");
-    assert.equal(await 页.title(), "俄罗斯方块 旅行版");
+    assert.equal(await 页.title(), "再消一行");
     await 截图(页, `${宽}-菜单`);
     await 点击(页, "menu.scenery");
     await 截图(页, `${宽}-纯享`);
@@ -155,7 +155,7 @@ try {
     assert.ok(收藏.已购.includes("成都熊猫.静态背景"));
     await 点击(页, "shop.confirm.use");
     assert.equal(
-      await 页.evaluate(() => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").背景主题),
+      await 页.evaluate(() => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").背景主题),
       "成都熊猫",
     );
     await 点击(页, "shop.item.动态背景");
@@ -192,7 +192,7 @@ try {
     await 点击(页, "settings.done");
     await 点击(页, "menu.start");
     await 点击(页, "mode.马拉松");
-    await 页.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+    await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
     await 页.keyboard.press("Space");
     await 页.keyboard.press("c");
     await 页.waitForFunction(
@@ -207,21 +207,21 @@ try {
     await 点击(页, "game.pause");
     if (宽 <= 430) await 页.touchscreen.tap(5, 5);
     else await 页.mouse.click(5, 5);
-    await 页.waitForFunction(() => window.__俄罗斯方块测试__?.读取状态().阶段 === "进行中");
+    await 页.waitForFunction(() => window.__再消一行测试__?.读取状态().阶段 === "进行中");
     if (宽 === 1366) {
       await 页.evaluate(() =>
         localStorage.setItem("neon-pulse:best:马拉松", JSON.stringify({ 分数: 1, 用时: null })),
       );
       for (let i = 0; i < 10; i++) {
-        await 页.evaluate(() => window.__俄罗斯方块测试__?.准备四行消除(true));
+        await 页.evaluate(() => window.__再消一行测试__?.准备四行消除(true));
         await 页.keyboard.press("Space");
       }
       await 页.waitForFunction(
-        () => (window.__俄罗斯方块测试__?.读取状态().有效用时 ?? 0) >= 31000,
+        () => (window.__再消一行测试__?.读取状态().有效用时 ?? 0) >= 31000,
         {},
         { timeout: 40000 },
       );
-      await 页.evaluate(() => window.__俄罗斯方块测试__?.结束当前对局());
+      await 页.evaluate(() => window.__再消一行测试__?.结束当前对局());
       await 页.waitForFunction(
         () => JSON.parse(localStorage.getItem("旅行版:收藏") ?? "{}").数据?.已结算.length === 1,
       );
@@ -296,9 +296,7 @@ try {
     await 点击(页, "shop.confirm.use");
     await 点击(页, "shop.close");
     await 等页面(页, "开始菜单");
-    const 设置 = await 页.evaluate(() =>
-      JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}"),
-    );
+    const 设置 = await 页.evaluate(() => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}"));
     assert.equal(设置.方块外观, 地点.名称);
     assert.equal(设置.旅行样式, 地点.名称);
     assert.equal(设置.旅行音乐, 地点.名称);
@@ -307,8 +305,8 @@ try {
     await 截图(页, `${地点.名称}-菜单`);
     await 点击(页, "menu.start");
     await 点击(页, "mode.马拉松");
-    await 页.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
-    assert.equal(await 页.evaluate(() => window.__俄罗斯方块测试__?.读取界面().样式), 地点.名称);
+    await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
+    assert.equal(await 页.evaluate(() => window.__再消一行测试__?.读取界面().样式), 地点.名称);
     await 页.keyboard.press("Space");
     await 页.waitForTimeout(220);
     await 截图(页, `${地点.名称}-对局`);
@@ -331,7 +329,7 @@ try {
       JSON.stringify(
         await 页.evaluate(() => ({
           快照: window.__GAMEMAKER_TEST__?.getSnapshot(),
-          状态: window.__俄罗斯方块测试__?.读取状态(),
+          状态: window.__再消一行测试__?.读取状态(),
           收藏: localStorage.getItem("旅行版:收藏"),
         })),
         null,

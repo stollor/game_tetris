@@ -1,7 +1,7 @@
 import { 基础背景已解锁, 是基础背景, 迁移基础背景 } from "../存档/基础背景解锁";
 import { 旅行收藏 } from "../存档/旅行收藏";
 import { 地点皮肤表, 查找地点 } from "../框架配置/旅行地点";
-import type { 背景主题 } from "../配置/俄罗斯方块设置";
+import type { 背景主题 } from "../配置/再消一行设置";
 import { 背景主题选项 } from "../配置/背景主题";
 
 export function 风景浏览列表(): 背景主题[] {

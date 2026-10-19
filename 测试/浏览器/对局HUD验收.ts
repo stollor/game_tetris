@@ -29,9 +29,9 @@ try {
     );
     await 点击对象("menu.start");
     await 点击对象(`mode.${模式}`);
-    await 页面.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+    await 页面.waitForFunction(() => Boolean(window.__再消一行测试__));
   };
-  const 读取界面 = () => 页面.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+  const 读取界面 = () => 页面.evaluate(() => window.__再消一行测试__?.读取界面());
 
   // 从实际游戏设置存储加载关闭状态，再走真实主菜单进入对局。
   await 页面.evaluate(() =>
@@ -51,14 +51,14 @@ try {
     "180°关闭时局内提示同步更新",
   );
   断言(Boolean(界面?.快速移动提示.可见), "局内显示快速移动提示");
-  const 朝向 = await 页面.evaluate(() => window.__俄罗斯方块测试__?.读取状态().当前朝向);
+  const 朝向 = await 页面.evaluate(() => window.__再消一行测试__?.读取状态().当前朝向);
   await 页面.keyboard.press("z");
   断言(
-    (await 页面.evaluate(() => window.__俄罗斯方块测试__?.读取状态().当前朝向)) === 朝向,
+    (await 页面.evaluate(() => window.__再消一行测试__?.读取状态().当前朝向)) === 朝向,
     "180°关闭后 Z 键不会旋转方块",
   );
 
-  await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(true));
+  await 页面.evaluate(() => window.__再消一行测试__?.准备结算(true));
   界面 = await 读取界面();
   断言(
     Boolean(
@@ -87,7 +87,7 @@ try {
     "Ultra 对局内显示倒计时",
   );
   await 页面.evaluate(() => localStorage.removeItem("neon-pulse:best:极限"));
-  await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(false));
+  await 页面.evaluate(() => window.__再消一行测试__?.准备结算(false));
   界面 = await 读取界面();
   const Ultra字段 =
     界面?.结算统计
@@ -105,9 +105,9 @@ try {
 
   await 页面.reload({ waitUntil: "domcontentloaded" });
   await 开始模式("马拉松");
-  await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备目标达成());
+  await 页面.evaluate(() => window.__再消一行测试__?.准备目标达成());
   await 页面.keyboard.press("Space");
-  await 页面.waitForFunction(() => window.__俄罗斯方块测试__?.读取状态().消行数 === 140);
+  await 页面.waitForFunction(() => window.__再消一行测试__?.读取状态().消行数 === 140);
   界面 = await 读取界面();
   断言(
     Boolean(界面?.目标达成提示.可见 && /Goal reached|目标达成/.test(界面.目标达成提示.文本)),

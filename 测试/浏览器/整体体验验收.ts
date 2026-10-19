@@ -41,7 +41,7 @@ try {
         canvas.y + ((b.y + b.height / 2) * canvas.height) / snap.height,
       );
     };
-    const 状态 = () => 页面.evaluate(() => window.__俄罗斯方块测试__?.读取状态());
+    const 状态 = () => 页面.evaluate(() => window.__再消一行测试__?.读取状态());
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-首页.png` });
     await 点击("menu.settings");
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-设置.png` });
@@ -68,7 +68,7 @@ try {
     await 点击("menu.start");
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-模式.png` });
     await 点击("mode.马拉松");
-    await 页面.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+    await 页面.waitForFunction(() => Boolean(window.__再消一行测试__));
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-对局.png` });
     await 页面.keyboard.down("ArrowRight");
     await 页面.evaluate(() => window.dispatchEvent(new Event("blur")));
@@ -90,7 +90,7 @@ try {
     const 后 = await 状态();
     断言(原?.当前格子[0]?.[0] === 后?.当前格子[0]?.[0], "恢复后没有残留长按横移");
     await 页面.keyboard.up("ArrowRight");
-    await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备单行消除());
+    await 页面.evaluate(() => window.__再消一行测试__?.准备单行消除());
     if (高 > 宽) await 点击("touch.hard-drop");
     else await 页面.keyboard.press("Space");
     断言((await 状态())?.消行数 === 1, "键盘或手机硬降执行真实消行");
@@ -100,7 +100,7 @@ try {
       "消行反馈显示真实行数",
     );
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-消行.png` });
-    await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(true));
+    await 页面.evaluate(() => window.__再消一行测试__?.准备结算(true));
     const lock = (await 快照())?.interactives.find((o) => o.name === "restart");
     断言(lock?.enabled === false, "重开等待期间按钮真正禁用");
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-结算.png` });

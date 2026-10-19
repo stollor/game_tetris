@@ -45,7 +45,7 @@ try {
       await 页.goto(地址);
       await 页.evaluate(() =>
         localStorage.setItem(
-          "俄罗斯方块:设置",
+          "再消一行:设置",
           JSON.stringify({ 旋转180: false, 背景主题: "极光原野" }),
         ),
       );
@@ -93,7 +93,7 @@ try {
       }
       await 点击(页, 名称);
       const 设置 = await 页.evaluate(() =>
-        JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}"),
+        JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}"),
       );
       assert.equal(设置.方块外观, 方案.名称);
       assert.equal(设置.旋转180, false);
@@ -109,9 +109,9 @@ try {
       );
       assert.ok(模式);
       await 点击(页, 模式);
-      await 页.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+      await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
       await 页.evaluate(() => {
-        window.__俄罗斯方块测试__?.准备四行消除(false, true);
+        window.__再消一行测试__?.准备四行消除(false, true);
       });
       await 页.keyboard.press("c");
       await 页.waitForTimeout(150);
@@ -121,9 +121,7 @@ try {
         () => window.__GAMEMAKER_TEST__?.getSnapshot().sceneId === "开始菜单",
       );
       assert.equal(
-        await 页.evaluate(
-          () => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").方块外观,
-        ),
+        await 页.evaluate(() => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").方块外观),
         方案.名称,
       );
       if (主题验收)

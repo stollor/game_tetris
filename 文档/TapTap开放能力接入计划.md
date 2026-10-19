@@ -9,7 +9,7 @@
 | 本地存档框架 | 已有 `框架/存档.ts`（注入 `存储接口`） | — |
 | 旅行收藏 | 本机 `localStorage` + Web Locks | `旅行版:收藏` v1 |
 | 模式纪录 | 本机 | `neon-pulse:best:<模式>` / `neon-pulse:daily:<日期>` |
-| 成就 | 本机 `框架/进度/成就.ts` | `neon-pulse:achievements`，12 项编号见 `代码/成就/俄罗斯方块成就.ts` |
+| 成就 | 本机 `框架/进度/成就.ts` | `neon-pulse:achievements`，12 项编号见 `代码/成就/再消一行成就.ts` |
 | TapTap JS / ClientID | **仓库内无任何** `tap` / ClientID / TapDB 引用 | — |
 | 正式发布阻塞 | 未绑主包、未签创意工坊协议、资料缺简介/截图等 | `analyze-app-status` |
 

@@ -1,9 +1,9 @@
 import { afterEach, expect, test } from "bun:test";
-import { 探测Tap能力 } from "../代码/平台/Tap环境";
 import { 序列化快照, 应用快照到本地, 收集本地键, 解析快照 } from "../代码/平台/云存档快照";
 import { 清空分析缓冲, 记录分析事件, 读取分析缓冲 } from "../代码/平台/分析";
 import { 排行榜分数 } from "../代码/平台/排行榜";
 import { Tap应用 } from "../代码/平台/配置";
+import { 探测Tap能力 } from "../框架/平台/TapTap/宿主探测";
 
 function 假存储(初始: Record<string, string> = {}): Storage {
   const map = new Map(Object.entries(初始));
@@ -369,7 +369,9 @@ test("云同步状态文案覆盖主要状态", async () => {
 
 test("排行榜错误文案：500001 友好中文，不暴露裸码", async () => {
   const { 格式化排行榜错误, 加载排行榜数据 } = await import("../代码/平台/排行榜");
-  expect(格式化排行榜错误(500001, "500001:leaderboard id 3gzyt8qlnrpvj2isf5 not exist")).toContain("白名单");
+  expect(格式化排行榜错误(500001, "500001:leaderboard id 3gzyt8qlnrpvj2isf5 not exist")).toContain(
+    "白名单",
+  );
   expect(格式化排行榜错误(500001, "500001:leaderboard id x not exist")).not.toMatch(/^500001/);
   expect(格式化排行榜错误(500001, "x", true)).toMatch(/unavailable/i);
 
@@ -397,5 +399,3 @@ test("排行榜错误文案：500001 友好中文，不暴露裸码", async () =
   expect(失败.原因).not.toMatch(/500001/);
   delete (globalThis as { window?: unknown }).window;
 });
-
-

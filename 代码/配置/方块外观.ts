@@ -1,5 +1,5 @@
 import { type 地点名称, 地点皮肤表, type 地点纹样 } from "../框架配置/旅行地点";
-import type { 方块类型 } from "../玩法/俄罗斯方块";
+import type { 方块类型 } from "../玩法/再消一行";
 
 export type 方块外观名称 = "默认" | "柔瓷" | "铬金" | "像素" | 地点名称;
 export interface 方块外观方案 {

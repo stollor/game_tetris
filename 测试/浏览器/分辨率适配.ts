@@ -74,7 +74,7 @@ try {
     const 开始按钮 = 菜单.interactives.find((项) => 项.name === "menu.start")?.bounds;
     assert.ok(开始按钮);
     if (高 >= 1080) assert.ok(开始按钮.width / 高 > 0.4, "大屏主菜单应随屏幕放大");
-    const 文字 = 扁平(菜单.nodes ?? []).find((项) => 项.text === "俄罗斯方块");
+    const 文字 = 扁平(菜单.nodes ?? []).find((项) => 项.text === "再消一行");
     if (高 === 2160)
       assert.ok(Number(文字?.文字样式?.resolution) >= 2.4, "放大文字源纹理应同步提高清晰度");
     await 页.screenshot({ path: join(输出, `${标签}-菜单.png`) });
@@ -110,9 +110,7 @@ try {
       assert.ok(亮点 > 100, "放大后列表内容实际绘出，没有被遮罩清空");
       await 点击(页, "settings.blocks.柔瓷");
       assert.equal(
-        await 页.evaluate(
-          () => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").方块外观,
-        ),
+        await 页.evaluate(() => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").方块外观),
         "柔瓷",
       );
     }
@@ -122,14 +120,14 @@ try {
     await 页.mouse.wheel(0, 400);
     await 页.waitForTimeout(100);
     assert.ok(
-      await 页.evaluate(() => (window.__俄罗斯方块成就__?.().滚动 ?? 0) > 0),
+      await 页.evaluate(() => (window.__再消一行成就__?.().滚动 ?? 0) > 0),
       "放大成就列表可滚动",
     );
     await 点击(页, "achievements.back");
     await 点击(页, "menu.start");
     await 点击(页, "mode.马拉松");
-    await 页.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
-    const 界面 = await 页.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+    await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
+    const 界面 = await 页.evaluate(() => window.__再消一行测试__?.读取界面());
     assert.ok(界面);
     const { 棋盘, 视口 } = 界面;
     assert.ok(
@@ -147,12 +145,12 @@ try {
     await 点击(页, "game.settings.back");
     await 点击(页, "game.pause.resume");
     if (宽 === 3840) {
-      const 前 = await 页.evaluate(() => window.__俄罗斯方块测试__?.读取状态());
+      const 前 = await 页.evaluate(() => window.__再消一行测试__?.读取状态());
       await 页.setViewportSize({ width: 430, height: 932 });
-      await 页.waitForFunction(() => window.__俄罗斯方块测试__?.读取界面().视口.宽 === 430);
+      await 页.waitForFunction(() => window.__再消一行测试__?.读取界面().视口.宽 === 430);
       await 页.waitForTimeout(100);
       assert.deepEqual(
-        await 页.evaluate(() => window.__俄罗斯方块测试__?.读取状态().棋盘),
+        await 页.evaluate(() => window.__再消一行测试__?.读取状态().棋盘),
         前?.棋盘,
         "重排保留对局",
       );
@@ -160,7 +158,7 @@ try {
       await 点击(页, "game.pause.resume");
       await 点击(页, "touch.left");
       await 页.setViewportSize({ width: 宽, height: 高 });
-      await 页.waitForFunction(() => window.__俄罗斯方块测试__?.读取界面().视口.比例 === 2.4);
+      await 页.waitForFunction(() => window.__再消一行测试__?.读取界面().视口.比例 === 2.4);
       await 页.waitForTimeout(100);
       await 点击(页, "game.pause");
       await 点击(页, "game.pause.resume");

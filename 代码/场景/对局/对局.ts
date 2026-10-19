@@ -6,17 +6,27 @@ import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 界面暂停菜单 } from "../../../框架/界面/暂停菜单";
 import { 界面触屏操作区 } from "../../../框架/界面/触屏操作区";
 import { 注册模态界面 } from "../../../框架/界面/输入隔离";
+import { type 冻结画面, 创建冻结画面 } from "../../../框架/绘画/冻结画面";
 import { 创建节流音效 } from "../../../框架/音频/音效节流";
-import { 播放游戏音效, 绑定音频管理器, 解锁程序音频 } from "../../../框架/音频/音频";
+import {
+  播放游戏音效,
+  绑定音频管理器,
+  解锁程序音频,
+  读取游戏音频状态,
+} from "../../../框架/音频/音频";
 import { 创建纪录存档, 是否刷新纪录 } from "../../存档/对局纪录";
 import { type 对局奖励输入, 执行收藏操作, 旅行日期 } from "../../存档/旅行收藏";
 import { 同步平台成就并回报 } from "../../平台/平台成就";
 import { 结算后同步平台 } from "../../平台/结算同步";
+import { 禁用性能项 } from "../../开发/性能开关";
+import { 标记重绘, 设置玩法进行中 } from "../../性能/按需渲染";
 import { 是省电模式 } from "../../性能/画质";
-import { 创建俄罗斯方块成就, 成就定义, 记录落块成就 } from "../../成就/俄罗斯方块成就";
+import { 获取纹理预算 } from "../../性能/纹理缓存";
+import { 获取冲刺显示用时 } from "../../性能/计时显示";
+import { 创建再消一行成就, 成就定义, 记录落块成就 } from "../../成就/再消一行成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import {
-  type 俄罗斯方块状态,
+  type 再消一行状态,
   切换暂停,
   创建新局,
   创建模式随机源,
@@ -32,21 +42,18 @@ import {
   移动方块,
   读取格子,
   软降一步,
-} from "../../玩法/俄罗斯方块";
+} from "../../玩法/再消一行";
 import { 获取技巧反馈 } from "../../视觉/技巧反馈";
 import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
 import { 布置烘焙底图 } from "../../视觉/风景缩略";
-import { 获取文案, 解析语言 } from "../../配置/俄罗斯方块文案";
-import { type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
+import { 获取文案, 解析语言 } from "../../配置/再消一行文案";
+import { type 背景主题, 获取游戏设置 } from "../../配置/再消一行设置";
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
-import {
-  播放俄罗斯方块音乐,
-  播放场景氛围,
-  设置俄罗斯方块音乐暂停,
-} from "../../音频/俄罗斯方块程序音频";
+import { 播放再消一行音乐, 播放场景氛围, 设置再消一行音乐暂停 } from "../../音频/再消一行程序音频";
 import { 结算音效名称 } from "../../音频/结算音效";
 import { 界面对局设置菜单 } from "../../预制体/对局设置菜单";
 import { 暂存方块栏 } from "../../预制体/暂存方块栏";
+import { 新对局编号 } from "./对局编号";
 
 type 触屏操作 = "左转" | "旋转" | "右转" | "左移" | "软降" | "右移";
 
@@ -60,7 +67,7 @@ import { 创建对局操作说明 } from "../../界面/操作说明卡";
 import { 创建对局结算面板 } from "../../界面/结算面板";
 import { 游戏外观 } from "../../配置/游戏外观";
 import { 下一个方块栏 } from "../../预制体/下一个方块栏";
-import { 俄罗斯方块棋盘 } from "../../预制体/俄罗斯方块棋盘";
+import { 再消一行棋盘 } from "../../预制体/再消一行棋盘";
 
 let 格子大小 = 25;
 let 棋盘左侧 = 354;
@@ -71,6 +78,10 @@ function 若变化设置文字(文本: Phaser.GameObjects.Text | undefined, 内�
   if (文本 && 文本.text !== 内容) 文本.setText(内容);
 }
 interface 本地测试接口 {
+  读取音频: () => {
+    游戏: ReturnType<typeof 获取游戏设置>;
+    框架: ReturnType<typeof 读取游戏音频状态>;
+  };
   设置暂停: (暂停: boolean) => void;
   硬降: () => void;
   结束当前对局: () => void;
@@ -88,7 +99,7 @@ interface 本地测试接口 {
     技巧反馈: string;
     震屏?: { 剩余: number; 强度: number; x: number; y: number };
     音效事件: { 名称: string; 参数: number }[];
-    消行特效?: { 活跃: boolean; 行: number[]; 碎片数: number; 时间: number };
+    消行特效?: { 活跃: boolean; 行: number[]; 碎片数: number; 时间: number; 四行庆祝: boolean };
     模式文字: { 文本: string; 可见: boolean };
     操作说明: { 文本: string; 可见: boolean }[];
     快速移动提示: { 文本: string; 可见: boolean };
@@ -98,7 +109,7 @@ interface 本地测试接口 {
     结算统计: { 标签: string; 数值: string; 可见: boolean }[];
   };
   读取状态: () => {
-    阶段: 俄罗斯方块状态["阶段"];
+    阶段: 再消一行状态["阶段"];
     分数: number;
     有效用时: number;
     暂存方块: 方块类型 | null;
@@ -114,7 +125,7 @@ interface 本地测试接口 {
 
 declare global {
   interface Window {
-    __俄罗斯方块测试__?: 本地测试接口;
+    __再消一行测试__?: 本地测试接口;
   }
 }
 
@@ -124,7 +135,7 @@ interface 横移输入 {
 }
 
 export class 对局 extends Phaser.Scene {
-  private 对局编号 = crypto.randomUUID();
+  private 对局编号 = 新对局编号();
   private 本局落块数 = 0;
   private 奖励文案 = "";
   private 金币奖励?: { 新增: number; 总额: number; 原因: string; 编号: string };
@@ -132,13 +143,13 @@ export class 对局 extends Phaser.Scene {
   private 领奖中 = false;
   private 视口 = { 宽: 0, 高: 0, 比例: 1 };
   private 状态 = 创建新局();
-  private readonly 成就 = 创建俄罗斯方块成就();
+  private readonly 成就 = 创建再消一行成就();
   private 成就提示?: Phaser.GameObjects.Text;
   private 成就提示剩余 = 0;
   private 音效参数 = 1;
   private 测试音效事件: { 名称: string; 参数: number }[] = [];
   private readonly 对局音效 = 创建节流音效({
-    前缀: "俄罗斯方块",
+    前缀: "再消一行",
     手动间隔毫秒: 55,
     自动间隔毫秒: 100,
     自动避让手动毫秒: 45,
@@ -160,7 +171,7 @@ export class 对局 extends Phaser.Scene {
       名称 === "移动" || 名称 === "软降" ? "手动" : 名称 === "锁定" ? "自动" : "重要",
     );
   }
-  private 音频上次阶段: 俄罗斯方块状态["阶段"] = "进行中";
+  private 音频上次阶段: 再消一行状态["阶段"] = "进行中";
   private 音频上次消行数 = 0;
   private 硬降处理中 = false;
   private 硬降按钮?: 界面按钮;
@@ -169,7 +180,9 @@ export class 对局 extends Phaser.Scene {
   private 消行反馈?: Phaser.GameObjects.Text;
   private 重开锁可用?: boolean;
   private 绘图?: Phaser.GameObjects.Graphics;
-  private 背景图?: Phaser.GameObjects.Image;
+  private 操作画面?: 冻结画面;
+  private 操作已冻 = false;
+  private 背景图?: Phaser.GameObjects.Image | Phaser.GameObjects.Graphics;
   private 背景动画层?: Phaser.GameObjects.Graphics;
   private 背景主题: 背景主题 = 获取游戏设置().背景主题;
   private 信息栏?: 界面数值面板;
@@ -182,7 +195,6 @@ export class 对局 extends Phaser.Scene {
   private 结算输入遮罩?: Phaser.GameObjects.Rectangle;
   private 结算面板?: 霓虹结算面板;
   private 标题文字?: Phaser.GameObjects.Text;
-  private 副标题文字?: Phaser.GameObjects.Text;
   private 操作说明卡?: 霓虹操作说明卡;
   private 目标达成提示?: Phaser.GameObjects.Text;
   private 目标达成显示至 = 0;
@@ -193,7 +205,7 @@ export class 对局 extends Phaser.Scene {
   private 离开按钮?: 界面按钮;
   private 触屏操作区?: 界面触屏操作区;
   private 预览栏?: 下一个方块栏;
-  private 棋盘预制体?: 俄罗斯方块棋盘;
+  private 棋盘预制体?: 再消一行棋盘;
   private 暂停面板?: 界面暂停菜单;
   private 对局设置面板?: 界面对局设置菜单;
   private 对局设置打开 = false;
@@ -213,9 +225,11 @@ export class 对局 extends Phaser.Scene {
   private 当前随机源: () => number = Math.random;
   private 紧凑布局 = false;
   private 竖屏布局 = false;
+  private 棋盘界面签名 = "";
+  private 界面签名 = "";
 
   constructor() {
-    super("俄罗斯方块对局");
+    super("再消一行对局");
   }
 
   init(data: { 模式?: 游戏模式; 日期?: string }): void {
@@ -227,7 +241,7 @@ export class 对局 extends Phaser.Scene {
     this.音频上次消行数 = this.状态.消行数;
     this.最佳纪录缓存 = undefined;
     this.结束已存档 = false;
-    this.对局编号 = crypto.randomUUID();
+    this.对局编号 = 新对局编号();
     this.本局落块数 = 0;
     this.奖励文案 = "";
     this.金币奖励 = undefined;
@@ -246,7 +260,7 @@ export class 对局 extends Phaser.Scene {
     this.视口 = 适配场景视口(this, 1440, 900);
     应用文字清晰度(this);
     绑定音频管理器(this.sound);
-    播放俄罗斯方块音乐("对局");
+    播放再消一行音乐("对局");
     播放场景氛围(获取游戏设置().背景主题);
     this.input.on("pointerdown", this.解锁对局音频);
     this.解锁对局音频();
@@ -270,7 +284,7 @@ export class 对局 extends Phaser.Scene {
       获取游戏设置().背景动态,
     );
     this.绘图 = this.add.graphics();
-    this.棋盘预制体 = new 俄罗斯方块棋盘(this);
+    this.棋盘预制体 = new 再消一行棋盘(this);
     this.绘制装饰();
     this.创建文字();
     this.结算面板 = 创建对局结算面板(this, this.取文案(), {
@@ -369,6 +383,7 @@ export class 对局 extends Phaser.Scene {
     this.布局界面();
     this.scale.on("resize", this.布局界面, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      设置玩法进行中(false);
       this.scale.off("resize", this.布局界面, this);
       this.input.off("pointerdown", this.解锁对局音频);
       this.对局音效.清理();
@@ -379,7 +394,7 @@ export class 对局 extends Phaser.Scene {
       this.释放操作();
       if (this.消行反馈) this.tweens.killTweensOf(this.消行反馈);
       window.removeEventListener("gamemaker:settings-change", this.对局设置已更新);
-      delete window.__俄罗斯方块测试__;
+      delete window.__再消一行测试__;
     });
   }
 
@@ -491,7 +506,6 @@ export class 对局 extends Phaser.Scene {
       .setPosition(宽 / 2, 38)
       .setOrigin(0.5)
       .setFontSize(this.紧凑布局 ? "18px" : "21px");
-    this.副标题文字?.setVisible(false);
     this.离开按钮?.setPosition(58, 38);
     this.暂停按钮?.setPosition(宽 - 58, 38);
     this.触屏操作区?.布局(宽, 高, this.竖屏布局);
@@ -552,9 +566,11 @@ export class 对局 extends Phaser.Scene {
     this.应用背景文字对比();
     this.绘制装饰();
     this.更新界面();
+    this.同步操作画面(true);
   };
 
   update(_时间: number, delta: number): void {
+    设置玩法进行中(this.状态.阶段 === "进行中");
     const 新主题 = 获取游戏设置().背景主题;
     if (新主题 !== this.背景主题) {
       this.背景主题 = 新主题;
@@ -574,6 +590,7 @@ export class 对局 extends Phaser.Scene {
     }
     if (this.状态.阶段 !== "暂停") this.棋盘预制体?.更新特效(delta);
     if (this.状态.阶段 === "进行中" && this.成就提示剩余 > 0) {
+      标记重绘();
       this.成就提示剩余 = Math.max(0, this.成就提示剩余 - delta);
       this.成就提示
         ?.setPosition(this.视口.宽 / 2, 146)
@@ -597,7 +614,7 @@ export class 对局 extends Phaser.Scene {
     this.处理横移("ArrowRight", 1, this.右移输入, 经过毫秒);
 
     更新时钟(this.状态, 经过毫秒, this.当前随机源, this.按住按键.has("ArrowDown"));
-    this.更新界面();
+    this.更新界面(false);
   }
 
   private readonly 处理按键按下 = (事件: KeyboardEvent): void => {
@@ -696,7 +713,8 @@ export class 对局 extends Phaser.Scene {
 
   private 绑定测试接口(): void {
     if (!this.是本地开发地址()) return;
-    window.__俄罗斯方块测试__ = {
+    window.__再消一行测试__ = {
+      读取音频: () => ({ 游戏: 获取游戏设置(), 框架: 读取游戏音频状态() }),
       设置暂停: (暂停) => {
         if ((this.状态.阶段 === "暂停") !== 暂停 && this.状态.阶段 !== "结束") 切换暂停(this.状态);
         this.释放操作();
@@ -865,7 +883,7 @@ export class 对局 extends Phaser.Scene {
     this.重开锁可用 = undefined;
     this.消行反馈?.setVisible(false);
     if (this.消行反馈) this.tweens.killTweensOf(this.消行反馈);
-    this.对局编号 = crypto.randomUUID();
+    this.对局编号 = 新对局编号();
     this.本局落块数 = 0;
     this.奖励文案 = "";
     this.金币奖励 = undefined;
@@ -919,22 +937,12 @@ export class 对局 extends Phaser.Scene {
   }
 
   private 创建文字(): void {
-    this.标题文字 = this.add.text(
-      0,
-      0,
-      解析语言(获取游戏设置().语言) === "简体中文" ? "俄罗斯方块 旅行版" : "Block Travel",
-      {
-        fontFamily: "Arial, sans-serif",
-        fontSize: "25px",
-        fontStyle: "bold",
-        color: 界面主题().文字.主要,
-        letterSpacing: 2,
-      },
-    );
-    this.副标题文字 = this.add.text(0, 0, this.取文案().对局副标题, {
+    this.标题文字 = this.add.text(0, 0, "", {
       fontFamily: "Arial, sans-serif",
-      fontSize: "13px",
-      color: 界面主题().文字.次要,
+      fontSize: "25px",
+      fontStyle: "bold",
+      color: 界面主题().文字.主要,
+      letterSpacing: 2,
     });
     this.操作说明卡 = 创建对局操作说明(this, this.取文案(), true);
     this.目标达成提示 = this.add
@@ -1293,67 +1301,150 @@ export class 对局 extends Phaser.Scene {
     this.布局界面();
   };
 
-  private 更新界面(): void {
-    if (!this.绘图) return;
-    this.结算输入层?.setVisible(this.状态.阶段 === "结束");
-    this.同步程序音频();
-    this.棋盘预制体?.更新(this.状态);
-    this.绘制下一个方块();
-    this.信息栏?.更新([
-      String(this.状态.等级),
-      String(this.状态.分数).padStart(6, "0"),
-      String(this.状态.消行数),
-    ]);
-    const 文案 = this.取文案();
+  private 更新计时文案(): void {
+    if (禁用性能项("计时文字")) return;
     const 模式名 =
       this.模式 === "马拉松"
         ? ""
         : this.模式 === "冲刺"
-          ? `40L · ${(this.状态.有效用时 / 1000).toFixed(2)}s`
+          ? `40L · ${(获取冲刺显示用时(this.状态.有效用时, this.状态.阶段 === "进行中") / 1000).toFixed(2)}s`
           : this.模式 === "极限"
             ? `${Math.ceil(this.状态.剩余时间 / 1000)}s`
             : this.每日日期;
     若变化设置文字(this.模式文字, 模式名);
-    this.模式文字?.setVisible(this.模式 !== "马拉松");
-    this.纪录页脚?.设置值(this.读取最佳文案());
-    const 显示键位说明 =
-      获取游戏设置().显示按键说明 &&
-      !this.竖屏布局 &&
-      this.视口.高 >= 560 &&
-      棋盘左侧 >= 220 &&
-      this.状态.阶段 !== "结束";
-    this.操作说明卡?.布局({
-      宽: this.视口.宽,
-      键位区X: 棋盘左侧 - 206,
-      键位区顶: 棋盘顶部 + 28,
-      紧凑: this.紧凑布局,
-      可见: 显示键位说明,
-    });
+  }
+
+  private 更新界面(强制 = true): void {
+    if (!this.绘图) return;
+    this.结算输入层?.setVisible(this.状态.阶段 === "结束");
+    this.同步程序音频();
+    const 文案 = this.取文案();
+    this.更新计时文案();
     if (this.模式 === "马拉松" && this.状态.目标达成 && !this.目标达成已显示) {
       this.目标达成已显示 = true;
       this.目标达成显示至 = this.time.now + 2200;
     }
-    this.目标达成提示?.setVisible(this.目标达成显示至 > this.time.now);
-    this.暂停按钮?.setVisible(this.状态.阶段 !== "结束");
-    this.暂停按钮?.setLabel(this.状态.阶段 === "暂停" ? 文案.继续 : 文案.暂停);
-    const 显示触屏按钮 = this.竖屏布局 && this.状态.阶段 === "进行中";
-    this.触屏操作区?.setVisible(显示触屏按钮);
-    this.硬降按钮?.setVisible(显示触屏按钮);
-    this.触屏操作区?.设置操作可用("右转", true);
-    const 暂停中 = this.状态.阶段 === "暂停";
-    if (!暂停中) this.对局设置打开 = false;
-    this.暂停面板?.setVisible(暂停中 && !this.对局设置打开);
-    this.对局设置面板?.setVisible(暂停中 && this.对局设置打开);
-    若变化设置文字(
-      this.提示文字,
-      this.状态.阶段 === "暂停" ? 文案.已暂停 : this.状态.完赛 ? 文案.挑战完成 : 文案.游戏结束,
-    );
-    this.提示文字?.setVisible(this.状态.阶段 !== "进行中");
-    若变化设置文字(this.状态文字, 文案.按P或Esc继续);
-    this.状态文字?.setVisible(this.状态.阶段 === "暂停");
+    const 目标提示可见 = this.目标达成显示至 > this.time.now;
+    this.目标达成提示?.setVisible(目标提示可见);
     if (this.状态.阶段 === "结束" && !this.结束已存档) this.保存纪录();
-    this.绘制结算面板();
+
+    const 当前方块 = this.状态.当前方块;
+    const 棋盘签名 = JSON.stringify([
+      当前方块.类型,
+      当前方块.旋转,
+      当前方块.格子.map(({ 列2, 行2 }) => [列2, 行2]),
+      this.状态.阶段,
+      this.状态.落块事件?.序号 ?? 0,
+      this.状态.消行事件?.序号 ?? 0,
+    ]);
+    if (强制 || 棋盘签名 !== this.棋盘界面签名) {
+      this.棋盘界面签名 = 棋盘签名;
+      this.棋盘预制体?.更新(this.状态);
+    }
+
+    const 界面签名 = JSON.stringify([
+      this.状态.阶段,
+      this.状态.等级,
+      this.状态.分数,
+      this.状态.消行数,
+      this.模式,
+      this.状态.下一个方块,
+      this.状态.后续方块,
+      this.状态.暂存方块,
+      this.状态.本块已暂存,
+      this.状态.完赛,
+      this.状态.目标达成,
+      this.对局设置打开,
+      目标提示可见,
+      this.刷新纪录,
+      this.奖励文案,
+      this.金币奖励,
+      this.读取最佳文案(),
+    ]);
+    if (强制 || 界面签名 !== this.界面签名) {
+      this.界面签名 = 界面签名;
+      this.绘制下一个方块();
+      this.信息栏?.更新([
+        String(this.状态.等级),
+        String(this.状态.分数).padStart(6, "0"),
+        String(this.状态.消行数),
+      ]);
+      this.模式文字?.setVisible(this.模式 !== "马拉松");
+      this.纪录页脚?.设置值(this.读取最佳文案());
+      const 显示键位说明 =
+        获取游戏设置().显示按键说明 &&
+        !this.竖屏布局 &&
+        this.视口.高 >= 560 &&
+        棋盘左侧 >= 220 &&
+        this.状态.阶段 !== "结束";
+      this.操作说明卡?.布局({
+        宽: this.视口.宽,
+        键位区X: 棋盘左侧 - 206,
+        键位区顶: 棋盘顶部 + 28,
+        紧凑: this.紧凑布局,
+        可见: 显示键位说明,
+      });
+      this.暂停按钮?.setVisible(this.状态.阶段 !== "结束");
+      this.暂停按钮?.setLabel(this.状态.阶段 === "暂停" ? 文案.继续 : 文案.暂停);
+      const 显示触屏按钮 = this.竖屏布局 && this.状态.阶段 === "进行中";
+      this.触屏操作区?.setVisible(显示触屏按钮);
+      this.硬降按钮?.setVisible(显示触屏按钮);
+      this.触屏操作区?.设置操作可用("右转", true);
+      const 暂停中 = this.状态.阶段 === "暂停";
+      if (!暂停中) this.对局设置打开 = false;
+      this.暂停面板?.setVisible(暂停中 && !this.对局设置打开);
+      this.对局设置面板?.setVisible(暂停中 && this.对局设置打开);
+      若变化设置文字(
+        this.提示文字,
+        this.状态.阶段 === "暂停" ? 文案.已暂停 : this.状态.完赛 ? 文案.挑战完成 : 文案.游戏结束,
+      );
+      this.提示文字?.setVisible(this.状态.阶段 !== "进行中");
+      若变化设置文字(this.状态文字, 文案.按P或Esc继续);
+      this.状态文字?.setVisible(this.状态.阶段 === "暂停");
+      this.绘制结算面板();
+    }
+    this.同步操作画面(false);
     this.发布测试快照();
+  }
+
+  private 确保操作画面(): void {
+    if (this.操作画面) return;
+    const 预算 = 获取纹理预算(this);
+    const 放开引用 = new Map<string, () => void>();
+    this.操作画面 =
+      创建冻结画面(this, this.视口.宽, this.视口.高, 5, {
+        登记: (键, 像素, 释放) => {
+          预算.登记(键, 像素, 释放);
+          放开引用.set(键, 预算.引用(键));
+        },
+        移除: (键) => {
+          放开引用.get(键)?.();
+          放开引用.delete(键);
+          预算.移除(键);
+        },
+      }) ?? undefined;
+    this.events.once("shutdown", () => this.操作画面?.销毁());
+  }
+
+  /**
+   * 手机上的操作键在对局中一直显示，收成一张。
+   * 分数和棋盘夹在界面中间，不能跟这些键拍在一起。
+   */
+  private 同步操作画面(强制: boolean): void {
+    const 要冻 = this.竖屏布局 && this.状态.阶段 === "进行中";
+    if (!强制 && 要冻 === this.操作已冻) return;
+    if (!要冻) {
+      this.操作画面?.解除();
+      this.操作已冻 = false;
+      return;
+    }
+    this.确保操作画面();
+    this.操作画面?.设置尺寸(this.视口.宽, this.视口.高);
+    const 操作: Phaser.GameObjects.GameObject[] = [];
+    if (this.触屏操作区) 操作.push(this.触屏操作区);
+    if (this.硬降按钮) 操作.push(this.硬降按钮);
+    this.操作画面?.拍摄(操作);
+    this.操作已冻 = true;
   }
 
   private 操作旋转(方向: 1 | -1, 半转: boolean): void {
@@ -1413,16 +1504,16 @@ export class 对局 extends Phaser.Scene {
         if (this.消行反馈)
           for (const tween of this.tweens.getTweensOf(this.消行反馈)) tween.pause();
         this.释放操作();
-        设置俄罗斯方块音乐暂停(true);
+        设置再消一行音乐暂停(true);
       } else if (this.状态.阶段 === "进行中") {
         this.播放对局音效("继续");
         if (this.消行反馈)
           for (const tween of this.tweens.getTweensOf(this.消行反馈)) tween.resume();
-        设置俄罗斯方块音乐暂停(false);
+        设置再消一行音乐暂停(false);
       } else {
         this.播放对局音效(结算音效名称(this.状态.完赛));
         this.释放操作();
-        设置俄罗斯方块音乐暂停(true);
+        设置再消一行音乐暂停(true);
       }
     }
     this.音频上次阶段 = this.状态.阶段;

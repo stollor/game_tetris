@@ -55,8 +55,8 @@ try {
       await click("menu.start");
       await shot("模式");
       await click("mode.马拉松");
-      await page.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
-      const 界面 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+      await page.waitForFunction(() => Boolean(window.__再消一行测试__));
+      const 界面 = await page.evaluate(() => window.__再消一行测试__?.读取界面());
       check(界面?.样式 === 样式, "对局沿用所选主题");
       check(
         Object.values(界面?.界面配色 ?? {}).every(
@@ -71,43 +71,40 @@ try {
       await shot("对局设置");
       await page.keyboard.press("Escape");
       await click("game.pause.resume");
-      await page.evaluate(() => window.__俄罗斯方块测试__?.准备单行消除());
+      await page.evaluate(() => window.__再消一行测试__?.准备单行消除());
       await page.keyboard.press("Space");
       await page.waitForTimeout(60);
-      const 单行 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面().消行特效);
+      const 单行 = await page.evaluate(() => window.__再消一行测试__?.读取界面().消行特效);
       check(
-        单行?.活跃 && 单行.行.join() === "19" && 单行.碎片数 === 20,
-        "单行实际位置与颜色碎片已触发",
+        单行?.活跃 && 单行.行.join() === "19" && 单行.碎片数 === 0,
+        "单行实际位置已触发，光带不再生成碎片",
       );
       await shot("单行特效");
       await page.keyboard.press("Escape");
-      const 冻结前 = await page.evaluate(
-        () => window.__俄罗斯方块测试__?.读取界面().消行特效?.时间,
-      );
+      const 冻结前 = await page.evaluate(() => window.__再消一行测试__?.读取界面().消行特效?.时间);
       await page.waitForTimeout(150);
       check(
-        (await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面().消行特效?.时间)) ===
-          冻结前,
+        (await page.evaluate(() => window.__再消一行测试__?.读取界面().消行特效?.时间)) === 冻结前,
         "暂停冻结特效",
       );
       await click("game.pause.resume");
-      await page.waitForFunction(() => !window.__俄罗斯方块测试__?.读取界面().消行特效?.活跃, {
+      await page.waitForFunction(() => !window.__再消一行测试__?.读取界面().消行特效?.活跃, {
         timeout: 3000,
       });
       check(
-        !(await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面().消行特效?.活跃)),
+        !(await page.evaluate(() => window.__再消一行测试__?.读取界面().消行特效?.活跃)),
         "特效完成后清空",
       );
-      await page.evaluate(() => window.__俄罗斯方块测试__?.准备四行消除());
+      await page.evaluate(() => window.__再消一行测试__?.准备四行消除());
       await page.keyboard.press("Space");
       await page.waitForTimeout(90);
-      const 四行 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面().消行特效);
+      const 四行 = await page.evaluate(() => window.__再消一行测试__?.读取界面().消行特效);
       check(
-        四行?.活跃 && 四行.行.length === 4 && 四行.碎片数 === 80,
-        "四行效果具有真实四行位置与受限碎片数",
+        四行?.活跃 && 四行.行.length === 4 && 四行.碎片数 === 0,
+        "四行效果具有真实四行位置，光带不再生成碎片",
       );
       await shot("四行特效");
-      await page.evaluate(() => window.__俄罗斯方块测试__?.准备结算(true));
+      await page.evaluate(() => window.__再消一行测试__?.准备结算(true));
       await shot("结算");
       await page.close();
     }
@@ -145,7 +142,7 @@ try {
     await 切换页.screenshot({ path: `${输出}/实际切换-${样式}-首页.png` });
     await 点选("menu.start");
     await 点选("mode.马拉松");
-    const 界面 = await 切换页.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+    const 界面 = await 切换页.evaluate(() => window.__再消一行测试__?.读取界面());
     check(界面?.样式 === 样式, "返回首页并开始游戏后仍沿用新样式");
     await 点选("game.leave");
   }

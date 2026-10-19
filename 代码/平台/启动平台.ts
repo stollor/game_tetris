@@ -1,10 +1,10 @@
-import { 发布Tap探针, 探测Tap能力 } from "./Tap环境";
+import { 发布Tap探针, 探测Tap能力 } from "../../框架/平台/TapTap/宿主探测";
 import { 拉取云存档 } from "./云存档";
 import { 更新云同步状态 } from "./云存档状态";
 import { 记录分析事件 } from "./分析";
 import { 刷新Tap用户身份 } from "./用户身份";
 import { Tap应用 } from "./配置";
-import "./Tap类型";
+import "../../框架/平台/TapTap/宿主类型";
 
 /** 启动时探测宿主、挂探针，并在具备云存档时尝试拉取。 */
 export function 启动平台能力(): void {

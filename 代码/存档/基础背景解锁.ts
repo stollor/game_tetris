@@ -1,4 +1,4 @@
-import { 创建俄罗斯方块成就, 成就定义 } from "../成就/俄罗斯方块成就";
+import { 创建再消一行成就, 成就定义 } from "../成就/再消一行成就";
 
 export type 基础背景 = "晨光海岸" | "云海山岚" | "极光原野" | "霓虹天际";
 export const 基础背景列表: readonly 基础背景[] = ["晨光海岸", "云海山岚", "极光原野", "霓虹天际"];
@@ -12,12 +12,7 @@ export const 背景解锁成就数: Record<基础背景, number> = {
   霓虹天际: 6,
 };
 const 保留键 = "旅行版:基础背景保留";
-const 旧存档键 = [
-  "俄罗斯方块:设置",
-  "gamemaker:settings",
-  "旅行版:收藏",
-  "neon-pulse:achievements",
-];
+const 旧存档键 = ["再消一行:设置", "gamemaker:settings", "旅行版:收藏", "neon-pulse:achievements"];
 
 export function 是基础背景(值: unknown): 值 is 基础背景 {
   return typeof 值 === "string" && (基础背景列表 as readonly string[]).includes(值);
@@ -45,7 +40,7 @@ function 读取保留(存储: Storage): string[] {
 
 export function 已得成就数(): number {
   try {
-    const 系统 = 创建俄罗斯方块成就();
+    const 系统 = 创建再消一行成就();
     return 成就定义.filter((a) => 系统.读取(a.编号).解锁时间 !== null).length;
   } catch {
     return 0;

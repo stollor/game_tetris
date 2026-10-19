@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
-import { 每日方块序列 } from "../../代码/玩法/俄罗斯方块";
+import { 每日方块序列 } from "../../代码/玩法/再消一行";
 
 interface 对局测试接口 {
   设置序列: (序列: string[]) => void;
@@ -75,19 +75,19 @@ try {
   await 页面.waitForTimeout(100);
   await 点击测试对象("mode.马拉松");
   await 页面.waitForFunction(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    return Boolean(测试窗.__俄罗斯方块测试__);
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    return Boolean(测试窗.__再消一行测试__);
   });
 
   const 读取对局 = async () =>
     await 页面.evaluate(() => {
-      const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-      return 测试窗.__俄罗斯方块测试__?.读取状态();
+      const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+      return 测试窗.__再消一行测试__?.读取状态();
     });
 
   await 页面.evaluate(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    测试窗.__俄罗斯方块测试__?.设置序列(["T", "I", "O", "S"]);
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    测试窗.__再消一行测试__?.设置序列(["T", "I", "O", "S"]);
   });
   const 初始 = await 读取对局();
   断言(初始?.当前方块 === "T", "固定序列可重现当前方块");
@@ -112,7 +112,7 @@ try {
   await 页面.keyboard.down("ArrowRight");
   // Phaser 的平滑 delta 与墙钟时间不同；等待实际对局时间覆盖 DAS + ARR。
   await 页面.waitForFunction(
-    (开始) => (window.__俄罗斯方块测试__?.读取状态().有效用时 ?? 0) >= 开始 + 350,
+    (开始) => (window.__再消一行测试__?.读取状态().有效用时 ?? 0) >= 开始 + 350,
     横移开始,
     { timeout: 3000 },
   );
@@ -156,8 +156,8 @@ try {
   断言((await 读取对局())?.阶段 === "进行中", "Esc 键恢复对局");
 
   await 页面.evaluate(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    测试窗.__俄罗斯方块测试__?.准备单行消除();
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    测试窗.__再消一行测试__?.准备单行消除();
   });
   await 页面.waitForTimeout(100);
   await 页面.keyboard.press("Space");
@@ -165,8 +165,8 @@ try {
   断言(消行后?.消行数 === 1 && 消行后.分数 === 1140, "单行完美清场、硬降得分与升级前等级结算正确");
 
   await 页面.evaluate(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    测试窗.__俄罗斯方块测试__?.设置序列(Array.from({ length: 30 }, () => "O"));
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    测试窗.__再消一行测试__?.设置序列(Array.from({ length: 30 }, () => "O"));
   });
   for (let 次数 = 0; 次数 < 15; 次数 += 1) {
     if ((await 读取对局())?.阶段 === "结束") break;
@@ -200,8 +200,8 @@ try {
   // —— 回归：重开后的对局结束时同样写入最佳纪录（结束已存档 必须随重开复位）——
   await 页面.evaluate(() => localStorage.removeItem("neon-pulse:best:马拉松"));
   await 页面.evaluate(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    测试窗.__俄罗斯方块测试__?.设置序列(Array.from({ length: 30 }, () => "O"));
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    测试窗.__再消一行测试__?.设置序列(Array.from({ length: 30 }, () => "O"));
   });
   for (let 次数 = 0; 次数 < 15; 次数 += 1) {
     if ((await 读取对局())?.阶段 === "结束") break;
@@ -229,7 +229,7 @@ try {
     测试窗.__验收原时间__ = Date.now;
     Date.now = () => 时刻;
   }, 结算测试时刻);
-  await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(false));
+  await 页面.evaluate(() => window.__再消一行测试__?.准备结算(false));
   await 点击测试对象("restart");
   await 页面.waitForTimeout(120);
   断言((await 读取对局())?.阶段 === "结束", "结算 3 秒内的重新开始被忽略");
@@ -272,8 +272,8 @@ try {
   await 页面.waitForTimeout(120);
   await 点击测试对象("mode.每日挑战");
   await 页面.waitForFunction(() => {
-    const 测试窗 = window as unknown as { __俄罗斯方块测试__?: 对局测试接口 };
-    return Boolean(测试窗.__俄罗斯方块测试__);
+    const 测试窗 = window as unknown as { __再消一行测试__?: 对局测试接口 };
+    return Boolean(测试窗.__再消一行测试__);
   });
   const 日期 = new Date().toISOString().slice(0, 10);
   const 当日序列 = 每日方块序列(日期, 14);

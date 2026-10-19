@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "./Tap环境";
-import type { Tap排行榜管理器 } from "./Tap类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
+import type { Tap排行榜管理器 } from "../../框架/平台/TapTap/宿主类型";
 import { 排行榜编号 } from "./配置";
 
 const 存储键 = "旅行版:Tap用户";
@@ -16,8 +16,7 @@ let 缓存: Tap用户身份 = { openid: "", nickName: "", 来源: "", 更新时�
 
 function 读本地(): Tap用户身份 {
   try {
-    const 原文 =
-      typeof localStorage !== "undefined" ? localStorage.getItem(存储键) : null;
+    const 原文 = typeof localStorage !== "undefined" ? localStorage.getItem(存储键) : null;
     if (!原文) return { openid: "", nickName: "", 来源: "", 更新时间: 0 };
     const o = JSON.parse(原文) as Partial<Tap用户身份>;
     return {
@@ -128,8 +127,9 @@ export async function 刷新Tap用户身份(): Promise<Tap用户身份> {
           collection: "public",
           callback: {
             onSuccess: (res) => {
-              const 我 = (res as { currentUserScore?: { user?: { openid?: string; name?: string } } })
-                ?.currentUserScore?.user;
+              const 我 = (
+                res as { currentUserScore?: { user?: { openid?: string; name?: string } } }
+              )?.currentUserScore?.user;
               if (我?.openid || 我?.name) {
                 记录Tap用户身份({
                   openid: 我.openid,

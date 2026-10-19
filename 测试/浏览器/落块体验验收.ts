@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 const 输出 = "测试/视觉快照/落块体验";
 await mkdir(输出, { recursive: true });
 const 音频构建 = await Bun.build({
-  entrypoints: ["代码/音频/俄罗斯方块程序音频.ts"],
+  entrypoints: ["代码/音频/再消一行程序音频.ts"],
   target: "browser",
 });
 if (!音频构建.success) throw new Error(String(音频构建.logs));
@@ -55,17 +55,17 @@ try {
       check(b, name);
       await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
     };
-    const ui = () => page.evaluate(() => window.__俄罗斯方块测试__!.读取界面());
-    const state = () => page.evaluate(() => window.__俄罗斯方块测试__!.读取状态());
+    const ui = () => page.evaluate(() => window.__再消一行测试__!.读取界面());
+    const state = () => page.evaluate(() => window.__再消一行测试__!.读取状态());
     const shot = (名: string) => page.screenshot({ path: `${输出}/${width}x${height}-${名}.png` });
     await click("menu.start");
     await click("mode.马拉松");
-    await page.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
-    await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O", "J"]));
+    await page.waitForFunction(() => Boolean(window.__再消一行测试__));
+    await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O", "J"]));
     await page.keyboard.press("ArrowUp");
     check((await state()).当前朝向 === 3 && (await state()).暂存方块 === null, "短按 ↑ 只旋转");
     await page.keyboard.down("ArrowUp");
-    await page.waitForFunction(() => window.__俄罗斯方块测试__!.读取状态().暂存方块 === "T");
+    await page.waitForFunction(() => window.__再消一行测试__!.读取状态().暂存方块 === "T");
     check((await state()).当前方块 === "I", "长按 ↑ 暂存");
     await page.keyboard.press("Space");
     await page.waitForTimeout(650);
@@ -75,7 +75,7 @@ try {
     );
     await page.keyboard.up("ArrowUp");
     if (width === 375) {
-      await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+      await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
       const b = await page.evaluate(
         () =>
           window
@@ -85,42 +85,45 @@ try {
       check(b, "手机 ↑ 按钮存在");
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
-      await page.waitForFunction(() => window.__俄罗斯方块测试__!.读取状态().暂存方块 === "T");
+      await page.waitForFunction(() => window.__再消一行测试__!.读取状态().暂存方块 === "T");
       await page.mouse.up();
       check((await state()).当前方块 === "I", "手机长按 ↑ 同样暂存");
     }
-    await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+    await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
     await page.keyboard.down("ArrowUp");
     await page.keyboard.press("p");
     await page.waitForTimeout(600);
     await page.keyboard.up("ArrowUp");
     await page.keyboard.press("p");
     check((await state()).暂存方块 === null, "暂停取消长按计时");
-    await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["I", "O"]));
+    await page.evaluate(() => window.__再消一行测试__!.设置序列(["I", "O"]));
     await page.keyboard.press("Space");
     await shot("柔光拖尾");
     // 首次四行保留一格，明确排除全清/连击音效替代的假阳性。
     await page.evaluate(() => {
-      window.__俄罗斯方块测试__!.准备四行消除(false, true);
+      window.__再消一行测试__!.准备四行消除(false, true);
       (window as unknown as { 发声音符: number }).发声音符 = 0;
     });
     const 初 = await page.evaluate(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space" }));
       window.dispatchEvent(new KeyboardEvent("keyup", { code: "Space" }));
-      return window.__俄罗斯方块测试__!.读取界面();
+      return window.__再消一行测试__!.读取界面();
     });
     check(
       初.技巧反馈.includes("四连消") && !初.技巧反馈.includes("完美清场"),
       "首次四行未全清的真实棋盘",
     );
-    check(初.音效事件.at(-1)?.名称 === "俄罗斯方块.四行", "首次四行独立音效实际派发");
+    check(初.音效事件.at(-1)?.名称 === "再消一行.四行", "首次四行独立音效实际派发");
     check(
-      await page.evaluate(() => (window as unknown as { 发声音符: number }).发声音符 >= 9),
-      "四行奖励实际创建 Web Audio 音符",
+      await page.evaluate(() => {
+        const 数量 = (window as unknown as { 发声音符: number }).发声音符;
+        return 数量 >= 1 && 数量 <= 32;
+      }),
+      "四行奖励复用常驻声部，不再按音符新建振荡器",
     );
     check(
-      初.消行特效?.碎片数 === 120 && 初.震屏?.强度 === 7 && Math.abs(初.震屏.y) >= 6,
-      "四行独有碎片庆祝与真实镜头位移",
+      初.消行特效?.碎片数 === 0 && 初.消行特效?.四行庆祝 === true && 初.震屏?.强度 === 7 && Math.abs(初.震屏?.y) >= 6,
+      "四行光带庆祝与真实镜头位移",
     );
     await shot("四行冲击");
     const 帧: (typeof 初.震屏)[] = [初.震屏];
@@ -133,7 +136,7 @@ try {
       帧.some((e) => e && e.y !== 初.震屏?.y),
       "镜头在后续帧持续震动",
     );
-    await page.evaluate(() => window.__俄罗斯方块测试__!.准备四行消除());
+    await page.evaluate(() => window.__再消一行测试__!.准备四行消除());
     await page.evaluate(() => {
       for (const code of ["Space", "KeyP"]) {
         window.dispatchEvent(new KeyboardEvent("keydown", { code }));
@@ -149,19 +152,19 @@ try {
       "暂停冻结震屏和消行计时",
     );
     await page.keyboard.press("p");
-    await page.waitForFunction(() => window.__俄罗斯方块测试__!.读取界面().震屏?.剩余 === 0);
+    await page.waitForFunction(() => window.__再消一行测试__!.读取界面().震屏?.剩余 === 0);
     const 结束 = await ui();
     check(结束.震屏?.x === 0 && 结束.震屏.y === 0, "震屏结束归零");
-    await page.evaluate(() => window.__俄罗斯方块测试__!.准备四行消除());
+    await page.evaluate(() => window.__再消一行测试__!.准备四行消除());
     await page.keyboard.press("Space");
     const 全清 = await ui();
     check(
-      全清.音效事件.slice(-3).some((e) => e.名称 === "俄罗斯方块.四行") &&
-        全清.音效事件.at(-1)?.名称 === "俄罗斯方块.全清",
+      全清.音效事件.slice(-3).some((e) => e.名称 === "再消一行.四行") &&
+        全清.音效事件.at(-1)?.名称 === "再消一行.全清",
       "四行全清保留两层奖励",
     );
     await shot("四行全清");
-    await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I"]));
+    await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I"]));
     const 清理 = await ui();
     check(
       清理.震屏?.剩余 === 0 &&

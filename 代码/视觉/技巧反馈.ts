@@ -1,7 +1,7 @@
-import type { 俄罗斯方块状态 } from "../玩法/俄罗斯方块";
+import type { 再消一行状态 } from "../玩法/再消一行";
 
-/** 文案完全来自规则判定，同一落块最多两行，适配小棋盘。界面优先中文，避开 TETRIS 商标用语。 */
-export function 获取技巧反馈(e: NonNullable<俄罗斯方块状态["落块事件"]>, 英文: boolean): string {
+/** 文案完全来自规则判定，同一落块最多两行，适配小棋盘。界面优先中文，避开商标用语。 */
+export function 获取技巧反馈(e: NonNullable<再消一行状态["落块事件"]>, 英文: boolean): string {
   const 标签: string[] = [];
   if (e.全清) 标签.push(英文 ? "PERFECT CLEAR" : "完美清场");
   if (e.T旋 !== "无")

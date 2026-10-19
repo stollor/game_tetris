@@ -1,4 +1,4 @@
-import "./Tap类型";
+import "../../框架/平台/TapTap/宿主类型";
 import { Tap应用, 分析开关 } from "./配置";
 
 export type 分析事件名 =

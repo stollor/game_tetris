@@ -1,8 +1,10 @@
 import Phaser from "phaser";
 import { 绘制玻璃面板 } from "../../框架/界面/玻璃绘制";
 import { 亮色 } from "../../框架/界面/颜色工具";
-import type { 方块类型 } from "../玩法/俄罗斯方块";
+import type { 方块类型 } from "../玩法/再消一行";
 import { 绘制方块单元预制体, 绘制方块辉光 } from "../界面/方块单元";
+import { 创建图像池, type 图像池 } from "../视觉/图像池";
+import { 获取游戏设置 } from "../配置/再消一行设置";
 import { 游戏外观 } from "../配置/游戏外观";
 import { 界面主题, 颜色值 } from "../配置/界面主题";
 
@@ -64,6 +66,9 @@ export interface 方块预览布局 {
 export class 下一个方块栏 extends Phaser.GameObjects.Container {
   private readonly 绘图: Phaser.GameObjects.Graphics;
   private readonly 辉光层: Phaser.GameObjects.Graphics;
+  private readonly 方块池: 图像池;
+  private readonly 辉光池: 图像池;
+  private 贴图 = true;
   private readonly 标题: Phaser.GameObjects.Text;
   private 方块序列: 方块类型[] = [];
   private 绘制签名 = "";
@@ -81,14 +86,30 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
       color: 界面主题().文字.次要,
       letterSpacing: 2,
     });
+    this.方块池 = 创建图像池(scene, this, { 低于: this.标题, 空闲上限: 16 });
+    this.辉光池 = 创建图像池(scene, this, {
+      混合: Phaser.BlendModes.ADD,
+      低于: this.标题,
+      空闲上限: 8,
+    });
     this.add([this.绘图, this.辉光层, this.标题]);
+    this.once("destroy", () => {
+      this.方块池.销毁();
+      this.辉光池.销毁();
+    });
     this.setDepth(2);
     scene.add.existing(this);
   }
 
   显示(方块序列: 方块类型[], 布局: 方块预览布局): this {
     const 序列 = 方块序列.slice(0, 3);
-    const 签名 = JSON.stringify([序列, 布局, 界面主题().元信息.名称, 游戏外观.方块.颜色]);
+    const 签名 = JSON.stringify([
+      序列,
+      布局,
+      界面主题().元信息.名称,
+      获取游戏设置().方块外观,
+      游戏外观.方块.颜色,
+    ]);
     if (签名 === this.绘制签名) return this;
     this.绘制签名 = 签名;
     this.方块序列 = 序列;
@@ -128,6 +149,11 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
       .setFontSize(`${手机 && 视口宽 < 640 ? 12 : 游戏外观.字体.辅助}px`);
     this.绘图.clear();
     this.辉光层.clear();
+    const 原本贴图 = this.贴图;
+    if (this.贴图) {
+      this.方块池.开始();
+      this.辉光池.开始();
+    }
 
     this.方块序列.forEach((方块, 索引) => {
       const 当前Y = 卡片顶 + 索引 * (紧凑 ? 62 : 卡片高 + (手机 ? 卡片间距 : 桌面间距));
@@ -178,9 +204,31 @@ export class 下一个方块栏 extends Phaser.GameObjects.Container {
         };
         const x = 原点X + (列 - 最小列) * 格子;
         const y = 原点Y + (行 - 最小行) * 格子;
-        绘制方块单元预制体(this.绘图, x, y, 外观);
-        if (首位) 绘制方块辉光(this.辉光层, x, y, 外观);
+        if (!this.贴图) {
+          绘制方块单元预制体(this.绘图, x, y, 外观);
+          if (首位) 绘制方块辉光(this.辉光层, x, y, 外观);
+          continue;
+        }
+        const 键 = `方块.${获取游戏设置().方块外观}.实体.${外观.色值}.${格子.toFixed(2)}.${外观.圆角比例.toFixed(2)}.1.00`;
+        const 贴上 =
+          this.方块池.放置(键, (图) => 绘制方块单元预制体(图, 0, 0, 外观), x, y) &&
+          (!首位 ||
+            this.辉光池.放置(
+              `方块.${获取游戏设置().方块外观}.辉光.${外观.色值}.${格子.toFixed(2)}.${外观.圆角比例.toFixed(2)}.1.00`,
+              (图) => 绘制方块辉光(图, 0, 0, 外观),
+              x,
+              y,
+            ));
+        if (!贴上) this.贴图 = false;
       }
     });
+    if (this.贴图) {
+      this.方块池.结束();
+      this.辉光池.结束();
+      return;
+    }
+    this.方块池.取消();
+    this.辉光池.取消();
+    if (原本贴图) this.重绘();
   }
 }

@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
 
 const 根 = `http://127.0.0.1:${process.env.PORT ?? 4175}`;
-const 地址 = new URL(`/ui/${encodeURIComponent("俄罗斯方块")}/index.html`, 根);
+const 地址 = new URL(`/ui/${encodeURIComponent("再消一行")}/index.html`, 根);
 地址.searchParams.set("category", "动效");
 地址.searchParams.set("sample", "背景动态");
 const 输出 = "reports/ui-suite-background";
@@ -44,7 +44,7 @@ try {
     assert.deepEqual(错误, [], "离开再返回动效分类不得残留失效回调");
   }
   await 页.setViewportSize({ width: 1440, height: 1000 });
-  await 页.goto(`${根}/?project=${encodeURIComponent("俄罗斯方块")}&view=UI%20套件&suite=project`);
+  await 页.goto(`${根}/?project=${encodeURIComponent("再消一行")}&view=UI%20套件&suite=project`);
   const 框 = 页.frameLocator(".suite-preview");
   await 框.getByRole("button", { name: "动效", exact: true }).click();
   for (const 主题 of ["云海山岚", "极光原野", "霓虹天际", "晨光海岸"]) {

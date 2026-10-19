@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
 import { 旅行主题表 } from "../代码/框架配置/旅行主题";
-import { 俄罗斯方块主题 } from "../代码/框架配置/界面主题";
+import { 再消一行主题 } from "../代码/框架配置/界面主题";
 import { 夜空鎏金, 暖纸古典, 青蓝未来 } from "../框架/样式/主题";
 import { 获取游戏主题 } from "../框架/样式/样式";
 import { 计算颜色对比度 } from "../框架/界面/颜色工具";
 
 test("三套项目主题同步框架控件，保留通用主题，并保持正文与按钮可读", () => {
   for (const 原主题 of [夜空鎏金, 暖纸古典, 青蓝未来]) {
-    const 名称 = 原主题.元信息.名称 as keyof typeof 俄罗斯方块主题;
-    const 主题 = 俄罗斯方块主题[名称];
+    const 名称 = 原主题.元信息.名称 as keyof typeof 再消一行主题;
+    const 主题 = 再消一行主题[名称];
     expect(获取游戏主题(名称)).toBe(主题);
     expect(主题).not.toBe(原主题);
     expect(主题.页面.背景).not.toBe(原主题.页面.背景);

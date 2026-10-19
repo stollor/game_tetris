@@ -1,4 +1,4 @@
-# TapTap 项目手册（俄罗斯方块-旅行版）
+# TapTap 项目手册（再消一行）
 
 项目专属配置与踩坑，配合 GM 通用流程（本机 `C:\Users\StollorSu\projects\GameMaker-v2\文档\TapTap发布.md`，仓库内路径 `文档/TapTap发布.md`）。早期接入计划见 [TapTap开放能力接入计划.md](TapTap开放能力接入计划.md)（研究稿，部分条目已被现行实现取代）。
 
@@ -16,13 +16,13 @@
 | 包体类型 | H5 ZIP（竖屏） |
 | 后台资料 | https://developer.taptap.cn/v3/363566/app/977300/store/update |
 
-公开配置单源：`代码/平台/配置.ts`（`Tap应用`、`排行榜编号按周期`、`平台成就映射`、`云存档槽名`）。
+公开配置单源：`配置/TapTap发布.json`，由GM发布页维护；`代码/平台/配置.ts`读取后组合游戏原有的榜单、成就和云槽接口。既有云快照范围与格式继续由 `代码/平台/云存档快照.ts`维护，不迁移玩家存档。
 
 ## 2. 打包与材料位置
 
 ```powershell
 # 在 GameMaker-v2 根目录
-bun run gm -- 打包游戏 俄罗斯方块
+bun run gm -- 打包游戏 再消一行
 ```
 
 | 材料 | 位置 | Git |
@@ -32,7 +32,7 @@ bun run gm -- 打包游戏 俄罗斯方块
 | 测试 ZIP / 二维码 / 上传回执 | `reports/TapTap/<日期>/` | **忽略** |
 | 平台公开配置 | `代码/平台/配置.ts` | 提交 |
 
-装配 ZIP：单一顶层目录（常用名 `tetris-travel/`），内含 `index.html`、主 bundle、css、外置 `phaser.esm.min.js`。以游戏根为 cwd 调用：
+装配 ZIP：单一顶层目录（常用名 `one-more-line-travel/`），内含 `index.html`、主 bundle、css、外置 `phaser.esm.min.js`。以游戏根为 cwd 调用：
 
 ```powershell
 taptap-cli upload-h5-package reports/TapTap/<日期>/<zip> --dev-id 363566 --app-id 977300 --screen-orientation 1 --idempotency-key <唯一键> --yes
@@ -87,7 +87,7 @@ taptap-cli test-qr-code --dev-id 363566 --app-id 977300 --data '{"package_id":<h
 | --- | --- |
 | first-lock | FIRST_LOCK |
 | first-clear | FIRST_CLEAR |
-| tetris | TETRIS |
+| four-lines | TETRIS |
 | spin | SPIN |
 | combo | COMBO |
 | b2b | B2B |
@@ -134,6 +134,6 @@ taptap-cli test-qr-code --dev-id 363566 --app-id 977300 --data '{"package_id":<h
 ## 9. 相关代码入口
 
 - `代码/平台/配置.ts` — ClientID、16 榜、成就映射、云槽
-- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts` / `Tap环境.ts`
+- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts`；宿主协议与探测复用 `框架/平台/TapTap/`
 - `代码/场景/` — 主菜单排行入口、设置云存档栏、成就页
 - `运行/构建游戏.ts` — 构建后 `中文instanceof` 校验

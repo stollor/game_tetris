@@ -3,23 +3,23 @@ import type { 游戏测试控制配置 } from "../../框架/开发/测试控制"
 import { 打开覆盖页面 } from "../../框架/页面切换";
 import { 执行收藏操作, 旅行收藏 } from "../存档/旅行收藏";
 
-export function 创建俄罗斯方块测试控制(游戏: Phaser.Game): 游戏测试控制配置 {
+export function 创建再消一行测试控制(游戏: Phaser.Game): 游戏测试控制配置 {
   const 切页 = (目标: string, 数据?: object) => {
     for (const 场景 of 游戏.scene.getScenes(false)) 游戏.scene.stop(场景.scene.key);
     游戏.scene.start(目标, 数据);
   };
   const 对局 = () => {
-    const 接口 = window.__俄罗斯方块测试__;
+    const 接口 = window.__再消一行测试__;
     if (!接口) throw new Error("请先开始一局游戏");
     return 接口;
   };
   return {
-    项目: "俄罗斯方块",
+    项目: "再消一行",
     状态: () => ({
       当前页面: 游戏.scene.getScenes(true).at(-1)?.scene.key ?? "启动中",
-      对局阶段: window.__俄罗斯方块测试__?.读取状态().阶段 ?? "未开始",
-      分数: window.__俄罗斯方块测试__?.读取状态().分数 ?? 0,
-      消行: window.__俄罗斯方块测试__?.读取状态().消行数 ?? 0,
+      对局阶段: window.__再消一行测试__?.读取状态().阶段 ?? "未开始",
+      分数: window.__再消一行测试__?.读取状态().分数 ?? 0,
+      消行: window.__再消一行测试__?.读取状态().消行数 ?? 0,
       金币: new 旅行收藏(localStorage).读取().金币,
       收藏数: new 旅行收藏(localStorage).读取().已购.length,
     }),
@@ -39,7 +39,7 @@ export function 创建俄罗斯方块测试控制(游戏: Phaser.Game): 游戏�
             选项: ["马拉松", "冲刺", "极限", "每日挑战"],
           },
         ],
-        执行: (参数) => 切页("俄罗斯方块对局", { 模式: 参数.模式 }),
+        执行: (参数) => 切页("再消一行对局", { 模式: 参数.模式 }),
       },
       {
         编号: "pause",
@@ -58,7 +58,7 @@ export function 创建俄罗斯方块测试控制(游戏: Phaser.Game): 游戏�
         执行: () => 对局().设置暂停(false),
       },
       {
-        编号: "tetris",
+        编号: "four-lines",
         名称: "准备四行消除",
         说明: "放置四行缺口和I方块；后续硬降会触发真实得分与成就",
         分组: "反馈",

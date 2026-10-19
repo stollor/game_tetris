@@ -1,13 +1,13 @@
-import type { 俄罗斯方块文案 } from "./类型";
+import type { 再消一行文案 } from "./类型";
 
-export const 文案: 俄罗斯方块文案 = {
+export const 文案: 再消一行文案 = {
   对局设置: "Game settings",
   落点影透明度: "Ghost opacity",
   旋转180设置: "Allow 180° rotation",
   显示网格: "Show grid",
   显示按键说明: "Show key guide",
   返回暂停菜单: "Back to pause menu",
-  对局副标题: "Travel Edition",
+  游戏名称: "One More Line",
   操作标题: "Controls",
   操作移动: "← →   Move",
   操作旋转: "↑ / X Rotate · Hold ↑: swap",

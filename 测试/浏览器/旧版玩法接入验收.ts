@@ -43,11 +43,11 @@ try {
       await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
       await page.waitForTimeout(60);
     };
-    const state = () => page.evaluate(() => window.__俄罗斯方块测试__?.读取状态());
+    const state = () => page.evaluate(() => window.__再消一行测试__?.读取状态());
     const shot = (名: string) => page.screenshot({ path: `${输出}/${width}x${height}-${名}.png` });
     await click("menu.start");
     await click("mode.马拉松");
-    await page.evaluate(() => window.__俄罗斯方块测试__?.设置序列(["T", "I", "O", "J"]));
+    await page.evaluate(() => window.__再消一行测试__?.设置序列(["T", "I", "O", "J"]));
     await page.keyboard.press("c");
     check(
       (await state())?.暂存方块 === "T" && (await state())?.当前方块 === "I",
@@ -59,7 +59,7 @@ try {
     const 动画 = await page.evaluate(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space" }));
       window.dispatchEvent(new KeyboardEvent("keyup", { code: "Space" }));
-      return window.__俄罗斯方块测试__?.读取界面().落块特效;
+      return window.__再消一行测试__?.读取界面().落块特效;
     });
     check(动画?.硬降拖尾 && 动画.锁定闪光, "真实硬降同时触发拖尾与锁定闪光");
     check(!(await state())?.本块已暂存, "落块恢复暂存权限");
@@ -72,27 +72,27 @@ try {
     await page.keyboard.press("c");
     check((await state())?.当前方块 === "T", "暂停时暂存键无效");
     await click("game.pause.resume");
-    await page.evaluate(() => window.__俄罗斯方块测试__?.准备四行消除());
+    await page.evaluate(() => window.__再消一行测试__?.准备四行消除());
     await page.keyboard.press("Space");
-    const 一次 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+    const 一次 = await page.evaluate(() => window.__再消一行测试__?.读取界面());
     check(
       一次?.技巧反馈.includes(width === 667 ? "PERFECT CLEAR" : "完美清场") &&
         一次.技巧反馈.includes(width === 667 ? "QUAD!" : "四连消"),
       "真实四行全清显示分层奖励",
     );
     await shot("四行全清");
-    await page.evaluate(() => window.__俄罗斯方块测试__?.准备四行消除(true));
+    await page.evaluate(() => window.__再消一行测试__?.准备四行消除(true));
     await page.keyboard.press("Space");
-    const 二次 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+    const 二次 = await page.evaluate(() => window.__再消一行测试__?.读取界面());
     check(
       二次?.技巧反馈.includes(width === 667 ? "COMBO ×2" : "连击 ×2") &&
         二次.技巧反馈.includes(width === 667 ? "BACK-TO-BACK" : "背靠背"),
       "连续四行显示真实连击和高难奖励",
     );
     await shot("连击技巧");
-    await page.evaluate(() => window.__俄罗斯方块测试__?.设置序列(["I", "O"]));
+    await page.evaluate(() => window.__再消一行测试__?.设置序列(["I", "O"]));
     const 新局 = await state(),
-      清理 = await page.evaluate(() => window.__俄罗斯方块测试__?.读取界面());
+      清理 = await page.evaluate(() => window.__再消一行测试__?.读取界面());
     check(
       新局?.暂存方块 === null && !清理?.落块特效?.硬降拖尾 && !清理?.落块特效?.锁定闪光,
       "重开清空暂存和旧动画",

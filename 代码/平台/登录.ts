@@ -1,4 +1,4 @@
-import { 探测Tap能力, 读取Tap宿主 } from "./Tap环境";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
 
 export interface 登录结果 {
   完成: boolean;

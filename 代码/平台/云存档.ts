@@ -1,5 +1,6 @@
-import { 探测Tap能力, 读取Tap宿主 } from "./Tap环境";
-import type { Tap云存档项 } from "./Tap类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
+import type { Tap云存档项 } from "../../框架/平台/TapTap/宿主类型";
+import { 迁移更名前存档 } from "../存档/更名迁移";
 import {
   序列化快照,
   应用快照到本地,
@@ -152,6 +153,7 @@ export async function 拉取云存档(存储: Storage = localStorage): Promise<�
       return { 完成: false, 原因: "本地更新，保留本地", 方向: "跳过" };
     }
     const n = 应用快照到本地(存储, 快照);
+    迁移更名前存档(存储);
     标记本地同步时间(存储, 快照.updatedAt);
     更新云同步状态({
       状态: "已同步",

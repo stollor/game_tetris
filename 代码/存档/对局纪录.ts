@@ -1,5 +1,5 @@
 import { type 存储接口, 存档 } from "../../框架/存档";
-import type { 游戏模式 } from "../玩法/俄罗斯方块";
+import type { 游戏模式 } from "../玩法/再消一行";
 
 export interface 对局纪录 {
   分数: number;

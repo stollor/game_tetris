@@ -1,16 +1,22 @@
 import Phaser from "phaser";
+import type { Tap排行榜分数 } from "../../../框架/平台/TapTap/宿主类型";
 import { 适配场景视口 } from "../../../框架/界面/响应式视口";
 import { 界面按钮 } from "../../../框架/界面/按钮";
 import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 界面滚动区域 } from "../../../框架/界面/滚动区域";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
-import type { Tap排行榜分数 } from "../../平台/Tap类型";
-import { 加载排行榜数据, type 排行榜周期, 排行榜周期顺序, 格式化榜分数, 格式化排行榜错误 } from "../../平台/排行榜";
+import {
+  加载排行榜数据,
+  type 排行榜周期,
+  排行榜周期顺序,
+  格式化排行榜错误,
+  格式化榜分数,
+} from "../../平台/排行榜";
 import { 请求Tap登录 } from "../../平台/登录";
 import { 排行榜周期标签 } from "../../平台/配置";
-import type { 游戏模式 } from "../../玩法/俄罗斯方块";
-import { 解析语言 } from "../../配置/俄罗斯方块文案";
-import { 获取游戏设置 } from "../../配置/俄罗斯方块设置";
+import type { 游戏模式 } from "../../玩法/再消一行";
+import { 解析语言 } from "../../配置/再消一行文案";
+import { 获取游戏设置 } from "../../配置/再消一行设置";
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
 
 interface 榜面缓存 {

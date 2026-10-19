@@ -1,5 +1,5 @@
 import { type 地点名称, 地点皮肤表 } from "../框架配置/旅行地点";
-import type { 背景主题 } from "./俄罗斯方块设置";
+import type { 背景主题 } from "./再消一行设置";
 
 export interface 背景配置 {
   标签: string;

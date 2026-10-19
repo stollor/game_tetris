@@ -101,15 +101,15 @@ try {
   if (!仅对局)
     采集结果.push(await 采集("B-模式选择", "B-模式选择.png", "开始菜单", "选择游戏模式"));
   await 点击对象("mode.马拉松");
-  采集结果.push(await 采集("C-桌面对局", "C-对局.png", "俄罗斯方块对局", "最佳纪录"));
+  采集结果.push(await 采集("C-桌面对局", "C-对局.png", "再消一行对局", "最佳纪录"));
 
   if (!仅对局) {
     await 页面.keyboard.press("p");
-    采集结果.push(await 采集("F-暂停", "F-暂停.png", "俄罗斯方块对局", "继续"));
+    采集结果.push(await 采集("F-暂停", "F-暂停.png", "再消一行对局", "继续"));
     await 页面.keyboard.press("p");
   }
   await 页面.setViewportSize({ width: 430, height: 860 });
-  采集结果.push(await 采集("D-手机竖屏对局", "D-对局竖屏.png", "俄罗斯方块对局", "最佳纪录"));
+  采集结果.push(await 采集("D-手机竖屏对局", "D-对局竖屏.png", "再消一行对局", "最佳纪录"));
 
   const 头部 = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
   const 包 = JSON.parse(await Bun.file(resolve("package.json")).text()) as {

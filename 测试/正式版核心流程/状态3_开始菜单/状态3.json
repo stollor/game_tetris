@@ -7,14 +7,14 @@
   "snapshot": {
     "version": 1,
     "sequence": 4,
-    "game": "NEON PULSE · 俄罗斯方块",
+    "game": "NEON PULSE · 再消一行",
     "sceneId": "开始菜单",
     "sceneName": "开始菜单",
     "width": 1280,
     "height": 720,
     "texts": [
       "NEON PULSE",
-      "俄罗斯方块  ·  霓虹街机",
+      "再消一行  ·  霓虹街机",
       "选择你的节奏",
       "开始游戏",
       "设置",

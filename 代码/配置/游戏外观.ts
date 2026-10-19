@@ -1,5 +1,5 @@
-import type { 游戏模式 } from "../玩法/俄罗斯方块";
-import { 获取游戏设置 } from "./俄罗斯方块设置";
+import type { 游戏模式 } from "../玩法/再消一行";
+import { 获取游戏设置 } from "./再消一行设置";
 import { 读取当前方块外观 } from "./方块外观";
 import { 界面主题, 颜色值 } from "./界面主题";
 

@@ -1,6 +1,6 @@
 import type Phaser from "phaser";
 import { 绑定滑动手势 } from "../../框架/界面/控件";
-import type { 背景主题 } from "../配置/俄罗斯方块设置";
+import type { 背景主题 } from "../配置/再消一行设置";
 import { 游戏外观 } from "../配置/游戏外观";
 import { 创建菜单按钮 } from "./按钮";
 import { 风景浏览列表, 风景说明 } from "./风景浏览";
@@ -41,7 +41,7 @@ function 绘制纯享胶囊(
   图形.fillStyle(0x000000, 0.22 + 加压);
   图形.fillRoundedRect(-宽 / 2 + 1, -高 / 2 + 2, 宽, 高, r);
   // 半透明深色胶囊
-  图形.fillStyle(0x101820, 0.55 + 加压);
+  图形.fillStyle(0x101820, 0.7 + 加压);
   图形.fillRoundedRect(-宽 / 2, -高 / 2, 宽, 高, r);
   // 浅描边：暗景可见轮廓，亮景也不糊
   图形.lineStyle(1.5, 0xfff6e8, 0.55 + 加压);
@@ -76,6 +76,8 @@ export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 
     字号: "15px",
     覆盖: {
       绘制底板: 绘制纯享胶囊,
+      面板色: "#101820",
+      强调色: "#101820",
       文字色: "#fff8e7",
       描边色: "#0c141c",
       描边宽度: 3,
@@ -99,6 +101,8 @@ export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 
       字号: "13px",
       覆盖: {
         绘制底板: 绘制纯享胶囊,
+        面板色: "#101820",
+        强调色: "#101820",
         文字色: "#fff8e7",
         描边色: "#0c141c",
         描边宽度: 3,

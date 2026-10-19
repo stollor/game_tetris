@@ -4,7 +4,7 @@ import { 选取对比文字色, 颜色字符串 } from "Phaser框架/界面/颜�
 import type Phaser from "phaser";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import { 添加风景缩略 } from "../../代码/视觉/风景缩略";
-import type { 背景主题 } from "../../代码/配置/俄罗斯方块设置";
+import type { 背景主题 } from "../../代码/配置/再消一行设置";
 import { type 方块外观名称, 解析方块外观 } from "../../代码/配置/方块外观";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import type { 样式选择 } from "../../框架/设置/设置";

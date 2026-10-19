@@ -6,21 +6,21 @@ import { 界面滚动区域 } from "../../../框架/界面/滚动区域";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
 import { 旅行收藏 } from "../../存档/旅行收藏";
 import {
-  补同步已解锁成就,
   成就同步文案,
+  补同步已解锁成就,
   订阅成就同步状态,
   读取成就同步状态,
 } from "../../平台/平台成就";
-import { 创建俄罗斯方块成就, 成就定义 } from "../../成就/俄罗斯方块成就";
+import { 创建再消一行成就, 成就定义 } from "../../成就/再消一行成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import { 布置金币条 } from "../../界面/金币条";
-import { 解析语言 } from "../../配置/俄罗斯方块文案";
-import { 获取游戏设置 } from "../../配置/俄罗斯方块设置";
+import { 解析语言 } from "../../配置/再消一行文案";
+import { 获取游戏设置 } from "../../配置/再消一行设置";
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
 
 declare global {
   interface Window {
-    __俄罗斯方块成就__?: () => { 滚动: number; 保存成功: boolean };
+    __再消一行成就__?: () => { 滚动: number; 保存成功: boolean };
   }
 }
 
@@ -40,7 +40,7 @@ export class 成就界面 extends Phaser.Scene {
     this.取消成就订阅 = 订阅成就同步状态(() => {
       if (this.sys.isActive()) this.布局();
     });
-    const 系统 = 创建俄罗斯方块成就();
+    const 系统 = 创建再消一行成就();
     const 已解锁 = 成就定义.filter((a) => 系统.读取(a.编号).解锁时间 !== null).map((a) => a.编号);
     void 补同步已解锁成就(已解锁).then(() => {
       if (this.sys.isActive()) this.布局();
@@ -49,7 +49,7 @@ export class 成就界面 extends Phaser.Scene {
       this.scale.off("resize", this.布局, this);
       window.removeEventListener("keydown", this.按键);
       this.取消成就订阅?.();
-      delete window.__俄罗斯方块成就__;
+      delete window.__再消一行成就__;
     });
   }
   private readonly 按键 = (e: KeyboardEvent) => {
@@ -70,7 +70,7 @@ export class 成就界面 extends Phaser.Scene {
       金币: new 旅行收藏(localStorage).读取().金币,
       名称: "achievements.coins",
     });
-    const 系统 = 创建俄罗斯方块成就();
+    const 系统 = 创建再消一行成就();
     const 已得 = 成就定义.filter((a) => 系统.读取(a.编号).解锁时间 !== null).length;
     const 标题 = this.add
       .text(w / 2, 30, `${英文 ? "ACHIEVEMENTS" : "成就收藏"}  ${已得} / ${成就定义.length}`, {
@@ -103,7 +103,7 @@ export class 成就界面 extends Phaser.Scene {
       内容高: 成就定义.length * 94,
       显示滚动条: false,
     });
-    window.__俄罗斯方块成就__ = () => ({ 滚动: 滚动.获取滚动位置(), 保存成功: 系统.保存成功 });
+    window.__再消一行成就__ = () => ({ 滚动: 滚动.获取滚动位置(), 保存成功: 系统.保存成功 });
     成就定义.forEach((a, i) => {
       const p = 系统.读取(a.编号),
         已解锁 = p.解锁时间 !== null,

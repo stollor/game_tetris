@@ -1,17 +1,19 @@
 import Phaser from "phaser";
 import { 亮色, 混色 } from "../../框架/界面/颜色工具";
 import {
+  引用烘焙贴图,
   type 替身项,
   获取替身贴图,
   获取烘焙贴图,
-  设为烘焙动画层,
+  设为动态层,
   设置替身贴图,
 } from "../性能/图形烘焙";
 import { 应重绘动态背景 } from "../性能/画质";
 import { 查找地点 } from "../框架配置/旅行地点";
-import type { 背景主题 } from "../配置/俄罗斯方块设置";
+import type { 背景主题 } from "../配置/再消一行设置";
 import { 背景主题选项, 背景主题配置 } from "../配置/背景主题";
 import { 绘制旅行动态, 绘制旅行风景 } from "./旅行风景";
+import { 移动极光替身, 绘制极光帘幕 } from "./极光演出";
 
 export { 背景主题选项 };
 
@@ -51,10 +53,11 @@ export function 绘制动态霓虹细节(
   播放 = true,
   允许闲置降频 = true,
 ): void {
-  设为烘焙动画层(图形);
+  设为动态层(图形);
+  if (!播放 && !图形.commandBuffer.length && !获取替身贴图(图形)) return;
   if (播放 && !应重绘动态背景(图形, 时间, 允许闲置降频)) return;
   图形.clear().setScale(1);
-  if (!播放 || 主题 !== "云海山岚") 设置替身贴图(图形, undefined);
+  if (!播放 || (主题 !== "云海山岚" && 主题 !== "极光原野")) 设置替身贴图(图形, undefined);
   if (!播放) return;
   const 地点 = 查找地点(主题);
   if (地点) {
@@ -67,8 +70,9 @@ export function 绘制动态霓虹细节(
   if (主题 === "晨光海岸") 绘制海面动画(图形, 宽, 高, 动画时间);
   else if (主题 === "云海山岚") {
     if (!移动云层替身(图形, 宽, 高, 动画时间)) 绘制云层动画(图形, 宽, 高, 动画时间);
-  } else if (主题 === "极光原野") 绘制极光动画(图形, 宽, 高, 动画时间);
-  else 绘制城市动画(图形, 宽, 高, 动画时间);
+  } else if (主题 === "极光原野") {
+    if (!移动极光替身(图形, 宽, 高, 动画时间)) 绘制极光动画(图形, 宽, 高, 动画时间);
+  } else 绘制城市动画(图形, 宽, 高, 动画时间);
   图形.setAlpha(配置.动画亮度);
 }
 
@@ -431,6 +435,7 @@ function 移动云层替身(
   const 签名 = `${宽}x${高}@${场景.cameras.main.zoom}`;
   let 列表 = 获取替身贴图(图形);
   if (!列表 || 云替身签名.get(图形) !== 签名) {
+    设置替身贴图(图形, undefined);
     const 新列表: 替身项[] = [];
     for (let i = 0; i < 5; i += 1) {
       const { 尺寸 } = 云朵参数(i, 宽, 高, 0);
@@ -443,9 +448,10 @@ function 移动云层替身(
         return false;
       }
       const 图 = 场景.make.image(
-        { key: 贴.键 } as Phaser.Types.GameObjects.Sprite.SpriteConfig,
+        { key: 贴.键, frame: 贴.帧 } as Phaser.Types.GameObjects.Sprite.SpriteConfig,
         false,
       );
+      引用烘焙贴图(图);
       图.setOrigin((-贴.左 * 贴.比) / 图.width, (-贴.顶 * 贴.比) / 图.height).setScale(1 / 贴.比);
       新列表.push({ 贴图: 图, x: 0, y: 0, 透明度: 1 });
     }
@@ -539,27 +545,7 @@ function 绘制极光动画(
   高: number,
   时间: number,
 ): void {
-  const 极光色 = [0x3ff0c0, 0x4de3d8, 0x7ad9ff, 0xa98cff];
-  for (let 条 = 0; 条 < 3; 条 += 1) {
-    const 色 = 极光色[条] ?? 0x4de3d8;
-    const 基Y = 高 * (0.12 + 条 * 0.05);
-    // 双遍重叠窄条 + 垂直渐变，消除竖直条纹
-    for (let 两遍 = 0; 两遍 < 2; 两遍 += 1) {
-      const 步长 = Math.max(10, 宽 / (44 + 两遍 * 28));
-      const 偏移 = 两遍 === 1 ? 步长 * 0.5 : 0;
-      for (let x = -步长; x < 宽 + 步长; x += 步长) {
-        const nx = x / 宽;
-        const 波 =
-          Math.sin(nx * 5.2 + 条 * 1.9 + 时间 * 0.00022) * 高 * 0.05 +
-          Math.sin(nx * 11 + 时间 * 0.00035) * 高 * 0.02;
-        const 顶 = 基Y + 波;
-        const 帘高 = 高 * (0.12 + 0.07 * Math.sin(nx * 6.5 + 条 * 2.2 + 时间 * 0.0003));
-        const α =
-          (两遍 === 0 ? 0.052 : 0.03) * (0.8 + 0.2 * Math.sin(nx * 4.2 + 时间 * 0.0005 + 条));
-        图形.fillGradientStyle(色, 色, 色, 色, α, α, 0, 0).fillRect(x + 偏移, 顶, 步长 + 1, 帘高);
-      }
-    }
-  }
+  for (let 条 = 0; 条 < 3; 条++) 绘制极光帘幕(图形, 宽, 高, 时间, 条);
   // 星光闪烁
   for (let i = 0; i < 26; i += 1) {
     const 闪 = 0.5 + 0.5 * Math.sin(时间 * (0.0008 + 随机值(i + 61) * 0.0012) + i);

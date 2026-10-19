@@ -51,12 +51,12 @@ try {
     }
     await 页面.evaluate(() => localStorage.setItem("neon-pulse:best:马拉松", "{broken"));
     await 点击("mode.马拉松");
-    await 页面.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+    await 页面.waitForFunction(() => Boolean(window.__再消一行测试__));
     await 页面.screenshot({ path: `${输出}/${宽}x${高}-对局.png` });
-    await 页面.evaluate(() => window.__俄罗斯方块测试__?.准备结算(true));
+    await 页面.evaluate(() => window.__再消一行测试__?.准备结算(true));
     const 原文 = await 页面.evaluate(() => localStorage.getItem("neon-pulse:best:马拉松"));
     if (原文 !== "{broken") throw new Error("损坏纪录被覆盖");
-    const 徽标 = await 页面.evaluate(() => window.__俄罗斯方块测试__?.读取界面().结算徽标.文本);
+    const 徽标 = await 页面.evaluate(() => window.__再消一行测试__?.读取界面().结算徽标.文本);
     if (徽标?.includes("纪录刷新")) throw new Error("保护失败时错误宣称刷新纪录");
     console.log(`通过：${宽}×${高} 菜单完整可点击，真实结算保护损坏纪录`);
     await 页面.close();

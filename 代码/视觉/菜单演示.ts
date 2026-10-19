@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { 读取霓虹调色板 } from "../../组件/霓虹街机/调色板";
-import { type 俄罗斯方块状态, 创建新局, 旋转方块, 硬降, 移动方块 } from "../玩法/俄罗斯方块";
+import { type 再消一行状态, 创建新局, 旋转方块, 硬降, 移动方块 } from "../玩法/再消一行";
 import { 绘制方块单元预制体 } from "../界面/方块单元";
 import { 游戏外观 } from "../配置/游戏外观";
 import { 出生格 } from "../预制体/下一个方块栏";
@@ -13,7 +13,7 @@ export interface 菜单演示选项 {
 /** 实际七袋和消行规则驱动自动对局，启发式挑选低堆叠落点，不播放固定录像。 */
 export class 菜单演示 extends Phaser.GameObjects.Graphics {
   private 状态 = 创建新局();
-  private 计划?: 俄罗斯方块状态;
+  private 计划?: 再消一行状态;
   private 落点: [number, number][] = [];
   private 时间 = 0;
   private 时长 = 1000;

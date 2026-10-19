@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "./Tap环境";
-import type { Tap成就管理器 } from "./Tap类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
+import type { Tap成就管理器 } from "../../框架/平台/TapTap/宿主类型";
 import { 是未登录错误 } from "./登录";
 import { 平台成就映射 } from "./配置";
 
@@ -40,8 +40,7 @@ function 通知(): void {
 
 function 读盘(): void {
   try {
-    const 原文 =
-      typeof localStorage !== "undefined" ? localStorage.getItem(存储键) : null;
+    const 原文 = typeof localStorage !== "undefined" ? localStorage.getItem(存储键) : null;
     if (!原文) return;
     const o = JSON.parse(原文) as Record<string, Partial<状态项>>;
     for (const [键, 值] of Object.entries(o)) {
@@ -107,7 +106,12 @@ export function 解释成就失败(代码?: number, 消息?: string): string {
     文.includes("审核")
   )
     return "成就仍为待发布：请在开发者中心发布，或把账号加为成就测试人员";
-  if (低.includes("not exist") || 低.includes("not found") || 文.includes("不存在") || 代码 === 500001)
+  if (
+    低.includes("not exist") ||
+    低.includes("not found") ||
+    文.includes("不存在") ||
+    代码 === 500001
+  )
     return "平台成就 ID 无效或不存在，请核对配置映射";
   if (低.includes("already") || 文.includes("已解锁") || 文.includes("已经解锁"))
     return "平台侧已解锁";
@@ -152,14 +156,13 @@ function 确保监听(m: Tap成就管理器): void {
   已挂监听的管理器 = m;
   const 成功 = (代码或成就?: unknown, 成就?: { achievementId?: string }) => {
     let 平台编号 = "";
-    if (成就 && typeof 成就 === "object" && 成就.achievementId) 平台编号 = String(成就.achievementId);
+    if (成就 && typeof 成就 === "object" && 成就.achievementId)
+      平台编号 = String(成就.achievementId);
     else if (代码或成就 && typeof 代码或成就 === "object" && 代码或成就 !== null) {
       const a = 代码或成就 as { achievementId?: string };
       if (a.achievementId) 平台编号 = String(a.achievementId);
     }
-    const 待 =
-      (平台编号 ? 等待中.get(平台编号) : undefined) ??
-      等待中.values().next().value;
+    const 待 = (平台编号 ? 等待中.get(平台编号) : undefined) ?? 等待中.values().next().value;
     const 本地 = 待?.本地编号 ?? (平台编号 ? 平台转本地(平台编号) : undefined);
     if (平台编号) 等待中.get(平台编号)?.resolve(true);
     if (平台编号) 等待中.delete(平台编号);
@@ -179,7 +182,13 @@ function 确保监听(m: Tap成就管理器): void {
     let msg = "";
     if (typeof id或错误 === "string") 平台编号 = id或错误;
     else if (id或错误 && typeof id或错误 === "object") {
-      const e = id或错误 as { id?: string; achievementId?: string; code?: number; message?: string; msg?: string };
+      const e = id或错误 as {
+        id?: string;
+        achievementId?: string;
+        code?: number;
+        message?: string;
+        msg?: string;
+      };
       平台编号 = String(e.achievementId || e.id || "");
       code = typeof e.code === "number" ? e.code : undefined;
       msg = String(e.message || e.msg || "");

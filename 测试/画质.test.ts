@@ -15,16 +15,21 @@ test("低端判定：≤4 核或 ≤3GB 内存或上次实测掉帧", () => {
   expect(判定低端设备({})).toBe(false);
 });
 
-test("设置优先于自动判定；省电时像素比封顶 2，标准 3", () => {
+test("设置优先于自动判定；两档都保留 3 倍清晰度", () => {
   expect(是省电模式("开", { 核心数: 16 })).toBe(true);
   expect(是省电模式("关", { 核心数: 2 })).toBe(false);
   expect(是省电模式("自动", { 核心数: 2 })).toBe(true);
-  expect(计算像素比上限(true)).toBe(1.5);
-  expect(计算像素比上限(false)).toBe(2);
+  expect(计算像素比上限(true)).toBe(3);
+  expect(计算像素比上限(false)).toBe(3);
+  expect(画质参数.标准帧率).toBe(60);
+  expect(画质参数.省电帧率).toBe(30);
 });
 
-test("动态背景首帧必画，标准模式非闲置时每帧都画", () => {
+test("动态背景首帧必画，间隔内不重复绘制，时间回退后恢复", () => {
   const 图 = {};
   expect(应重绘动态背景(图, 0, false)).toBe(true);
-  expect(画质参数.省电背景间隔毫秒).toBeGreaterThan(16);
+  expect(应重绘动态背景(图, 16, false)).toBe(false);
+  expect(应重绘动态背景(图, 100, false)).toBe(true);
+  expect(应重绘动态背景(图, 110, false)).toBe(false);
+  expect(应重绘动态背景(图, 0, false)).toBe(true);
 });

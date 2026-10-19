@@ -35,7 +35,7 @@ describe("框架配置音频表", () => {
 
   test("十七种音效全部登记", () => {
     const 名称 = 音效库
-      .filter((项) => 项.id.startsWith("俄罗斯方块."))
+      .filter((项) => 项.id.startsWith("再消一行."))
       .map((项) => 项.名称)
       .sort();
     expect(名称).toEqual(
@@ -62,9 +62,9 @@ describe("框架配置音频表", () => {
   });
 
   test("两首背景曲谱用稳定编号登记", () => {
-    expect(音乐库.filter((项) => 项.id.startsWith("俄罗斯方块.")).map((项) => 项.id)).toEqual([
-      "俄罗斯方块.菜单",
-      "俄罗斯方块.对局",
+    expect(音乐库.filter((项) => 项.id.startsWith("再消一行.")).map((项) => 项.id)).toEqual([
+      "再消一行.菜单",
+      "再消一行.对局",
     ]);
   });
 

@@ -1,4 +1,4 @@
-import type { 游戏模式 } from "../玩法/俄罗斯方块";
+import type { 游戏模式 } from "../玩法/再消一行";
 import { 尝试上传云存档 } from "./云存档";
 import { 记录分析事件 } from "./分析";
 import { 同步平台成就 } from "./平台成就";

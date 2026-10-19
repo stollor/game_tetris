@@ -109,12 +109,12 @@ try {
   assert.ok(!(await 快照())?.interactives.some((x) => x.name === "settings.shop"));
   assert.equal(
     await 页.evaluate(
-      () => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").背景音效音量 ?? 0,
+      () => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").背景音效音量 ?? 0,
     ),
     0,
   );
   assert.equal(
-    await 页.evaluate(() => window.__俄罗斯方块音乐__?.().曲目),
+    await 页.evaluate(() => window.__再消一行音乐__?.().曲目),
     null,
     "新玩家音乐默认关闭",
   );
@@ -125,8 +125,8 @@ try {
   await 页.mouse.click(音乐框.x + 音乐框.width * 0.7, 音乐框.y + 音乐框.height / 2);
   await 页.waitForTimeout(350);
   assert.equal(
-    await 页.evaluate(() => window.__俄罗斯方块音乐__?.().曲目),
-    "俄罗斯方块.菜单",
+    await 页.evaluate(() => window.__再消一行音乐__?.().曲目),
+    "再消一行.菜单",
     "调高音乐即播放菜单曲",
   );
   assert.ok(
@@ -145,11 +145,7 @@ try {
   );
   await 页.mouse.click(音乐框.x, 音乐框.y + 音乐框.height / 2);
   await 页.waitForTimeout(200);
-  assert.equal(
-    await 页.evaluate(() => window.__俄罗斯方块音乐__?.().曲目),
-    null,
-    "音乐归零停止曲目",
-  );
+  assert.equal(await 页.evaluate(() => window.__再消一行音乐__?.().曲目), null, "音乐归零停止曲目");
   const 框 = (await 快照())?.interactives.find(
     (x) => x.name === "settings.ambient-volume.slider",
   )?.bounds;
@@ -160,7 +156,7 @@ try {
   await 页.mouse.up();
   assert.ok(
     await 页.evaluate(
-      () => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").背景音效音量 >= 70,
+      () => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").背景音效音量 >= 70,
     ),
   );
   assert.ok(
@@ -219,7 +215,7 @@ try {
           ].includes(x.name) && x.name !== 卡名,
       )
       .flatMap((x) => (x.bounds ? [{ name: x.name, x: x.bounds.x, y: x.bounds.y }] : []));
-    const 旧设置 = await 页.evaluate(() => localStorage.getItem("俄罗斯方块:设置"));
+    const 旧设置 = await 页.evaluate(() => localStorage.getItem("再消一行:设置"));
     await 会话.send("Input.dispatchTouchEvent", {
       type: "touchStart",
       touchPoints: [{ x, y, id: 1 }],
@@ -243,7 +239,7 @@ try {
     await 页.screenshot({ path: join(输出, `拖动-${分类}.png`) });
     assert.ok(新框 && Math.abs(新框.x - 卡框.x) > 20, `${分类}从卡片上横拖有效`);
     assert.equal(
-      await 页.evaluate(() => localStorage.getItem("俄罗斯方块:设置")),
+      await 页.evaluate(() => localStorage.getItem("再消一行:设置")),
       旧设置,
       "拖动不误选",
     );
@@ -272,9 +268,7 @@ try {
   assert.ok(竖拖后 && 竖拖后.y > 竖拖前.y + 20, "卡片上竖拖仍能滚动设置页");
   await 点击("settings.defaults");
   assert.equal(
-    await 页.evaluate(
-      () => JSON.parse(localStorage.getItem("俄罗斯方块:设置") ?? "{}").背景音效音量,
-    ),
+    await 页.evaluate(() => JSON.parse(localStorage.getItem("再消一行:设置") ?? "{}").背景音效音量),
     0,
   );
   assert.equal(
@@ -313,7 +307,7 @@ try {
     assert.ok(
       JSON.stringify(
         await 页.evaluate(() => window.__GAMEMAKER_TEST__?.getSnapshot("完整")),
-      ).includes("BLOCKS"),
+      ).includes("One More Line"),
       "英文标题已翻译",
     );
     await 页.screenshot({ path: join(输出, `英文-${样式}.png`) });

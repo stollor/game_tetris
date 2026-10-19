@@ -8,7 +8,7 @@ import { 打开覆盖页面 } from "../../../框架/页面切换";
 import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
 import { 旅行收藏 } from "../../存档/旅行收藏";
 import { 同步成就金币 } from "../../成就/旅行奖励";
-import type { 游戏模式 } from "../../玩法/俄罗斯方块";
+import type { 游戏模式 } from "../../玩法/再消一行";
 import { 创建菜单按钮 } from "../../界面/按钮";
 import { 创建模式选择卡 } from "../../界面/模式卡";
 import { 布置纯享层 } from "../../界面/纯享风景";
@@ -16,11 +16,11 @@ import { 布置金币条 } from "../../界面/金币条";
 import { 已解锁风景列表, 相邻已解锁风景 } from "../../界面/风景浏览";
 import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
 import { 布置烘焙底图 } from "../../视觉/风景缩略";
-import { 解析语言 } from "../../配置/俄罗斯方块文案";
-import { type 背景主题, 获取游戏设置 } from "../../配置/俄罗斯方块设置";
+import { 获取文案, 解析语言 } from "../../配置/再消一行文案";
+import { type 背景主题, 获取游戏设置 } from "../../配置/再消一行设置";
 import { 游戏外观, 游戏模式顺序 } from "../../配置/游戏外观";
 import { 界面主题 } from "../../配置/界面主题";
-import { 播放俄罗斯方块音乐, 播放场景氛围 } from "../../音频/俄罗斯方块程序音频";
+import { 播放再消一行音乐, 播放场景氛围 } from "../../音频/再消一行程序音频";
 
 export class 开始菜单 extends Phaser.Scene {
   private 视口 = { 宽: 0, 高: 0, 比例: 1 };
@@ -44,7 +44,7 @@ export class 开始菜单 extends Phaser.Scene {
     this.选择模式 = false;
     this.纯享背景 = false;
     this.重建();
-    播放俄罗斯方块音乐("菜单");
+    播放再消一行音乐("菜单");
     void 同步成就金币();
     window.addEventListener("旅行版:收藏变化", this.重建);
     this.input.on("pointerdown", 解锁程序音频);
@@ -176,10 +176,6 @@ export class 开始菜单 extends Phaser.Scene {
     const { 宽, 高 } = this.视口;
     return Math.round(高 * (高 > 宽 ? 0.36 : 0.32));
   }
-  private 副题y(): number {
-    const { 宽, 高 } = this.视口;
-    return this.标题y() + (高 > 宽 && 高 >= 640 ? 40 : 34);
-  }
   private 角钮x(): number {
     return this.视口.宽 < 420 ? 36 : 46;
   }
@@ -307,9 +303,11 @@ export class 开始菜单 extends Phaser.Scene {
         if (!判定滑动方向(指针.downX, 指针.downY, 指针.x, 指针.y)) this.进入纯享();
       });
     }
-    const 英文 = 解析语言(获取游戏设置().语言) !== "简体中文";
+    const 语言 = 解析语言(获取游戏设置().语言);
+    const 英文 = 语言 !== "简体中文";
     const t = (zh: string, en: string) => (英文 ? en : zh);
-    document.title = t("俄罗斯方块 旅行版", "Block Travel");
+    const 游戏名称 = 获取文案(语言).游戏名称;
+    document.title = 游戏名称;
     this.标题层 = this.add.container(0, 0);
     const 描边文字 = (
       x: number,
@@ -333,8 +331,8 @@ export class 开始菜单 extends Phaser.Scene {
       return 对象;
     };
     if (!this.选择模式) {
-      描边文字(宽 / 2, this.标题y(), t("俄罗斯方块", "BLOCKS"), 竖屏 && !矮屏 ? 36 : 30);
-      描边文字(宽 / 2, this.副题y(), t("旅行版", "TRAVEL"), 16, "#f0ead3");
+      const 标题字号 = 英文 ? (竖屏 && !矮屏 ? 26 : 22) : 竖屏 && !矮屏 ? 40 : 32;
+      描边文字(宽 / 2, this.标题y(), 游戏名称, 标题字号);
     }
     this.金币层 = this.add.container(0, 0);
     this.金币层.add(
@@ -474,6 +472,6 @@ export class 开始菜单 extends Phaser.Scene {
     });
   }
   private 开始(模式: 游戏模式): void {
-    this.scene.start("俄罗斯方块对局", { 模式, 日期: new Date().toISOString().slice(0, 10) });
+    this.scene.start("再消一行对局", { 模式, 日期: new Date().toISOString().slice(0, 10) });
   }
 }

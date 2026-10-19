@@ -82,7 +82,7 @@ try {
       await page.waitForTimeout(65);
     };
     const shot = (名: string) => page.screenshot({ path: `${输出}/${width}x${height}-${名}.png` });
-    const state = () => page.evaluate(() => window.__俄罗斯方块测试__!.读取状态());
+    const state = () => page.evaluate(() => window.__再消一行测试__!.读取状态());
     await shot("主菜单开始");
     await click("menu.achievements");
     await page.waitForFunction(
@@ -93,7 +93,7 @@ try {
     await page.mouse.wheel(0, 700);
     await page.waitForTimeout(120);
     check(
-      await page.evaluate(() => (window.__俄罗斯方块成就__?.().滚动 ?? 0) > 0),
+      await page.evaluate(() => (window.__再消一行成就__?.().滚动 ?? 0) > 0),
       "成就列表滚轮实际改变滚动位置",
     );
     await shot("成就列表底部");
@@ -107,21 +107,21 @@ try {
     check((await snap()).sceneId === "开始菜单", "覆盖设置返回不误触主菜单");
     await click("menu.start");
     await click("mode.马拉松");
-    await page.waitForFunction(() => Boolean(window.__俄罗斯方块测试__));
+    await page.waitForFunction(() => Boolean(window.__再消一行测试__));
     if (width === 375) {
-      await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+      await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
       await click("touch.rotate-left");
       check((await state()).当前朝向 === 3, "手机左按钮左转");
       await click("touch.rotate-right");
       check((await state()).当前朝向 === 0, "手机右按钮右转而非180°");
       await click("touch.rotate");
       check((await state()).当前朝向 === 3, "↑ 默认左转");
-      await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+      await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
       const b = (await snap()).interactives.find((o) => o.name === "touch.soft-drop")!.bounds!;
       await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
       check((await state()).当前方块 === "I", "双击 ↓ 实际速降并换下一块");
-      await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+      await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
       await page.waitForTimeout(350);
@@ -140,7 +140,7 @@ try {
       await click("game.pause");
       await click("game.leave");
       check(
-        (await state()).阶段 === "暂停" && (await snap()).sceneId === "俄罗斯方块对局",
+        (await state()).阶段 === "暂停" && (await snap()).sceneId === "再消一行对局",
         "设置遮罩阻挡底层暂停与离开",
       );
       await click(`game.settings.touch-up.${选项}`);
@@ -149,20 +149,20 @@ try {
       check((await state()).阶段 === "暂停", "关闭设置只回到暂停菜单，不穿透继续");
       await click("game.pause.resume");
       if (width === 375) {
-        await page.evaluate(() => window.__俄罗斯方块测试__!.设置序列(["T", "I", "O"]));
+        await page.evaluate(() => window.__再消一行测试__!.设置序列(["T", "I", "O"]));
         await click("touch.rotate");
         check((await state()).当前朝向 === 朝向, `↑ ${选项} 实际旋转正确`);
       }
       check(暂停前.阶段 === "暂停", "设置在暂停中编辑");
     }
-    await page.evaluate(() => window.__俄罗斯方块测试__!.准备四行消除());
+    await page.evaluate(() => window.__再消一行测试__!.准备四行消除());
     await page.keyboard.press("Space");
     await shot("成就解锁提示");
     const 存档 = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("neon-pulse:achievements") ?? "null"),
     );
     check(
-      存档?.数据?.tetris?.解锁时间 !== null &&
+      存档?.数据?.["four-lines"]?.解锁时间 !== null &&
         存档?.数据?.perfect?.进度 === 1 &&
         存档?.数据?.lines?.进度 === 4,
       "真实四行全清解锁成就并累计存档",

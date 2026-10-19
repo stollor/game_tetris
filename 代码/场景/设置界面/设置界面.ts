@@ -22,8 +22,8 @@ import { 清除实测低端 } from "../../性能/画质";
 import { 旅行主题表 } from "../../框架配置/旅行主题";
 import { 地点皮肤表, 查找地点 } from "../../框架配置/旅行地点";
 import { 背景主题选项 } from "../../视觉/霓虹背景";
-import { 获取文案, 解析语言 } from "../../配置/俄罗斯方块文案";
-import { 更新游戏设置, type 游戏设置, 获取游戏设置, 默认设置 } from "../../配置/俄罗斯方块设置";
+import { 获取文案, 解析语言 } from "../../配置/再消一行文案";
+import { 更新游戏设置, type 游戏设置, 获取游戏设置, 默认设置 } from "../../配置/再消一行设置";
 import { 方块外观方案表 } from "../../配置/方块外观";
 import { 界面主题 } from "../../配置/界面主题";
 import { 背景主题配置 } from "../../配置/背景主题";
@@ -650,25 +650,17 @@ export class 设置界面 extends Phaser.Scene {
     });
     const 同步宽 = 英文 ? 96 : 88;
     钮行.添加(
-      this.创建按钮(
-        0,
-        0,
-        同步宽,
-        34,
-        英文 ? "Sync now" : "立即同步",
-        "settings.cloud-sync",
-        () => {
-          if (this.云同步中) return;
-          this.云同步中 = true;
-          this.重建界面();
-          void 立即同步云存档()
-            .catch(() => undefined)
-            .finally(() => {
-              this.云同步中 = false;
-              if (this.sys.isActive()) this.重建界面();
-            });
-        },
-      ),
+      this.创建按钮(0, 0, 同步宽, 34, 英文 ? "Sync now" : "立即同步", "settings.cloud-sync", () => {
+        if (this.云同步中) return;
+        this.云同步中 = true;
+        this.重建界面();
+        void 立即同步云存档()
+          .catch(() => undefined)
+          .finally(() => {
+            this.云同步中 = false;
+            if (this.sys.isActive()) this.重建界面();
+          });
+      }),
       { 宽: 同步宽, 高: 34 },
     );
     钮行.添加(this.创建按钮(0, 0, 80, 34, 文案.恢复默认, "settings.defaults", this.恢复默认), {

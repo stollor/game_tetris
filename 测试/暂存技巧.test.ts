@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { type 俄罗斯方块状态, 创建新局, 暂存换块, 硬降 } from "../代码/玩法/俄罗斯方块";
+import { type 再消一行状态, 创建新局, 暂存换块, 硬降 } from "../代码/玩法/再消一行";
 import { 获取技巧反馈 } from "../代码/视觉/技巧反馈";
 
 test("暂存首次消费一个预告，重复操作无效；落块后交换不消费预告", () => {
@@ -32,7 +32,7 @@ test("暂停与结束不能暂存，换入出生碰撞会结束，新局清空�
   expect(String(s.阶段)).toBe("结束");
   expect(创建新局().暂存方块).toBeNull();
 });
-function 四行(s: 俄罗斯方块状态) {
+function 四行(s: 再消一行状态) {
   s.当前方块.类型 = "I";
   s.当前方块.格子 = [-1, 0, 1, 2].map((行) => ({ 列2: 8, 行2: 行 * 2 }));
   for (const row of s.棋盘.slice(-4)) row.fill("J")[4] = null;

@@ -1,6 +1,6 @@
 import { 亮色, 暗色 } from "Phaser框架/界面/颜色工具";
 import type Phaser from "phaser";
-import { 获取游戏设置 } from "../../代码/配置/俄罗斯方块设置";
+import { 获取游戏设置 } from "../../代码/配置/再消一行设置";
 import { type 方块外观名称, 解析方块外观, 读取当前方块外观 } from "../../代码/配置/方块外观";
 import { 绘制地点纹样 } from "./旅行纹样";
 

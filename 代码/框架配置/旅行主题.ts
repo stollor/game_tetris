@@ -1,12 +1,12 @@
 import type { 游戏主题 } from "../../框架/样式/类型";
 import { 选取对比文字色 } from "../../框架/界面/颜色工具";
 import { 地点皮肤表 } from "./旅行地点";
-import { 俄罗斯方块主题 } from "./界面主题";
+import { 再消一行主题 } from "./界面主题";
 
 const 色 = (值: number) => `#${值.toString(16).padStart(6, "0")}`;
 export const 旅行主题表: Record<string, 游戏主题> = Object.fromEntries(
   地点皮肤表.map((地点) => {
-    const 基础 = 俄罗斯方块主题.夜空鎏金;
+    const 基础 = 再消一行主题.夜空鎏金;
     const 强调 = 色(地点.强调);
     const 文字 = "#f6f1e8";
     const 主要 = { 背景: 强调, 文字: 选取对比文字色(强调), 描边: "#fff2cf" };

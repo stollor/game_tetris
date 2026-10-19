@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { 创建新局, 硬降 } from "../代码/玩法/俄罗斯方块";
+import { 创建新局, 硬降 } from "../代码/玩法/再消一行";
 
 test("四行特效快照保留实际行与每格颜色，重开不继承事件", () => {
   const s = 创建新局(() => 0, ["I", "O"]);

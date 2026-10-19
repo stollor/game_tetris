@@ -1,11 +1,11 @@
 import type { 样品设定, 预览样品 } from "GM预览协议";
 import { 选取对比文字色, 颜色字符串 } from "Phaser框架/界面/颜色工具";
 import Phaser from "phaser";
-import type { 方块类型 } from "../../代码/玩法/俄罗斯方块";
+import type { 方块类型 } from "../../代码/玩法/再消一行";
 import { 消行特效 } from "../../代码/视觉/消行特效";
 import { 落块特效 } from "../../代码/视觉/落块特效";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../代码/视觉/霓虹背景";
-import type { 背景主题 } from "../../代码/配置/俄罗斯方块设置";
+import type { 背景主题 } from "../../代码/配置/再消一行设置";
 import { 方块外观方案表 } from "../../代码/配置/方块外观";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import { 背景主题选项, 背景主题配置 } from "../../代码/配置/背景主题";

@@ -1,14 +1,14 @@
-import type { 游戏模式 } from "../玩法/俄罗斯方块";
-import { 探测Tap能力, 读取Tap宿主 } from "./Tap环境";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
 import type {
   Tap当前玩家分数结果,
   Tap排行榜分数,
   Tap排行榜分数结果,
   Tap排行榜周期,
-} from "./Tap类型";
+} from "../../框架/平台/TapTap/宿主类型";
+import type { 游戏模式 } from "../玩法/再消一行";
+import { 记录Tap用户身份 } from "./用户身份";
 import { 是未登录错误 } from "./登录";
 import { type 排行榜周期, 排行榜周期顺序, 排行榜编号, 排行榜编号按周期 } from "./配置";
-import { 记录Tap用户身份 } from "./用户身份";
 
 export type { 排行榜周期 };
 export { 排行榜周期顺序 };
@@ -52,12 +52,7 @@ export function 格式化榜分数(模式: 游戏模式, 分: number | null | un
   return Math.floor(分).toLocaleString();
 }
 
-
-export function 格式化排行榜错误(
-  代码: number | undefined,
-  原始: string,
-  英文 = false,
-): string {
+export function 格式化排行榜错误(代码: number | undefined, 原始: string, 英文 = false): string {
   const 文 = 原始 || "";
   const 码 = Number.isFinite(代码) ? 代码 : Number((文.match(/^(\d{3,6})/) || [])[1]);
   if (码 === 500001 || /not exist|未找到|不存在/i.test(文)) {
@@ -86,7 +81,6 @@ export function 格式化排行榜错误(
   if (英文) return 去码 || "Failed to load leaderboard.";
   return 去码 ? `加载失败：${去码}` : "加载排行榜失败，请稍后重试。";
 }
-
 
 export interface 排行操作结果 {
   完成: boolean;

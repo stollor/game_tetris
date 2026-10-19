@@ -1,8 +1,8 @@
 {
   "格式版本": 1,
-  "编号": "tetris",
-  "名称": "NEON PULSE · 俄罗斯方块",
-  "说明": "单机网页俄罗斯方块。现行功能策划由原策划案与当前实现逐项补录；不将补录稿伪装为历史原稿。",
+  "编号": "one-more-line",
+  "名称": "再消一行",
+  "说明": "单机网页方块消除游戏《再消一行》。现行功能策划由原策划案与当前实现逐项补录；不将补录稿伪装为历史原稿。",
   "分组": [
     {
       "id": "core",
@@ -41,7 +41,12 @@
     "visual-feedback.json",
     "audio.json",
     "achievements-records.json",
-    "travel-collection.json"
+    "travel-collection.json",
+    "performance-board-layers.json",
+    "performance-scenery.json",
+    "performance-hud.json",
+    "performance-idle.json",
+    "performance-layer-quality.json"
   ],
   "关系": [
     {
