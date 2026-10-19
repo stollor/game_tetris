@@ -74,7 +74,10 @@ let 棋盘左侧 = 354;
 let 棋盘顶部 = 70;
 
 /** 仅在内容变化时重建文字纹理，避免每帧重绘导致的开销与截图渐裂。 */
-function 若变化设置文字(文本: Phaser.GameObjects.Text | undefined, 内容: string): void {
+function 若变化设置文字(
+  文本: Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText | undefined,
+  内容: string,
+): void {
   if (文本 && 文本.text !== 内容) 文本.setText(内容);
 }
 interface 本地测试接口 {
@@ -186,7 +189,7 @@ export class 对局 extends Phaser.Scene {
   private 背景动画层?: Phaser.GameObjects.Graphics;
   private 背景主题: 背景主题 = 获取游戏设置().背景主题;
   private 信息栏?: 界面数值面板;
-  private 模式文字?: Phaser.GameObjects.Text;
+  private 模式文字?: Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText;
   private 最佳纪录缓存?: string;
   private 状态文字?: Phaser.GameObjects.Text;
   private 提示文字?: Phaser.GameObjects.Text;
@@ -314,7 +317,7 @@ export class 对局 extends Phaser.Scene {
       点击: () => {
         if (this.状态.阶段 !== "进行中") return;
         this.操作硬降();
-        this.更新界面();
+        this.更新界面(false);
       },
       覆盖: {
         强调色: 界面主题().文字.强调,
@@ -432,7 +435,7 @@ export class 对局 extends Phaser.Scene {
       this.重置横移(this.左移输入);
       this.重置横移(this.右移输入);
       this.播放对局音效("暂存");
-      this.更新界面();
+      this.更新界面(false);
     }
   }
   private 布局界面 = (): void => {
@@ -531,7 +534,7 @@ export class 对局 extends Phaser.Scene {
     this.模式文字
       ?.setPosition(棋盘中心X, 棋盘顶部 - 12)
       .setOrigin(0.5, 1)
-      .setFontSize(this.竖屏布局 ? "11px" : "12px")
+      .setFontSize(this.竖屏布局 ? 11 : 12)
       .setVisible(this.模式 !== "马拉松");
     this.纪录页脚?.布局({
       竖屏: this.竖屏布局,
@@ -667,7 +670,7 @@ export class 对局 extends Phaser.Scene {
     if (事件.code === "Space") {
       this.操作硬降();
     }
-    this.更新界面();
+    this.更新界面(false);
   };
 
   private readonly 处理按键松开 = (事件: KeyboardEvent): void => {
@@ -687,7 +690,7 @@ export class 对局 extends Phaser.Scene {
     输入.按住毫秒 = 0;
     输入.下次横移毫秒 = 133;
     if (移动方块(this.状态, 方向, 0, this.当前随机源)) this.播放对局音效("移动");
-    this.更新界面();
+    this.更新界面(false);
   }
 
   private 重置横移(输入: 横移输入): void {
@@ -703,7 +706,7 @@ export class 对局 extends Phaser.Scene {
     while (输入.按住毫秒 >= 输入.下次横移毫秒) {
       if (移动方块(this.状态, 方向, 0, this.当前随机源)) this.播放对局音效("移动");
       输入.下次横移毫秒 += 33;
-      this.更新界面();
+      this.更新界面(false);
     }
   }
 
@@ -800,7 +803,7 @@ export class 对局 extends Phaser.Scene {
         棋盘: structuredClone(this.状态.棋盘),
       }),
       读取界面: () => {
-        const 读取文字 = (文字?: Phaser.GameObjects.Text) => ({
+        const 读取文字 = (文字?: Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText) => ({
           文本: 文字?.text ?? "",
           可见: Boolean(文字?.visible),
         });
@@ -964,7 +967,7 @@ export class 对局 extends Phaser.Scene {
       高: 游戏外观.布局.信息栏高度,
       文案: this.取文案(),
     });
-    this.模式文字 = 创建对局模式文字(this);
+    this.模式文字 = 创建对局模式文字(this, this.模式 === "冲刺");
     this.纪录页脚 = 创建对局纪录页脚(this, this.取文案());
     this.状态文字 = this.add
       .text(0, 0, "", {
@@ -1075,7 +1078,7 @@ export class 对局 extends Phaser.Scene {
         }
         const 方向 = 操作 === "旋转" ? 获取游戏设置().手机上键旋转 : 操作;
         this.操作旋转(方向 === "左转" ? -1 : 1, 方向 === "180度");
-        this.更新界面();
+        this.更新界面(false);
       } else if (操作 === "软降") {
         const 现在 = performance.now();
         this.手机下键按下 = 现在;
@@ -1084,12 +1087,12 @@ export class 对局 extends Phaser.Scene {
         if (this.手机下键已速降) {
           this.按住按键.delete("ArrowDown");
           this.操作硬降();
-          this.更新界面();
+          this.更新界面(false);
           return;
         }
         this.按住按键.add("ArrowDown");
         this.操作软降();
-        this.更新界面();
+        this.更新界面(false);
       }
     });
     操作区.on("control-up", (操作: 触屏操作) => {

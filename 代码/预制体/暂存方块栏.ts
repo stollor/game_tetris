@@ -2,10 +2,10 @@ import Phaser from "phaser";
 import { 界面按钮 } from "../../框架/界面/按钮";
 import type { 方块类型 } from "../玩法/再消一行";
 import { 绘制方块单元预制体 } from "../界面/方块单元";
+import { 创建图像池, type 图像池 } from "../视觉/图像池";
+import { 获取游戏设置 } from "../配置/再消一行设置";
 import { 游戏外观 } from "../配置/游戏外观";
 import { 界面主题 } from "../配置/界面主题";
-import { 获取游戏设置 } from "../配置/再消一行设置";
-import { 创建图像池, type 图像池 } from "../视觉/图像池";
 import { 出生格 } from "./下一个方块栏";
 
 export class 暂存方块栏 extends Phaser.GameObjects.Container {

@@ -124,6 +124,22 @@ function 包装实例(对象: Phaser.GameObjects.GameObject): () => void {
       else Reflect.deleteProperty(对象, "updateText");
     };
   }
+  if (对象 instanceof Phaser.GameObjects.BitmapText) {
+    const 原设置文字 = 对象.setText;
+    const 有自有方法 = Object.hasOwn(对象, "setText");
+    const 设置文字 = (内容: string | string[]): Phaser.GameObjects.BitmapText => {
+      const 旧文字 = 对象.text;
+      原设置文字.call(对象, 内容);
+      if (对象.text !== 旧文字) 脏 = true;
+      return 对象;
+    };
+    对象.setText = 设置文字;
+    return () => {
+      if (对象.setText !== 设置文字) return;
+      if (有自有方法) 对象.setText = 原设置文字;
+      else Reflect.deleteProperty(对象, "setText");
+    };
+  }
   return () => {};
 }
 

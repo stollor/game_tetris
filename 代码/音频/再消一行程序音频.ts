@@ -1,4 +1,4 @@
-import type { 程序音频环境 } from "../../框架/音频/程序音频";
+import { type 程序音频环境, 释放程序输出 } from "../../框架/音频/程序音频";
 import type { 音效谱 } from "../../框架/音频/音效目录";
 import { 演奏音效 } from "../../框架/音频/音效编排";
 import {
@@ -222,6 +222,7 @@ function 启动场景氛围(环境: 程序音频环境, 主题: 氛围主题): v
   }
   氛围停止 = () => {
     for (const 停 of 停止项) 停();
+    释放程序输出(氛围输出);
     氛围输出.disconnect();
     if (氛围点缀) clearInterval(氛围点缀);
     氛围点缀 = undefined;

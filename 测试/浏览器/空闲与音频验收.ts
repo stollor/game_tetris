@@ -3,14 +3,18 @@ import { mkdir, writeFile } from "node:fs/promises";
 import type Phaser from "phaser";
 import { chromium } from "playwright";
 import type {} from "../../代码/场景/对局/对局";
+import { 读取测试快照 } from "../../框架/开发/浏览器测试操作";
+import { 计算画布点击位置 } from "../../框架/开发/画布点击";
 
 declare global {
   interface Window {
     __音频验收__: {
       上下文: AudioContext[];
       循环: Set<AudioBufferSourceNode>;
+      空闲循环: Set<AudioBufferSourceNode>;
       输出: Set<AudioNode>;
       音符: number;
+      读取音频?: NonNullable<Window["__再消一行测试__"]>["读取音频"];
     };
   }
 }
@@ -21,7 +25,7 @@ await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 页 = await 浏览器.newPage({
   viewport: { width: 390, height: 844 },
-  deviceScaleFactor: 3,
+  deviceScaleFactor: 1,
   isMobile: true,
   hasTouch: true,
 });
@@ -32,15 +36,12 @@ const 错误: string[] = [];
 });
 
 async function 点击(名称: string) {
-  const 框 = await 页.evaluate(
-    (名) =>
-      window.__GAMEMAKER_TEST__
-        ?.getSnapshot()
-        .interactives.find((x) => x.name === 名 && x.visible && x.enabled)?.bounds,
-    名称,
-  );
-  assert.ok(框, 名称);
-  await 页.touchscreen.tap((框.x + 框.width / 2) / 3, (框.y + 框.height / 2) / 3);
+  const 快照 = await 读取测试快照(页);
+  const 按钮 = 快照.interactives.find((项) => 项.name === 名称 && 项.visible && 项.enabled);
+  const 画布 = await 页.locator("canvas").first().boundingBox();
+  assert.ok(按钮 && 画布, 名称);
+  const 坐标 = 计算画布点击位置(按钮, 画布, { 宽度: 快照.width, 高度: 快照.height });
+  await 页.touchscreen.tap(坐标.x, 坐标.y);
 }
 
 async function 数帧(毫秒 = 1200) {
@@ -117,6 +118,7 @@ try {
     const 数据 = {
       上下文: [] as AudioContext[],
       循环: new Set<AudioBufferSourceNode>(),
+      空闲循环: new Set<AudioBufferSourceNode>(),
       输出: new Set<AudioNode>(),
       音符: 0,
     };
@@ -183,6 +185,9 @@ try {
   await 点击("mode.马拉松");
   await 页.waitForFunction(() => Boolean(window.__再消一行测试__));
   console.log("已进入对局");
+  await 页.evaluate(() => {
+    window.__音频验收__.读取音频 = window.__再消一行测试__?.读取音频;
+  });
   await 页.waitForTimeout(1200);
   const 玩法 = await 数帧();
   assert.ok(玩法.更新 > 45, "玩法恢复高频更新");
@@ -224,6 +229,26 @@ try {
   await 页.waitForFunction(() => window.__GAMEMAKER_TEST__?.getSnapshot().sceneId === "设置界面");
   console.log("已进入设置");
   await 音量("music", 45);
+  await 页.waitForFunction(
+    () =>
+      [...window.__音频验收__.循环].some(
+        (源) => 源.context === window.__音频验收__.上下文[0] && (源.buffer?.duration ?? 0) > 1,
+      ),
+    undefined,
+    { timeout: 10000 },
+  );
+  console.log(
+    "音乐准备",
+    await 页.evaluate(() => ({
+      曲目: window.__再消一行音乐__?.(),
+      实际: window.__音频验收__.读取音频?.(),
+      循环: [...window.__音频验收__.循环].map((源) => ({
+        离线: 源.context instanceof OfflineAudioContext,
+        状态: 源.context.state,
+        时长: 源.buffer?.duration,
+      })),
+    })),
+  );
   const 音乐电平 = await 电平();
   assert.ok(音乐电平 > 0.0001, "音量提高后实际有音乐波形");
   console.log("音乐电平", 音乐电平);
@@ -231,19 +256,55 @@ try {
   await 页.waitForTimeout(300);
   const 静音电平 = await 电平();
   assert.ok(静音电平 < 0.0001, "音乐归零后实际静音");
+  await 页.evaluate(() => {
+    // 音效复用池保留关闭音门的噪声源；环境声需与这些既有源区分。
+    window.__音频验收__.空闲循环 = new Set(window.__音频验收__.循环);
+  });
   await 音量("ambient", 45);
   console.log("已开启环境声");
-  await 页.waitForFunction(() => window.__音频验收__.循环.size > 0);
+  await 页.waitForFunction(() =>
+    [...window.__音频验收__.循环].some((源) => !window.__音频验收__.空闲循环.has(源)),
+  );
   const 环境电平 = await 电平();
   assert.ok(环境电平 > 0.0001, "环境声实际发声");
   await 页.evaluate(() => window.dispatchEvent(new Event("blur")));
   console.log("已失焦");
-  await 页.waitForFunction(() => window.__音频验收__.循环.size === 0);
+  await 页.waitForFunction(() =>
+    [...window.__音频验收__.循环].every((源) => window.__音频验收__.空闲循环.has(源)),
+  );
   await 页.evaluate(() => window.dispatchEvent(new Event("focus")));
   console.log("已恢复焦点");
-  await 页.waitForFunction(() => window.__音频验收__.循环.size > 0);
+  await 页.waitForFunction(() =>
+    [...window.__音频验收__.循环].some((源) => !window.__音频验收__.空闲循环.has(源)),
+  );
   await 音量("ambient", 0);
-  await 页.waitForFunction(() => window.__音频验收__.循环.size === 0);
+  await 页.waitForFunction(() =>
+    [...window.__音频验收__.循环].every((源) => window.__音频验收__.空闲循环.has(源)),
+  );
+  const 读取声部 = () =>
+    页.evaluate(() => {
+      const 采集 = window.__GAMEMAKER_TEST__?.性能;
+      if (!采集) throw new Error("缺少音频资源采集");
+      return 采集
+        .读取()
+        .专项.filter((项) => 项.名称 === "程序声部在用" || 项.名称 === "程序声部空闲");
+    });
+  await 页.evaluate(() => window.__GAMEMAKER_TEST__?.性能?.开始());
+  const 声部基线 = await 读取声部();
+  const 切换回收 = [];
+  for (let 次 = 0; 次 < 2; 次++) {
+    const 前音符 = await 页.evaluate(() => window.__音频验收__.音符);
+    await 音量("ambient", 45);
+    // 等真实9.2秒环境点缀，覆盖其专属输出声部池，不能只检查风声循环。
+    await 页.waitForFunction((前) => window.__音频验收__.音符 > 前, 前音符);
+    await 音量("ambient", 0);
+    await 页.waitForTimeout(1100);
+    const 回收后 = await 读取声部();
+    切换回收.push(回收后);
+  }
+  await writeFile(`${输出}/环境点缀回收.json`, JSON.stringify({ 声部基线, 切换回收 }, null, 2));
+  for (const 回收后 of 切换回收) assert.deepEqual(回收后, 声部基线, "环境点缀关闭后释放专属声部池");
+  await 页.evaluate(() => window.__GAMEMAKER_TEST__?.性能?.停止());
   await 页.evaluate(() => window.__游戏__.events.emit("hidden"));
   const 隐藏 = await 数帧();
   assert.equal(隐藏.更新, 0, "Phaser 隐藏事件停止空闲定时器");
@@ -287,6 +348,14 @@ try {
       场景: window.__GAMEMAKER_TEST__?.getSnapshot().sceneId,
       音频: window.__音频验收__?.上下文.map((c) => c.state),
       循环: window.__音频验收__?.循环.size,
+      输出: [...window.__音频验收__.输出].map((节点) => ({
+        增益: 节点 instanceof GainNode ? 节点.gain.value : null,
+        时间: 节点.context.currentTime,
+      })),
+      缓冲: [...window.__音频验收__.循环].map((源) => ({
+        时长: 源.buffer?.duration,
+        非零: 源.buffer?.getChannelData(0).some((值) => Math.abs(值) > 0.0001),
+      })),
     })),
   );
   await 页.screenshot({ path: `${输出}/失败.png` });

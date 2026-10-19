@@ -1,7 +1,7 @@
 import Phaser from "phaser";
+import { 设为动态层 } from "../性能/图形烘焙";
 import type { 再消一行状态 } from "../玩法/再消一行";
 import { 界面主题, 颜色值 } from "../配置/界面主题";
-import { 设为动态层 } from "../性能/图形烘焙";
 
 /** 消行只画每行一条光带，最多四行。不再为每个格子生成碎片精灵。 */
 export class 消行特效 extends Phaser.GameObjects.Container {
@@ -53,12 +53,9 @@ export class 消行特效 extends Phaser.GameObjects.Container {
       if (t < 90)
         this.背景.fillStyle(0xffffff, (1 - t / 90) * 0.85).fillRect(0, 行 * 格, 10 * 格, 格);
       const 光宽 = 10 * 格 * Math.min(1, t / 140);
-      this.背景.fillStyle(强调, 淡 * 0.9).fillRect(
-        5 * 格 - 光宽 / 2,
-        (行 + 0.48) * 格,
-        光宽,
-        Math.max(2, 格 * 0.09),
-      );
+      this.背景
+        .fillStyle(强调, 淡 * 0.9)
+        .fillRect(5 * 格 - 光宽 / 2, (行 + 0.48) * 格, 光宽, Math.max(2, 格 * 0.09));
     });
     if (this.行.length === 4) this.绘制四行(格);
   }
@@ -89,7 +86,9 @@ export class 消行特效 extends Phaser.GameObjects.Container {
       this.前景
         .fillGradientStyle(0xffdb70, 0xffdb70, 0xffffff, 0xffffff, 0, 0, 淡 * 0.22, 淡 * 0.22)
         .fillRect(0, Math.max(0, 扫Y - 格 * 1.5), 10 * 格, Math.min(格 * 1.5, 扫Y));
-      this.前景.lineStyle(Math.max(2, 格 * 0.12), 0xffedb5, 淡 * 0.7).lineBetween(0, 扫Y, 10 * 格, 扫Y);
+      this.前景
+        .lineStyle(Math.max(2, 格 * 0.12), 0xffedb5, 淡 * 0.7)
+        .lineBetween(0, 扫Y, 10 * 格, 扫Y);
     }
     this.前景
       .lineStyle(Math.max(2, 格 * 0.12), 0xffdb70, 淡 * 0.85)

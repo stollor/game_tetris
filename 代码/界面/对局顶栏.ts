@@ -1,8 +1,10 @@
 import type Phaser from "phaser";
+import { 创建字符图集文字 } from "../../框架/界面/字符图集文字";
 import type { 界面数值面板 } from "../../框架/界面/数值面板";
 import { 创建霓虹信息栏, 创建霓虹模式文字 } from "../../组件/霓虹街机/对局顶栏";
 import { 读取霓虹调色板 } from "../../组件/霓虹街机/调色板";
 import type { 游戏文案 } from "../语言/类型";
+import { 颜色值 } from "../配置/界面主题";
 
 export interface 对局信息栏选项 {
   x: number;
@@ -29,6 +31,20 @@ export function 创建对局信息栏(场景: Phaser.Scene, 选项: 对局信息
 }
 
 /** 棋盘上方的模式提示文字，内容由场景按模式更新。 */
-export function 创建对局模式文字(场景: Phaser.Scene): Phaser.GameObjects.Text {
-  return 创建霓虹模式文字(场景, "");
+export function 创建对局模式文字(
+  场景: Phaser.Scene,
+  缓存计时 = false,
+): Phaser.GameObjects.Text | Phaser.GameObjects.BitmapText {
+  const 文字 = 创建霓虹模式文字(场景, "");
+  if (!缓存计时) return 文字;
+  try {
+    return 创建字符图集文字(场景, {
+      字符集: "0123456789 .sL·",
+      字体: 文字.style.fontFamily,
+      字号: 11,
+      分辨率: 文字.style.resolution,
+    }).setTint(颜色值(读取霓虹调色板().强调色));
+  } finally {
+    文字.destroy();
+  }
 }

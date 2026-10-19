@@ -1,6 +1,6 @@
-import { 创建Phaser构建插件 } from "./Phaser构建";
-import { readFileSync, readdirSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { 创建Phaser构建插件 } from "./Phaser构建";
 
 const 产物目录 = "./产物";
 for (const 名 of readdirSync(产物目录, { withFileTypes: true })) {
