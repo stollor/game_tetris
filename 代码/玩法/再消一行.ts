@@ -359,6 +359,13 @@ export function 暂存换块(s: 再消一行状态, rand: () => number = Math.ra
 export function 读取格子(p: 活动方块): [number, number][] {
   return p.格子.map((c) => [c.列2 / 2, c.行2 / 2]);
 }
+/** 预览用：方块出生形状平移到左上角后的行列（Three 版的下一个/暂存栏使用）。 */
+export function 预览格子(类型: 方块类型): [number, number][] {
+  const 格子 = 方块出生格[类型];
+  const 最小列 = Math.min(...格子.map(([列]) => 列));
+  const 最小行 = Math.min(...格子.map(([, 行]) => 行));
+  return 格子.map(([列, 行]) => [列 - 最小列, 行 - 最小行]);
+}
 export function 可以放置(s: 再消一行状态, p: 活动方块): boolean {
   return 读取格子(p).every(
     ([x, y]) =>

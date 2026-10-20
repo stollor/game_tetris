@@ -22,5 +22,5 @@
     }
   },
   "include": ["代码", "运行", "框架", "组件", "测试"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "框架Three"]
 }

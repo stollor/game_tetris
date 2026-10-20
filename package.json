@@ -10,14 +10,18 @@
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "test": "bun ./运行/运行游戏命令.ts test",
-    "test:browser": "bun ./运行/运行游戏命令.ts ./测试/浏览器验收.ts"
+    "test:browser": "bun ./运行/运行游戏命令.ts ./测试/浏览器验收.ts",
+    "dev:three": "bun ./运行/运行游戏命令.ts ./运行/Three开发服务器.ts",
+    "build:three": "bun ./运行/运行游戏命令.ts ./运行/构建Three版.ts"
   },
   "dependencies": {
-    "phaser": "^4.2.1"
+    "phaser": "^4.2.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "@types/bun": "^1.4.2",
+    "@types/three": "^0.186.0",
     "playwright": "^1.63.0",
     "typescript": "^7.0.2"
   }
