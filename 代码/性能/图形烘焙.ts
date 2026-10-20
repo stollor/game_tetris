@@ -540,6 +540,9 @@ export function 获取烘焙贴图(
     if (!边界) {
       return null;
     }
+    // 图章与普通烘焙一样对齐物理像素，避免方块轮廓在入图集时先被插值一次。
+    边界.左 = Math.floor(边界.左 * 比) / 比;
+    边界.顶 = Math.floor(边界.顶 * 比) / 比;
     const 宽 = Math.max(1, Math.ceil((边界.右 - 边界.左) * 比));
     const 高 = Math.max(1, Math.ceil((边界.底 - 边界.顶) * 比));
     const 预算 = 获取纹理预算(场景);

@@ -56,6 +56,7 @@ try {
   for (const [像素比, 省电, 动态] of [
     [1, false, true],
     [3, false, true],
+    [3.25, false, true],
     [3, true, true],
     [3, true, false],
   ] as const) {
@@ -104,7 +105,35 @@ try {
       const 游戏 = window.__游戏__;
       const 场景 = 游戏.scene.getScene("再消一行对局");
       const 缓存: { 比: number; 需要: number }[] = [];
-      const 扫描 = (对象: Phaser.GameObjects.GameObject): void => {
+      const 操作文字: { 字号: number; 分辨率: number; 高: number }[] = [];
+      const 图章原点: number[] = [];
+      const 合成采样: { 键: string; 倍率: number; 宽: number; 高: number }[] = [];
+      const 扫描 = (对象: Phaser.GameObjects.GameObject, 操作区 = false): void => {
+        操作区 ||= [
+          "touch.left",
+          "touch.right",
+          "touch.soft-drop",
+          "touch.rotate",
+          "touch.rotate-left",
+          "touch.rotate-right",
+        ].includes(对象.name);
+        if (操作区 && 对象.type === "Text") {
+          const 字 = 对象 as Phaser.GameObjects.Text;
+          操作文字.push({
+            字号: Number.parseFloat(String(字.style.fontSize)),
+            分辨率: 字.style.resolution,
+            高: 字.height,
+          });
+        }
+        if (对象.type === "Image") {
+          const 图 = 对象 as Phaser.GameObjects.Image;
+          if (图.texture.key.startsWith("图章图集."))
+            图章原点.push(图.displayOriginX, 图.displayOriginY);
+          if (/^(冻结画面|画面层)\./.test(图.texture.key) && 图.visible) {
+            const 矩阵 = 图.getWorldTransformMatrix();
+            合成采样.push({ 键: 图.texture.key, 倍率: Math.max(Math.hypot(矩阵.a, 矩阵.b), Math.hypot(矩阵.c, 矩阵.d)) * 场景.cameras.main.zoom, 宽: 图.frame.width, 高: 图.frame.height });
+          }
+        }
         const 图 = 对象 as Phaser.GameObjects.Graphics & { __烘焙?: { 比: number } };
         if (图.__烘焙) {
           const 矩阵 = 图.getWorldTransformMatrix();
@@ -116,13 +145,35 @@ try {
           });
         }
         if (对象.type === "Container")
-          for (const 子 of (对象 as Phaser.GameObjects.Container).list) 扫描(子);
+          for (const 子 of (对象 as Phaser.GameObjects.Container).list) 扫描(子, 操作区);
       };
-      场景.children.list.forEach(扫描);
-      return { 宽: 游戏.canvas.width, 高: 游戏.canvas.height, 限帧: 游戏.loop.fpsLimit, 缓存 };
+      for (const 对象 of 场景.children.list) 扫描(对象);
+      return {
+        宽: 游戏.canvas.width,
+        高: 游戏.canvas.height,
+        限帧: 游戏.loop.fpsLimit,
+        缓存,
+        操作文字,
+        图章原点,
+        合成采样,
+      };
     });
-    assert.equal(清晰度.宽, 390 * 像素比);
-    assert.equal(清晰度.高, 844 * 像素比);
+    assert.equal(清晰度.宽, Math.floor(390 * 像素比));
+    assert.equal(清晰度.高, Math.floor(844 * 像素比));
+    assert.equal(清晰度.操作文字.length, 6);
+    assert.ok(清晰度.合成采样.some((项) => 项.键.startsWith("冻结画面.")) && 清晰度.合成采样.some((项) => 项.键.startsWith("画面层.")), "实际使用操作区与棋盘合成纹理");
+    assert.ok(清晰度.合成采样.every((项) => 项.倍率 <= 1.001), `合成后仍保持物理像素精度：${JSON.stringify(清晰度.合成采样)}`);
+    assert.ok(
+      清晰度.操作文字.every(
+        (字) => 字.字号 >= 14 && 字.分辨率 >= Math.max(2, 像素比) && 字.高 <= 54,
+      ),
+      "操作区文字够大、纹理覆盖画布精度且不裁切",
+    );
+    assert.ok(
+      清晰度.图章原点.length > 0 &&
+        清晰度.图章原点.every((值) => Math.abs(值 - Math.round(值)) < 0.001),
+      "方块图章原点对齐纹理像素",
+    );
     assert.equal(清晰度.限帧, 省电 ? 30 : 60);
     assert.ok(清晰度.缓存.length > 10);
     assert.ok(

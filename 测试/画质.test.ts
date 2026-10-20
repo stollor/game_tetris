@@ -19,8 +19,8 @@ test("设置优先于自动判定；两档都保留 3 倍清晰度", () => {
   expect(是省电模式("开", { 核心数: 16 })).toBe(true);
   expect(是省电模式("关", { 核心数: 2 })).toBe(false);
   expect(是省电模式("自动", { 核心数: 2 })).toBe(true);
-  expect(计算像素比上限(true)).toBe(3);
-  expect(计算像素比上限(false)).toBe(3);
+  expect(计算像素比上限(true)).toBe(4);
+  expect(计算像素比上限(false)).toBe(4);
   expect(画质参数.标准帧率).toBe(60);
   expect(画质参数.省电帧率).toBe(30);
 });
