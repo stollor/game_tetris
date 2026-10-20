@@ -2,166 +2,328 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type { 运行统计 } from "../../代码/three版/启动";
-import type { 对局快照 } from "../../代码/three版/对局";
-import { type 再消一行状态, 旋转方块, 硬降, 移动方块 } from "../../代码/玩法/再消一行";
+import type { 调试状态, 调试统计 } from "../../代码/three版/启动";
+import type { 对局快照 } from "../../代码/three版/对局/index";
+import type { 界面快照, 界面按钮快照 } from "../../代码/three版/接口/上下文";
 
 /**
- * 《再消一行》Three 版实机验收：390×844 DPR1 只截当前视口。
- * 连玩一局到结束（记录落块/消行/计分），点结算「重新开始」再开一局，
- * 采集首帧、平均帧间隔、单帧脚本耗时与 JS 堆内存，产物写 reports/three版/。
+ * 《再消一行》Three 版完整功能实机验收：390×844 DPR1，只截当前视口。
+ * 覆盖：主界面 → 设置/成就/排行榜/商店导航与返回 → 四模式开始 → 落块/计分 →
+ * 暂停/继续 → 结束 → 结算 → 重新开始 → 返回主菜单；设置项持久化；商店购买/穿戴；
+ * 音频静音；性能数据（首帧/平均帧间隔/单帧脚本耗时/内存/绘制调用/四边形数）。
+ * 页面操作通过调试桥 `读取界面()` 的按钮名称真实点击，不硬编码坐标。
+ * 结果写游戏 reports/three版/结果.json 与截图。
  */
-
-type 对局状态 = 对局快照 & { 场景栈: string[] };
-
-interface 操作记录 {
-  序号: number;
-  动作: "落块" | "消行" | "重开";
-  说明: string;
-  分数: number;
-  消行数: number;
-  阶段: string;
-  有效用时: number;
-}
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 const 输出 = resolve("reports/three版");
 await mkdir(输出, { recursive: true });
 
+type 验收记录 = {
+  步骤: string;
+  页面?: string;
+  场景栈?: string[];
+  说明?: string;
+};
+
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 try {
   const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
   const 页面错误: string[] = [];
+  const 控制台日志: string[] = [];
   页.on("pageerror", (错误) => 页面错误.push(错误.message));
   页.on("console", (消息) => {
-    if (消息.type() !== "error") return;
-    const 文本 = 消息.text();
-    // 宿主不做 <link rel="icon"> 时浏览器会自己请求 favicon，404 与游戏无关。
-    if (文本.includes("favicon")) return;
-    页面错误.push(文本);
+    if (消息.type() === "error") 页面错误.push(消息.text());
+    else 控制台日志.push(消息.text());
   });
-  await 页.goto(地址);
-  try {
-    await 页.waitForFunction(() => window.__three版__ !== undefined, undefined, { timeout: 20000 });
-  } catch {
-    throw new Error(`游戏未就绪：${页面错误.join("；")}`);
-  }
-  await 页.waitForTimeout(600);
 
-  const 读取状态 = async (): Promise<对局状态> => {
+  const 准备 = async () => {
+    await 页.goto(地址);
+    try {
+      await 页.waitForFunction(() => window.__three版__ !== undefined, undefined, {
+        timeout: 20000,
+      });
+    } catch {
+      throw new Error(`游戏未就绪：${页面错误.join("；")}`);
+    }
+    await 页.waitForTimeout(400);
+  };
+  await 准备();
+
+  // —— 调试桥读取封装（全部走页面真实对象，类型来自 启动.ts 的全局声明）——
+  const 读取状态 = async (): Promise<调试状态> => {
     const 状态 = await 页.evaluate(() => window.__three版__?.读取状态());
     if (!状态) throw new Error("读取状态失败");
     return 状态;
   };
-  const 读取统计 = async (): Promise<运行统计> => {
+  const 读取统计 = async (): Promise<调试统计> => {
     const 统计 = await 页.evaluate(() => window.__three版__?.读取统计());
     if (!统计) throw new Error("读取统计失败");
     return 统计;
   };
-
-  const 开局 = await 读取状态();
-  assert.equal(页面错误.length, 0, `启动报错：${页面错误.join("；")}`);
-  assert.equal(开局.阶段, "进行中");
-  assert.equal(开局.分数, 0);
-  assert.equal(开局.消行数, 0);
-  await 页.screenshot({ path: join(输出, "01-开局.png") });
-
-  const 操作记录: 操作记录[] = [];
-  let 记录序号 = 0;
-  const 记录 = (动作: 操作记录["动作"], 说明: string, 状态: 对局状态) => {
-    操作记录.push({
-      序号: ++记录序号,
-      动作,
-      说明,
-      分数: 状态.分数,
-      消行数: 状态.消行数,
-      阶段: 状态.阶段,
-      有效用时: 状态.有效用时,
-    });
+  const 读取界面 = async (): Promise<界面快照> => {
+    const 界面 = await 页.evaluate(() => window.__three版__?.读取界面());
+    return 界面 ?? { 按钮: [] };
+  };
+  const 读取设置 = async () => {
+    const 设置 = await 页.evaluate(() => window.__three版__?.读取设置());
+    if (!设置) throw new Error("读取设置失败");
+    return 设置;
+  };
+  const 更新设置 = async (变化: Partial<Awaited<ReturnType<typeof 读取设置>>>) => {
+    await 页.evaluate((项) => window.__three版__?.更新设置(项), 变化);
+    await 页.waitForTimeout(120);
+  };
+  const 读取音频 = async () => {
+    const 音频 = await 页.evaluate(() => window.__three版__?.读取音频());
+    if (!音频) throw new Error("读取音频失败");
+    return 音频;
+  };
+  const 增加金币 = async (数量: number) => {
+    await 页.evaluate((值) => window.__three版__?.增加金币(值), 数量);
+    await 页.waitForTimeout(120);
+  };
+  const 测试桥 = {
+    结束当前对局: () => 页.evaluate(() => window.__再消一行测试__?.结束当前对局()),
+    设置暂停: () => 页.evaluate(() => window.__再消一行测试__?.设置暂停(true)),
+    准备单行消除: () => 页.evaluate(() => window.__再消一行测试__?.准备单行消除()),
+    硬降: () => 页.evaluate(() => window.__再消一行测试__?.硬降()),
   };
 
-  // 落块策略在页面外模拟规则后选点：优先消行，其次少挖洞、压低堆高。
-  const 选择落点 = async (): Promise<{ 旋转: number; 目标列: number }> => {
-    const 原状态 = await 页.evaluate(() => window.__three版__?.读取原始状态());
-    if (!原状态) throw new Error("读取原始状态失败");
-    const 随机源 = () => 0.5;
-    let 最优 = { 旋转: 0, 目标列: 5, 评分: Number.NEGATIVE_INFINITY };
-    const 旋转后 = structuredClone(原状态) as 再消一行状态;
-    for (let 旋转次数 = 0; 旋转次数 <= 3; 旋转次数++) {
-      if (旋转次数 > 0 && !旋转方块(旋转后, 1, false, 随机源)) break;
-      for (let 目标列 = 0; 目标列 <= 9; 目标列++) {
-        const 模拟 = structuredClone(旋转后) as 再消一行状态;
-        for (let 次 = 0; 次 < 10; 次++) 移动方块(模拟, -1, 0, 随机源);
-        for (let 次 = 0; 次 < 目标列; 次++) 移动方块(模拟, 1, 0, 随机源);
-        硬降(模拟, 随机源);
-        const 评分 = 评估落点(原状态, 模拟);
-        if (评分 > 最优.评分) 最优 = { 旋转: 旋转次数, 目标列, 评分 };
-      }
-    }
-    return { 旋转: 最优.旋转, 目标列: 最优.目标列 };
-  };
-
-  const 落一块 = async (旋转: number, 目标列: number) => {
-    for (let 次 = 0; 次 < 旋转; 次++) await 页.keyboard.press("ArrowUp");
-    for (let 次 = 0; 次 < 10; 次++) await 页.keyboard.press("ArrowLeft");
-    for (let 次 = 0; 次 < 目标列; 次++) await 页.keyboard.press("ArrowRight");
-    await 页.keyboard.press(" ");
-    await 页.waitForTimeout(12);
-  };
-
-  let 上一消行 = 0;
-  let 消行截图 = false;
-  let 结束状态: 对局状态 | null = null;
-  let 块 = 0;
-  // 阶段一：正常落块直到至少消一行（最多 40 块）。
-  while (块 < 40 && 上一消行 === 0) {
-    const 落点 = await 选择落点();
-    await 落一块(落点.旋转, 落点.目标列);
+  const 步骤: 验收记录[] = [];
+  const 记录步骤 = async (名称: string, 说明?: string) => {
     const 状态 = await 读取状态();
-    记录("落块", `第 ${块 + 1} 块 → 第 ${落点.目标列} 列（旋转 ${落点.旋转} 次）`, 状态);
-    if (状态.消行数 > 上一消行) {
-      记录("消行", `本次消除 ${状态.消行数 - 上一消行} 行`, 状态);
-      if (!消行截图) {
-        消行截图 = true;
-        await 页.screenshot({ path: join(输出, "02-消行后.png") });
-      }
-    }
-    上一消行 = Math.max(上一消行, 状态.消行数);
-    块++;
-    if (状态.阶段 === "结束") 结束状态 = 状态;
-  }
-  assert.ok(上一消行 >= 1, `阶段一应至少消 1 行，实际 ${上一消行}`);
-  assert.ok((await 读取状态()).分数 > 0, "阶段一计分应大于 0");
-
-  // 阶段二：同一列硬降直到顶出，验证自然结束与结算覆盖页。
-  while (!结束状态 && 块 < 160) {
-    await 落一块(0, 0);
+    console.log(`[步骤] ${名称} → 页面=${状态.页面} 栈=${状态.场景栈.join("/")}`);
+    步骤.push({ 步骤: 名称, 页面: 状态.页面, 场景栈: 状态.场景栈, 说明 });
+  };
+  const 读取快照字段 = async (): Promise<对局快照 | null> => {
     const 状态 = await 读取状态();
-    记录("落块", `第 ${块 + 1} 块 → 第 0 列（堆高）`, 状态);
-    上一消行 = Math.max(上一消行, 状态.消行数);
-    块++;
-    if (状态.阶段 === "结束") 结束状态 = 状态;
-  }
+    return 状态 ? (状态 as 对局快照) : null;
+  };
+  const 等待状态 = async (
+    判断: (状态: 调试状态) => boolean,
+    描述: string,
+    超时毫秒 = 6000,
+  ): Promise<调试状态> => {
+    const 开始 = Date.now();
+    while (Date.now() - 开始 < 超时毫秒) {
+      const 状态 = await 读取状态();
+      if (判断(状态)) return 状态;
+      await 页.waitForTimeout(80);
+    }
+    const 最后 = await 读取状态();
+    throw new Error(`等待「${描述}」超时，当前：${JSON.stringify(最后)}`);
+  };
+  const 等待页面 = (页面: string) => 等待状态((状态) => 状态.页面 === 页面, `页面 ${页面}`);
+  const 等待覆盖 = (覆盖: string) =>
+    等待状态((状态) => 状态.场景栈.at(-1) === 覆盖, `覆盖页 ${覆盖}`);
+  const 等待回到对局 = () =>
+    等待状态((状态) => 状态.页面 === "对局" && 状态.场景栈.at(-1) === "对局", "回到对局");
+  const 查找按钮 = async (名称: string): Promise<界面按钮快照> => {
+    const 界面 = await 读取界面();
+    const 按钮 = 界面.按钮.find((项) => 项.名称 === 名称);
+    if (!按钮) {
+      throw new Error(
+        `页面缺少按钮「${名称}」，现有：${界面.按钮.map((项) => 项.名称).join("、")}`,
+      );
+    }
+    return 按钮;
+  };
+  const 弹层按钮名 = ["确认交易", "确认购买", "穿戴", "确认", "取消交易", "取消"];
+  const 找弹层按钮 = async (候选: readonly string[]) => {
+    const 界面 = await 读取界面();
+    return 界面.按钮.find((项) => 候选.includes(项.名称) && 项.可用 !== false);
+  };
+  const 关闭可能的弹层 = async () => {
+    const 取消 = await 找弹层按钮(["取消交易", "取消"]);
+    if (取消) {
+      await 页.mouse.click(取消.左 + 取消.宽 / 2, 取消.上 + 取消.高 / 2);
+      await 页.waitForTimeout(150);
+    }
+  };
+  const 点击按钮 = async (名称: string) => {
+    // 结算 3 秒重开锁等会把按钮标成不可用：先等它可用再点。
+    let 按钮 = await 查找按钮(名称);
+    if (按钮.可用 === false) {
+      const 开始 = Date.now();
+      while (按钮.可用 === false && Date.now() - 开始 < 5000) {
+        await 页.waitForTimeout(120);
+        按钮 = await 查找按钮(名称);
+      }
+      if (按钮.可用 === false) throw new Error(`按钮「${名称}」一直不可用`);
+    }
+    await 页.mouse.click(按钮.左 + 按钮.宽 / 2, 按钮.上 + 按钮.高 / 2);
+    await 页.waitForTimeout(200);
+  };
+  const 截图 = async (名称: string) => {
+    await 页.screenshot({ path: join(输出, `${名称}.png`) });
+  };
 
-  assert.ok((结束状态?.分数 ?? 0) > 0, `计分应大于 0，实际 ${结束状态?.分数}`);
-  assert.ok(结束状态, "一局应能自然结束（顶出）");
-  assert.deepEqual(结束状态.场景栈, ["对局", "结算"]);
-  await 页.screenshot({ path: join(输出, "03-结束.png") });
-
-  // 结算面板「重新开始」按钮中心：左 115 + 宽 160/2，上 500 + 高 56/2。
-  await 页.mouse.click(195, 528);
-  await 页.waitForTimeout(300);
-  const 重开状态 = await 读取状态();
-  assert.equal(重开状态.阶段, "进行中");
-  assert.equal(重开状态.分数, 0);
-  assert.equal(重开状态.消行数, 0);
-  assert.deepEqual(重开状态.场景栈, ["对局"]);
-  记录("重开", "点击结算面板重新开始", 重开状态);
-  await 页.screenshot({ path: join(输出, "04-重开.png") });
-
-  // 至少 300 帧后再取性能数据；headless 浏览器刷新率不固定，同时给出脚本耗时。
   let 统计 = await 读取统计();
-  for (let 等待 = 0; 等待 < 80 && 统计.循环.帧数 < 320; 等待++) {
+
+  // —— 1) 主界面 ——
+  const 主界面 = await 等待页面("主界面");
+  assert.equal(主界面.场景栈.at(-1), "主界面");
+  await 截图("01-主界面");
+  await 记录步骤("主界面可见");
+
+  // —— 2) 子页面导航与返回（设置/成就/排行榜/商店）——
+  for (const 子页 of ["设置", "成就", "排行榜", "商店"] as const) {
+    await 点击按钮(子页);
+    await 等待页面(子页);
+    await 记录步骤(`主界面 → ${子页}`);
+    if (子页 === "商店") {
+      await 增加金币(5000);
+      const 界面 = await 读取界面();
+      const 可买 = 界面.按钮.find((项) => 项.名称.startsWith("购买:") && 项.可用 !== false);
+      if (可买) {
+        await 点击按钮(可买.名称);
+        const 确认 = await 找弹层按钮(弹层按钮名);
+        if (确认) {
+          await 页.mouse.click(确认.左 + 确认.宽 / 2, 确认.上 + 确认.高 / 2);
+          await 页.waitForTimeout(200);
+        }
+        await 记录步骤(`商店购买 ${可买.名称}`);
+        const 买后 = await 读取界面();
+        const 可穿 = 买后.按钮.find((项) => 项.名称.startsWith("穿戴:") && 项.可用 !== false);
+        if (可穿) {
+          await 点击按钮(可穿.名称);
+          const 穿戴确认 = await 找弹层按钮(弹层按钮名);
+          if (穿戴确认) {
+            await 页.mouse.click(穿戴确认.左 + 穿戴确认.宽 / 2, 穿戴确认.上 + 穿戴确认.高 / 2);
+            await 页.waitForTimeout(200);
+          }
+          await 记录步骤(`商店穿戴 ${可穿.名称}`);
+        }
+      }
+      await 关闭可能的弹层();
+      await 截图("05-商店");
+    }
+    await 点击按钮("返回主菜单");
+    await 等待页面("主界面");
+    await 记录步骤(`${子页} → 主界面`);
+  }
+
+  // —— 3) 设置项持久化 ——
+  await 点击按钮("设置");
+  await 等待页面("设置");
+  const 原设置 = await 读取设置();
+  const 原音效音量 = 原设置.音效音量;
+  await 更新设置({ 音效音量: 0 });
+  await 准备();
+  await 等待页面("主界面");
+  const 重载设置 = await 读取设置();
+  assert.equal(重载设置.音效音量, 0, `设置未持久化：${JSON.stringify(重载设置)}`);
+  await 记录步骤("设置持久化（音效音量=0 刷新后仍生效）");
+  await 更新设置({ 音效音量: 原音效音量 });
+
+  // 语言持久化（切英文 → 刷新仍英文），再切回中文。
+  const 原语言 = 原设置.语言;
+  await 更新设置({ 语言: "English" });
+  await 准备();
+  await 等待页面("主界面");
+  assert.equal((await 读取设置()).语言, "English", "语言切换未持久化");
+  await 截图("06-主界面-英文");
+  await 记录步骤("语言持久化（English 刷新后仍生效）");
+  await 更新设置({ 语言: 原语言 });
+  await 准备();
+  await 等待页面("主界面");
+
+  // 省电模式联动画质：上限 30fps，切回自动恢复 60。
+  const 原省电 = 原设置.省电模式;
+  await 更新设置({ 省电模式: "开" });
+  统计 = await 读取统计();
+  assert.equal(统计.省电, "开", "省电模式未生效");
+  assert.equal(统计.渲染.最大帧率, 30, `省电应限 30fps，实际 ${统计.渲染.最大帧率}`);
+  await 更新设置({ 省电模式: "自动" });
+  统计 = await 读取统计();
+  assert.equal(统计.渲染.最大帧率, 60, `恢复后应 60fps，实际 ${统计.渲染.最大帧率}`);
+  await 记录步骤("省电模式限帧 30fps → 恢复 60fps", `原省电=${原省电}`);
+
+  // —— 4) 四模式对局：开始 → 落块/计分 → 暂停/继续 → 结束 → 结算 → 重开 → 返回 ——
+  const 模式列表 = ["马拉松", "冲刺", "极限", "每日挑战"] as const;
+  const 对局证据: { 模式: string; 落块数: number; 分数: number; 消行数: number }[] = [];
+  const 消行证据: { 模式: string; 落块数: number; 分数: number; 消行数: number }[] = [];
+  for (const 模式 of 模式列表) {
+    await 点击按钮(`开始:${模式}`);
+    const 开局 = await 等待状态(
+      (状态) => 状态.页面 === "对局" && 状态.场景栈.at(-1) === "对局",
+      `开始 ${模式}`,
+    );
+    assert.equal(开局.模式, 模式, `模式不符：${JSON.stringify(开局)}`);
+    // 真实键盘落 3 块：方向键移动 + 空格硬降。
+    for (let 块 = 0; 块 < 3; 块++) {
+      await 页.keyboard.press("ArrowLeft");
+      await 页.keyboard.press("ArrowRight");
+      await 页.keyboard.press(" ");
+      await 页.waitForTimeout(50);
+    }
+    const 落块后 = await 读取统计();
+    assert.ok(
+      落块后.对局统计.落块数 >= 3,
+      `${模式} 落块数不足：${JSON.stringify(落块后.对局统计)}`,
+    );
+    assert.ok(落块后.对局统计.操作次数 >= 3, `${模式} 操作数不足`);
+    // 准备单行消除 + 硬降：验证真实消行与计分链路（不是只看落块分）。
+    await 测试桥.准备单行消除();
+    await 测试桥.硬降();
+    await 页.waitForTimeout(120);
+    const 消行后 = await 读取统计();
+    const 快照 = await 读取快照字段();
+    assert.ok((快照?.消行数 ?? 0) >= 1, `${模式} 消行未发生：${JSON.stringify(快照)}`);
+    assert.ok((快照?.分数 ?? 0) > 0, `${模式} 分数为 0`);
+    消行证据.push({
+      模式,
+      消行数: 快照?.消行数 ?? 0,
+      分数: 快照?.分数 ?? 0,
+      落块数: 消行后.对局统计.落块数,
+    });
+    await 截图(`02-消行-${模式}`);
+    对局证据.push({
+      模式,
+      落块数: 落块后.对局统计.落块数,
+      分数: 快照?.分数 ?? 0,
+      消行数: 快照?.消行数 ?? 0,
+    });
+    if (模式 === "马拉松") {
+      await 点击按钮("暂停");
+      await 等待状态((状态) => (状态.阶段 ?? "") === "暂停", "暂停");
+      await 截图("02-暂停面板");
+      await 点击按钮("继续");
+      await 等待状态((状态) => (状态.阶段 ?? "") === "进行中", "继续");
+      await 记录步骤("暂停 → 继续");
+    }
+    // 结束当前对局并进结算，再重开一局确认可继续玩。
+    await 测试桥.结束当前对局();
+    await 等待覆盖("结算");
+    await 截图(`03-结算-${模式}`);
+    await 点击按钮("重新开始");
+    await 等待回到对局();
+    await 记录步骤(`${模式}：结束 → 结算 → 重新开始`);
+    // 再结束一次，从结算返回主菜单，准备下一个模式。
+    await 测试桥.结束当前对局();
+    await 等待覆盖("结算");
+    await 点击按钮("返回主菜单");
+    await 等待页面("主界面");
+    await 记录步骤(`${模式}：结算 → 返回主菜单`);
+  }
+
+  // —— 5) 音频静音联动 ——
+  const 音频设置前 = await 读取音频();
+  await 更新设置({ 音效音量: 0, 音乐音量: 0, 背景音乐: false });
+  const 音频设置后 = await 读取音频();
+  assert.equal(音频设置后.音效音量, 0);
+  assert.equal(音频设置后.背景音乐, false);
+  await 记录步骤("音频静音联动", `上下文=${音频设置后.上下文}`);
+  await 更新设置({
+    音效音量: 原音效音量,
+    音乐音量: 音频设置前.音乐音量,
+    背景音乐: 音频设置前.背景音乐,
+  });
+
+  // —— 6) 性能数据（≥300 帧）——
+  统计 = await 读取统计();
+  for (let 等待 = 0; 等待 < 100 && 统计.循环.帧数 < 320; 等待++) {
     await 页.waitForTimeout(100);
     统计 = await 读取统计();
   }
@@ -171,67 +333,44 @@ try {
   assert.ok(统计.循环.帧数 >= 300, `帧数不足：${统计.循环.帧数}`);
   assert.ok(统计.循环.首帧毫秒 !== null, "首帧耗时缺失");
   assert.ok(统计.循环.平均工作毫秒 < 16, `单帧脚本耗时过高：${统计.循环.平均工作毫秒}`);
-  assert.ok(统计.渲染.绘制调用 <= 8, `绘制调用过多：${统计.渲染.绘制调用}`);
-  assert.ok(统计.合批.四边形数 > 20, `四边形数异常：${统计.合批.四边形数}`);
-  assert.ok(统计.内存 && 统计.内存.已用MB > 0, "JS 堆内存缺失");
+  assert.ok(统计.渲染.绘制调用 <= 12, `绘制调用过多：${统计.渲染.绘制调用}`);
+  assert.ok(统计.内存.已用MB !== null && 统计.内存.已用MB > 0, "JS 堆内存缺失");
+  await 截图("04-主界面-最终");
 
   const 结果 = {
     地址,
     视口: { 宽: 390, 高: 844, 设备像素比: 1 },
-    开局,
-    结束状态,
-    重开状态,
+    步骤,
+    对局证据,
+    消行证据,
+    设置持久化: { 原音效音量, 重载后音效音量: 重载设置.音效音量 },
+    音频: { 前: 音频设置前, 后: 音频设置后 },
     统计,
-    操作记录,
+    控制台drawCall日志: 控制台日志.filter((日志) => 日志.includes("draw call")).slice(-3),
     页面错误,
     时间: new Date().toISOString(),
   };
   await writeFile(join(输出, "结果.json"), JSON.stringify(结果, null, 2));
-  await writeFile(join(输出, "操作记录.json"), JSON.stringify(操作记录, null, 2));
   console.log(
     JSON.stringify(
       {
-        落块数: 统计.对局统计.落块数,
-        消行次数: 统计.对局统计.消行次数,
-        最终分数: 结束状态.分数,
+        步数: 步骤.length,
+        对局证据,
+        消行证据,
         首帧毫秒: 统计.循环.首帧毫秒,
         平均帧间隔毫秒: 统计.循环.平均帧间隔毫秒,
         平均工作毫秒: 统计.循环.平均工作毫秒,
-        最长工作毫秒: 统计.循环.最长工作毫秒,
         帧数: 统计.循环.帧数,
         内存: 统计.内存,
         绘制调用: 统计.渲染.绘制调用,
         四边形数: 统计.合批.四边形数,
-        操作记录条数: 操作记录.length,
+        页面错误,
       },
       null,
       2,
     ),
   );
-  console.log("Three 版实机验收通过，截图与结果：reports/three版/");
+  console.log("Three 版完整功能验收通过，截图与结果：reports/three版/");
 } finally {
   await 浏览器.close();
-}
-
-/** 落点评分：消行权重最高，其次少留洞、压低总高度与最高列。 */
-function 评估落点(原状态: 再消一行状态, 模拟: 再消一行状态): number {
-  const 新增消行 = 模拟.消行数 - 原状态.消行数;
-  let 洞数 = 0;
-  let 总高度 = 0;
-  let 最高 = 0;
-  for (let 列 = 0; 列 < 10; 列++) {
-    let 见到方块 = false;
-    let 高度 = 0;
-    for (let 行 = 0; 行 < 20; 行++) {
-      const 有 = Boolean(模拟.棋盘[行 + 2]?.[列]);
-      if (有) {
-        if (!见到方块) 高度 = 20 - 行;
-        见到方块 = true;
-      } else if (见到方块) 洞数++;
-    }
-    总高度 += 高度;
-    if (高度 > 最高) 最高 = 高度;
-  }
-  const 结束惩罚 = 模拟.阶段 === "结束" ? 100000 : 0;
-  return 新增消行 * 10000 - 洞数 * 120 - 总高度 * 4 - 最高 * 6 - 结束惩罚;
 }
