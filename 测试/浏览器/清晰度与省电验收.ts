@@ -131,7 +131,14 @@ try {
             图章原点.push(图.displayOriginX, 图.displayOriginY);
           if (/^(冻结画面|画面层)\./.test(图.texture.key) && 图.visible) {
             const 矩阵 = 图.getWorldTransformMatrix();
-            合成采样.push({ 键: 图.texture.key, 倍率: Math.max(Math.hypot(矩阵.a, 矩阵.b), Math.hypot(矩阵.c, 矩阵.d)) * 场景.cameras.main.zoom, 宽: 图.frame.width, 高: 图.frame.height });
+            合成采样.push({
+              键: 图.texture.key,
+              倍率:
+                Math.max(Math.hypot(矩阵.a, 矩阵.b), Math.hypot(矩阵.c, 矩阵.d)) *
+                场景.cameras.main.zoom,
+              宽: 图.frame.width,
+              高: 图.frame.height,
+            });
           }
         }
         const 图 = 对象 as Phaser.GameObjects.Graphics & { __烘焙?: { 比: number } };
@@ -161,8 +168,15 @@ try {
     assert.equal(清晰度.宽, Math.floor(390 * 像素比));
     assert.equal(清晰度.高, Math.floor(844 * 像素比));
     assert.equal(清晰度.操作文字.length, 6);
-    assert.ok(清晰度.合成采样.some((项) => 项.键.startsWith("冻结画面.")) && 清晰度.合成采样.some((项) => 项.键.startsWith("画面层.")), "实际使用操作区与棋盘合成纹理");
-    assert.ok(清晰度.合成采样.every((项) => 项.倍率 <= 1.001), `合成后仍保持物理像素精度：${JSON.stringify(清晰度.合成采样)}`);
+    assert.ok(
+      清晰度.合成采样.some((项) => 项.键.startsWith("冻结画面.")) &&
+        清晰度.合成采样.some((项) => 项.键.startsWith("画面层.")),
+      "实际使用操作区与棋盘合成纹理",
+    );
+    assert.ok(
+      清晰度.合成采样.every((项) => 项.倍率 <= 1.001),
+      `合成后仍保持物理像素精度：${JSON.stringify(清晰度.合成采样)}`,
+    );
     assert.ok(
       清晰度.操作文字.every(
         (字) => 字.字号 >= 14 && 字.分辨率 >= Math.max(2, 像素比) && 字.高 <= 54,

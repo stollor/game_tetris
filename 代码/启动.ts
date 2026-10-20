@@ -1,5 +1,6 @@
 import "./存档/更名迁移";
 import { 创建游戏框架 } from "../框架/游戏框架";
+import 游戏图标地址 from "../资源/图标/游戏图标.png" with { type: "file" };
 import "./音频/再消一行程序音频";
 import { 配置滚动区域 } from "../框架/界面/滚动区域";
 import { 开始菜单 } from "./场景/主界面/开始菜单";
@@ -18,6 +19,12 @@ import { 接入画质管理, 是省电模式, 计算像素比上限 } from "./�
 
 // 滚动区：镜头视口裁剪替代滤镜遮罩（低端机滚动不再离屏合成），并开启惯性滑动。
 配置滚动区域({ 镜头裁剪: true, 惯性: true });
+// 图标走构建产物而不是裸路径：既进包，也保证它作为真实静态资源被加载；图集工具会把它打进 512 页。
+const 图标链接 = document.createElement("link");
+图标链接.rel = "icon";
+图标链接.type = "image/png";
+图标链接.href = 游戏图标地址;
+document.head.append(图标链接);
 const 游戏 = 创建游戏框架({
   容器: "游戏容器",
   宽度: 390,

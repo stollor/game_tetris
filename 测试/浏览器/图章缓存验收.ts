@@ -55,17 +55,21 @@ class 场景 extends Phaser.Scene {
   Object.assign(window,{__图章验收:{初始,清理:()=>{
    图.destroy();绿图.destroy();放开();池.销毁();
    const 保留=[];
+   const 保留页=[];
    for(let i=0;i<3;i++) {
     const 贴=获取烘焙贴图(this,"验收.占页"+i,g=>g.fillStyle(0xff0000).fillRect(0,0,900,900));
     if(!贴) throw Error("占页失败");
     保留.push(预算.引用(贴.键));
+    保留页.push(贴.键);
    }
    const 满=获取烘焙贴图(this,"验收.满页",g=>g.fillStyle(0x00ff00).fillRect(0,0,900,900));
    const 满页回退=!!满&&满.帧===undefined;
    for(const 释放 of 保留) 释放();
    let 异常已清理=false;
    try { 获取烘焙贴图(this,"验收.异常",g=>{g.once("destroy",()=>异常已清理=true);throw Error("故意绘制失败");}); } catch(错) { if(错.message!=="故意绘制失败") throw 错; }
-   const 已移除=预算.移除(初.键);
+   // 图章页按内容从 256 起放大；占满 3 页上限时最早的小页会被淘汰，
+   // 所以用占页阶段仍受引用的页验证"释放后可移除"，不能用初.键（它的页可能已淘汰）。
+   const 已移除=保留页[0]===undefined?false:预算.移除(保留页[0]);
    const 再=获取烘焙贴图(this,"验收.渐变",绘制);
    const 重建=!!再&&再.键!==初.键&&this.textures.get(再.键).has(再.帧);
    const 游戏=this.game;

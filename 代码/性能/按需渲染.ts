@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { 正在实况观测 } from "../../框架/开发/实况观测";
 import { 观察场景对象 } from "./场景对象";
 
 /**
@@ -256,7 +257,8 @@ export function 安装按需渲染(游戏: Phaser.Game): void {
     // RAF 在回调结束后才登记下一帧，微任务中 sleep 才能取消那一帧。
     queueMicrotask(() => {
       if (已销毁 || document.hidden) return;
-      const 高频 = 玩法进行中 || performance.now() - 最近输入 < 200 || 有活动动画(游戏);
+      const 高频 =
+        玩法进行中 || 正在实况观测() || performance.now() - 最近输入 < 200 || 有活动动画(游戏);
       if (高频) {
         if (!游戏.loop.running) 唤醒();
       } else if (游戏.loop.running) {

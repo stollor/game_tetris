@@ -1,4 +1,5 @@
 import type Phaser from "phaser";
+import { 正在实况观测 } from "../../框架/开发/实况观测";
 import { 创建重绘节拍 } from "../../框架/性能/帧率";
 import { 获取游戏设置 } from "../配置/再消一行设置";
 
@@ -72,8 +73,10 @@ const 重绘节拍 = new WeakMap<object, ReturnType<typeof 创建重绘节拍>>(
 
 /** 动态背景是否该在本帧重绘；不重绘时保留上一帧图形。 */
 export function 应重绘动态背景(图形: object, 时间: number, 允许闲置降频 = true): boolean {
+  // 看着性能页时不要掉进 20 秒闲置后的 2 帧，否则实况会把省电节拍画成掉帧。
   const 闲置 =
     允许闲置降频 &&
+    !正在实况观测() &&
     (typeof performance === "undefined" ? 0 : performance.now()) - 最近操作 > 画质参数.闲置判定毫秒;
   const 间隔 = 闲置
     ? 画质参数.闲置背景间隔毫秒

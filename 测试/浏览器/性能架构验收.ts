@@ -19,7 +19,7 @@ const 原渲染 = Reflect.get(Phaser.GameObjects.Graphics.prototype, 'renderWebG
 let 游戏, 场景, 图, 图形;
 function 创建() {
   游戏 = new Phaser.Game({type:Phaser.WEBGL,width:390,height:844,audio:{noAudio:true},
-    scene:{create(){场景=this; 图形=this.add.graphics().fillStyle(0xffffff).fillRect(0,0,80,80);
+    scene:{create(){场景=this; 图形=this.add.graphics().fillGradientStyle(0xffffff,0xffffff,0xffffff,0xffffff,1).fillRect(0,0,80,80);
       const 容器=this.add.container();setTimeout(()=>容器.add(this.make.graphics({},false).fillStyle(0xffffff).fillRect(5,5,20,20)),50);
       const 圆=this.add.circle(30,30,10,0xffffff);setTimeout(()=>圆.destroy(),100);
       图=this.add.image(100,100,'__WHITE').setDisplaySize(30,30);}}});

@@ -6,7 +6,6 @@ import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 界面暂停菜单 } from "../../../框架/界面/暂停菜单";
 import { 界面触屏操作区 } from "../../../框架/界面/触屏操作区";
 import { 注册模态界面 } from "../../../框架/界面/输入隔离";
-import { type 冻结画面, 创建冻结画面 } from "../../../框架/绘画/冻结画面";
 import { 创建节流音效 } from "../../../框架/音频/音效节流";
 import {
   播放游戏音效,
@@ -21,7 +20,6 @@ import { 结算后同步平台 } from "../../平台/结算同步";
 import { 禁用性能项 } from "../../开发/性能开关";
 import { 标记重绘, 设置玩法进行中 } from "../../性能/按需渲染";
 import { 是省电模式 } from "../../性能/画质";
-import { 获取纹理预算 } from "../../性能/纹理缓存";
 import { 获取冲刺显示用时 } from "../../性能/计时显示";
 import { 创建再消一行成就, 成就定义, 记录落块成就 } from "../../成就/再消一行成就";
 import { 同步成就金币 } from "../../成就/旅行奖励";
@@ -183,8 +181,6 @@ export class 对局 extends Phaser.Scene {
   private 消行反馈?: Phaser.GameObjects.Text;
   private 重开锁可用?: boolean;
   private 绘图?: Phaser.GameObjects.Graphics;
-  private 操作画面?: 冻结画面;
-  private 操作已冻 = false;
   private 背景图?: Phaser.GameObjects.Image | Phaser.GameObjects.Graphics;
   private 背景动画层?: Phaser.GameObjects.Graphics;
   private 背景主题: 背景主题 = 获取游戏设置().背景主题;
@@ -569,7 +565,6 @@ export class 对局 extends Phaser.Scene {
     this.应用背景文字对比();
     this.绘制装饰();
     this.更新界面();
-    this.同步操作画面(true);
   };
 
   update(_时间: number, delta: number): void {
@@ -1406,48 +1401,7 @@ export class 对局 extends Phaser.Scene {
       this.状态文字?.setVisible(this.状态.阶段 === "暂停");
       this.绘制结算面板();
     }
-    this.同步操作画面(false);
     this.发布测试快照();
-  }
-
-  private 确保操作画面(): void {
-    if (this.操作画面) return;
-    const 预算 = 获取纹理预算(this);
-    const 放开引用 = new Map<string, () => void>();
-    this.操作画面 =
-      创建冻结画面(this, this.视口.宽, this.视口.高, 5, {
-        登记: (键, 像素, 释放) => {
-          预算.登记(键, 像素, 释放);
-          放开引用.set(键, 预算.引用(键));
-        },
-        移除: (键) => {
-          放开引用.get(键)?.();
-          放开引用.delete(键);
-          预算.移除(键);
-        },
-      }) ?? undefined;
-    this.events.once("shutdown", () => this.操作画面?.销毁());
-  }
-
-  /**
-   * 手机上的操作键在对局中一直显示，收成一张。
-   * 分数和棋盘夹在界面中间，不能跟这些键拍在一起。
-   */
-  private 同步操作画面(强制: boolean): void {
-    const 要冻 = this.竖屏布局 && this.状态.阶段 === "进行中";
-    if (!强制 && 要冻 === this.操作已冻) return;
-    if (!要冻) {
-      this.操作画面?.解除();
-      this.操作已冻 = false;
-      return;
-    }
-    this.确保操作画面();
-    this.操作画面?.设置尺寸(this.视口.宽, this.视口.高);
-    const 操作: Phaser.GameObjects.GameObject[] = [];
-    if (this.触屏操作区) 操作.push(this.触屏操作区);
-    if (this.硬降按钮) 操作.push(this.硬降按钮);
-    this.操作画面?.拍摄(操作);
-    this.操作已冻 = true;
   }
 
   private 操作旋转(方向: 1 | -1, 半转: boolean): void {

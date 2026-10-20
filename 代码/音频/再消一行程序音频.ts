@@ -1,3 +1,4 @@
+import { 正在实况观测 } from "../../框架/开发/实况观测";
 import { type 程序音频环境, 释放程序输出 } from "../../框架/音频/程序音频";
 import type { 音效谱 } from "../../框架/音频/音效目录";
 import { 演奏音效 } from "../../框架/音频/音效编排";
@@ -101,7 +102,11 @@ let 试听计时: ReturnType<typeof setTimeout> | undefined;
 function 同步音乐(): void {
   const 设置 = 获取游戏设置();
   const 目标 =
-    音乐暂停 || document.hidden || !页面有焦点 || !设置.背景音乐 || 设置.音乐音量 <= 0
+    音乐暂停 ||
+    document.hidden ||
+    !(页面有焦点 || 正在实况观测()) ||
+    !设置.背景音乐 ||
+    设置.音乐音量 <= 0
       ? null
       : (试听曲目 ?? 当前曲目);
   if (目标 === 播放中曲目) return;
@@ -154,6 +159,10 @@ if (typeof window !== "undefined") {
     同步场景氛围();
   });
   document.addEventListener("visibilitychange", () => {
+    同步音乐();
+    同步场景氛围();
+  });
+  window.addEventListener("gamemaker:实况观测", () => {
     同步音乐();
     同步场景氛围();
   });
@@ -242,7 +251,8 @@ export function 播放场景氛围(主题: 氛围主题): void {
   if (当前氛围 === 主题 && 氛围停止) return;
   停止场景氛围();
   当前氛围 = 主题;
-  if (获取游戏设置().背景音效音量 <= 0 || document.hidden || !页面有焦点) return;
+  if (获取游戏设置().背景音效音量 <= 0 || document.hidden || !(页面有焦点 || 正在实况观测()))
+    return;
   const 环境 = 获取程序音频环境();
   if (环境) 启动场景氛围(环境, 主题);
 }
