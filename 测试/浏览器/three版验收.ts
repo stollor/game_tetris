@@ -158,17 +158,45 @@ try {
   const 截图 = async (名称: string) => {
     await 页.screenshot({ path: join(输出, `${名称}.png`) });
   };
+  const 查找按钮名 = async (名称: string) => (await 读取界面()).按钮.some((项) => 项.名称 === 名称);
+  const 等待按钮 = async (名称: string, 超时毫秒 = 6000) => {
+    const 开始 = Date.now();
+    while (Date.now() - 开始 < 超时毫秒) {
+      if (await 查找按钮名(名称)) return;
+      await 页.waitForTimeout(80);
+    }
+    throw new Error(
+      `等待按钮「${名称}」超时，现有：${(await 读取界面()).按钮.map((项) => 项.名称).join("、")}`,
+    );
+  };
+  /** 主界面两态：菜单态有「开始游戏」，模式选择态有「返回」。从任何页面回到菜单态。 */
+  const 回到菜单态 = async () => {
+    await 等待页面("主界面");
+    if (await 查找按钮名("开始游戏")) return;
+    if (await 查找按钮名("返回")) {
+      await 点击按钮("返回");
+      await 等待按钮("开始游戏");
+    }
+  };
 
   let 统计 = await 读取统计();
 
-  // —— 1) 主界面 ——
+  // —— 1) 主界面（菜单态 → 模式选择态 → 返回） ——
   const 主界面 = await 等待页面("主界面");
   assert.equal(主界面.场景栈.at(-1), "主界面");
+  await 等待按钮("开始游戏");
   await 截图("01-主界面");
-  await 记录步骤("主界面可见");
+  await 记录步骤("主界面可见（菜单态）");
+  await 点击按钮("开始游戏");
+  await 等待按钮("返回");
+  await 截图("01b-模式选择");
+  await 记录步骤("开始游戏 → 模式选择");
+  await 点击按钮("返回");
+  await 等待按钮("开始游戏");
+  await 记录步骤("模式选择 → 返回菜单态");
 
-  // —— 2) 子页面导航与返回（设置/成就/排行榜/商店）——
-  for (const 子页 of ["设置", "成就", "排行榜", "商店"] as const) {
+  // —— 2) 子页面导航与返回（设置/成就/商店）——
+  for (const 子页 of ["设置", "成就", "商店"] as const) {
     await 点击按钮(子页);
     await 等待页面(子页);
     await 记录步骤(`主界面 → ${子页}`);
@@ -201,8 +229,21 @@ try {
     }
     await 点击按钮("返回主菜单");
     await 等待页面("主界面");
+    await 回到菜单态();
     await 记录步骤(`${子页} → 主界面`);
   }
+
+  // —— 2b) 排行榜：入口在模式选择态模式卡右上角（与 Phaser 一致） ——
+  await 点击按钮("开始游戏");
+  await 等待按钮("排行榜:马拉松");
+  await 点击按钮("排行榜:马拉松");
+  await 等待页面("排行榜");
+  await 截图("07-排行榜");
+  await 记录步骤("模式选择 → 排行榜:马拉松");
+  await 点击按钮("返回主菜单");
+  await 等待页面("主界面");
+  await 回到菜单态();
+  await 记录步骤("排行榜 → 主界面");
 
   // —— 3) 设置项持久化 ——
   await 点击按钮("设置");
@@ -245,6 +286,9 @@ try {
   const 对局证据: { 模式: string; 落块数: number; 分数: number; 消行数: number }[] = [];
   const 消行证据: { 模式: string; 落块数: number; 分数: number; 消行数: number }[] = [];
   for (const 模式 of 模式列表) {
+    await 回到菜单态();
+    await 点击按钮("开始游戏");
+    await 等待按钮(`开始:${模式}`);
     await 点击按钮(`开始:${模式}`);
     const 开局 = await 等待状态(
       (状态) => 状态.页面 === "对局" && 状态.场景栈.at(-1) === "对局",

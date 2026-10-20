@@ -5,7 +5,13 @@ import { 判定滑动方向, 绑定滑动手势 } from "../../../框架/界面/�
 import { 应用文字清晰度 } from "../../../框架/界面/文字清晰度";
 import { 解锁程序音频 } from "../../../框架/音频/音频";
 import { 打开覆盖页面 } from "../../../框架/页面切换";
+import {
+  type 主界面布局,
+  生成主界面文字项,
+  计算主界面布局,
+} from "../../../组件/霓虹街机/主界面布局";
 import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
+import { 添加霓虹文字项 } from "../../../组件/霓虹街机/文字";
 import { 旅行收藏 } from "../../存档/旅行收藏";
 import { 同步成就金币 } from "../../成就/旅行奖励";
 import type { 游戏模式 } from "../../玩法/再消一行";
@@ -18,7 +24,6 @@ import { 绘制动态霓虹细节 } from "../../视觉/霓虹背景";
 import { 布置烘焙底图 } from "../../视觉/风景缩略";
 import { 获取文案, 解析语言 } from "../../配置/再消一行文案";
 import { type 背景主题, 获取游戏设置 } from "../../配置/再消一行设置";
-import { 游戏外观, 游戏模式顺序 } from "../../配置/游戏外观";
 import { 界面主题 } from "../../配置/界面主题";
 import { 播放再消一行音乐, 播放场景氛围 } from "../../音频/再消一行程序音频";
 
@@ -34,6 +39,7 @@ export class 开始菜单 extends Phaser.Scene {
   private 开始钮?: 界面按钮;
   private 标题层?: Phaser.GameObjects.Container;
   private 金币层?: Phaser.GameObjects.Container;
+  private 布局?: 主界面布局;
   private 过场?: "进入纯享" | "退出纯享" | "进入模式" | "退出模式";
   constructor() {
     super("开始菜单");
@@ -169,26 +175,6 @@ export class 开始菜单 extends Phaser.Scene {
     this.过场 = "退出模式";
     this.重建();
   }
-  private 金币y(): number {
-    return 12;
-  }
-  private 标题y(): number {
-    const { 宽, 高 } = this.视口;
-    return Math.round(高 * (高 > 宽 ? 0.36 : 0.32));
-  }
-  private 角钮x(): number {
-    return this.视口.宽 < 420 ? 36 : 46;
-  }
-  private 角钮距(): number {
-    return this.视口.高 < 560 ? 56 : 64;
-  }
-  private 角钮y(i: number): number {
-    const 起 = Math.round(this.视口.高 * (this.视口.高 < 560 ? 0.28 : 0.26));
-    return 起 + i * this.角钮距();
-  }
-  private 开始y(): number {
-    return Math.round(this.视口.高 * (this.视口.高 > this.视口.宽 ? 0.72 : 0.76));
-  }
   private 立刻藏起角钮(): void {
     this.角钮层?.setX(-140).setAlpha(0);
     for (const 钮 of this.角钮) 钮.设置可用(false);
@@ -261,7 +247,7 @@ export class 开始菜单 extends Phaser.Scene {
       this.开始钮.setY(高 + 80).setAlpha(0);
       this.tweens.add({
         targets: this.开始钮,
-        y: this.开始y(),
+        y: this.布局?.开始钮?.中心Y ?? this.开始钮.y,
         alpha: 1,
         duration: 320,
         ease: "Cubic.easeOut",
@@ -289,9 +275,13 @@ export class 开始菜单 extends Phaser.Scene {
     }
   }
   private 构建(): void {
+    const 布局 = 计算主界面布局(
+      this.视口.宽,
+      this.视口.高,
+      this.选择模式 ? "模式选择" : this.纯享背景 ? "纯享" : "菜单",
+    );
+    this.布局 = 布局;
     const { 宽, 高 } = this.视口;
-    const 竖屏 = 高 > 宽;
-    const 矮屏 = 高 < 560;
     if (!this.选择模式 && !this.纯享背景) {
       const 手势 = this.add
         .rectangle(宽 / 2, 高 / 2, 宽, 高, 0, 0.001)
@@ -309,82 +299,33 @@ export class 开始菜单 extends Phaser.Scene {
     const 游戏名称 = 获取文案(语言).游戏名称;
     document.title = 游戏名称;
     this.标题层 = this.add.container(0, 0);
-    const 描边文字 = (
-      x: number,
-      y: number,
-      内容: string,
-      大小: number,
-      色 = "#fff8e7",
-      居中 = true,
-    ) => {
-      const 对象 = this.add
-        .text(x, y, 内容, {
-          fontFamily: 游戏外观.字体.家族,
-          fontSize: `${大小}px`,
-          color: 色,
-          fontStyle: 大小 >= 22 ? "bold" : "normal",
-          stroke: "#16303a",
-          strokeThickness: 大小 >= 28 ? 5 : 4,
-        })
-        .setOrigin(居中 ? 0.5 : 0, 0.5);
-      this.标题层?.add(对象);
-      return 对象;
-    };
-    if (!this.选择模式) {
-      const 标题字号 = 英文 ? (竖屏 && !矮屏 ? 26 : 22) : 竖屏 && !矮屏 ? 40 : 32;
-      描边文字(宽 / 2, this.标题y(), 游戏名称, 标题字号);
-    }
+    for (const 项 of 生成主界面文字项(布局, { 英文, 游戏名称 }))
+      添加霓虹文字项(this, this.标题层, 项);
     this.金币层 = this.add.container(0, 0);
     this.金币层.add(
       布置金币条(this, {
-        x: 16,
-        y: this.金币y(),
+        x: 布局.金币.左,
+        y: 布局.金币.上,
         金币: new 旅行收藏(localStorage).读取().金币,
         名称: "menu.coins",
       }).层,
     );
-    const 角项: {
-      文案: string;
-      英文: string;
-      名称: string;
-      图标: "设置" | "成就" | "商店";
-      点: () => void;
-    }[] = [
-      {
-        文案: "设置",
-        英文: "SET",
-        名称: "menu.settings",
-        图标: "设置",
-        点: () => 打开覆盖页面(this, "设置界面"),
-      },
-      {
-        文案: "成就",
-        英文: "BEST",
-        名称: "menu.achievements",
-        图标: "成就",
-        点: () => 打开覆盖页面(this, "成就界面"),
-      },
-      {
-        文案: "商店",
-        英文: "SHOP",
-        名称: "menu.shop",
-        图标: "商店",
-        点: () => 打开覆盖页面(this, "旅行商店"),
-      },
+    const 角项: { 名称: string; 点: () => void }[] = [
+      { 名称: "menu.settings", 点: () => 打开覆盖页面(this, "设置界面") },
+      { 名称: "menu.achievements", 点: () => 打开覆盖页面(this, "成就界面") },
+      { 名称: "menu.shop", 点: () => 打开覆盖页面(this, "旅行商店") },
     ];
-    const 钮宽 = 宽 < 420 ? 52 : 64;
-    const 钮高 = 52;
     this.角钮层 = this.add.container(0, 0);
     // 设置/成就/商店各自一块按钮底板，互不共用背景；按钮命中、手势与配色仍走霓虹配方。
-    this.角钮 = 角项.map((项, i) =>
+    this.角钮 = 布局.角钮.项.map((项, i) =>
       创建菜单按钮(this, {
-        x: this.角钮x(),
-        y: this.角钮y(i),
-        宽: 钮宽,
-        高: 钮高,
-        文案: t(项.文案, 项.英文),
-        名称: 项.名称,
-        点击: 项.点,
+        x: 布局.角钮.中心X,
+        y: 布局.角钮.中心Y[i] ?? 0,
+        宽: 布局.角钮.宽,
+        高: 布局.角钮.高,
+        文案: t(项.文案.中文, 项.文案.英文),
+        名称: 角项[i]?.名称 ?? `menu.corner.${i}`,
+        点击: 角项[i]?.点 ?? (() => undefined),
         图标: 获取旅行图标(this, 项.图标),
         图标尺寸: 18,
         字号: "12px",
@@ -395,49 +336,42 @@ export class 开始菜单 extends Phaser.Scene {
         },
       }),
     );
-    if (!this.选择模式) {
+    if (布局.开始钮) {
+      const 开始 = 布局.开始钮;
       this.开始钮 = this.按钮(
-        宽 / 2,
-        this.开始y(),
-        Math.min(390, 宽 - 48),
-        44,
-        t("开始游戏", "PLAY"),
+        开始.中心X,
+        开始.中心Y,
+        开始.宽,
+        开始.高,
+        t(开始.文案.中文, 开始.文案.英文),
         "menu.start",
         () => this.进入模式选择(),
         false,
         true,
       );
-    } else {
-      描边文字(宽 / 2, 矮屏 ? 88 : 108, t("选择游戏模式", "CHOOSE YOUR MODE"), 15, "#ffe7a8");
-      const 列 = 竖屏 || 宽 < 720 ? 1 : 2;
-      const 卡宽 = Math.min(340, 列 === 1 ? 宽 - 48 : Math.min(320, (宽 - 72) / 2));
-      const 卡高 = 矮屏 ? 68 : 竖屏 ? 96 : 108;
-      const 横距 = 20;
-      const 纵距 = 矮屏 ? 10 : 16;
-      const 行 = Math.ceil(游戏模式顺序.length / 列);
-      const 块宽 = 列 * 卡宽 + (列 - 1) * 横距;
-      const 块高 = 行 * 卡高 + (行 - 1) * 纵距;
-      const 顶留 = 矮屏 ? 108 : 128;
-      const 底留 = 72;
-      const 起x = 宽 / 2 - 块宽 / 2 + 卡宽 / 2;
-      const 起y = 顶留 + (高 - 顶留 - 底留 - 块高) / 2 + 卡高 / 2;
-      游戏模式顺序.forEach((模式, i) => {
-        const 列号 = 列 === 1 ? 0 : i % 列;
-        const 行号 = 列 === 1 ? i : Math.floor(i / 列);
+    } else if (布局.模式选择) {
+      for (const [索引, 卡] of 布局.模式选择.卡.entries()) {
         创建模式选择卡(this, this.add.container(), {
-          索引: i,
-          模式,
-          x: 起x + 列号 * (卡宽 + 横距),
-          y: 起y + 行号 * (卡高 + 纵距),
-          宽: 卡宽,
-          高: 卡高,
+          索引,
+          模式: 卡.模式,
+          x: 卡.中心X,
+          y: 卡.中心Y,
+          宽: 卡.宽,
+          高: 卡.高,
           英文,
-          点击: () => this.开始(模式),
-          排行点击: () => 打开覆盖页面(this, "排行榜界面", { 模式 }),
+          点击: () => this.开始(卡.模式),
+          排行点击: () => 打开覆盖页面(this, "排行榜界面", { 模式: 卡.模式 }),
         });
-      });
-      this.按钮(宽 / 2, 高 - 42, 168, 40, t("返回", "BACK"), "mode.back", () =>
-        this.退出模式选择(),
+      }
+      const 返回 = 布局.模式选择.返回钮;
+      this.按钮(
+        返回.中心X,
+        返回.中心Y,
+        返回.宽,
+        返回.高,
+        t(返回.文案.中文, 返回.文案.英文),
+        "mode.back",
+        () => this.退出模式选择(),
       );
     }
   }

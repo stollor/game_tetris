@@ -1,6 +1,66 @@
 import { 界面文字 } from "Phaser框架/界面/控件";
 import type Phaser from "phaser";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
+import type { 文字锚点, 文字项 } from "../绘制/图形对象";
+
+export {
+  派生霓虹文字样式,
+  读取霓虹文字样式,
+  type 霓虹文字角色,
+} from "./文字样式";
+
+function 颜色文本(颜色: number | string): string {
+  if (typeof 颜色 === "string") return 颜色;
+  return `#${颜色.toString(16).padStart(6, "0")}`;
+}
+
+function 锚点原点(锚点: 文字锚点): [number, number] {
+  switch (锚点) {
+    case "左上":
+      return [0, 0];
+    case "左中":
+      return [0, 0.5];
+    case "中上":
+      return [0.5, 0];
+    case "中中":
+      return [0.5, 0.5];
+    case "右上":
+      return [1, 0];
+    case "右中":
+      return [1, 0.5];
+  }
+}
+
+/**
+ * Phaser 后端的共享文字项渲染：把配方给出的 `文字项` 建成原生 Text。
+ * 这是 Phaser 侧唯一从 文字项 到 Text 的转换点；Three 侧换由画笔.绘制文字 渲染同一份 文字项。
+ */
+export function 添加霓虹文字项(
+  场景: Phaser.Scene,
+  容器: Phaser.GameObjects.Container | undefined,
+  项: 文字项,
+): Phaser.GameObjects.Text {
+  const 样式: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: 项.样式.字体 ?? 游戏外观.字体.家族,
+    fontSize: `${项.样式.字号}px`,
+    color: 颜色文本(项.样式.颜色),
+  };
+  if (项.样式.字重 === "粗体") 样式.fontStyle = "bold";
+  if (项.样式.对齐 !== undefined) {
+    样式.align = 项.样式.对齐 === "左" ? "left" : 项.样式.对齐 === "右" ? "right" : "center";
+  }
+  if (项.样式.描边 !== undefined) {
+    样式.stroke = 颜色文本(项.样式.描边.颜色);
+    样式.strokeThickness = 项.样式.描边.粗细;
+  }
+  if (项.样式.字距 !== undefined) 样式.letterSpacing = 项.样式.字距;
+  if (项.最大宽 !== undefined) 样式.wordWrap = { width: 项.最大宽 };
+  const 对象 = 场景.add.text(项.x, 项.y, 项.文案, 样式);
+  const [原点X, 原点Y] = 锚点原点(项.锚点);
+  对象.setOrigin(原点X, 原点Y);
+  容器?.add(对象);
+  return 对象;
+}
 
 export interface 霓虹文字配置 {
   颜色: string;

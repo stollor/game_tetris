@@ -1,7 +1,9 @@
 import type Phaser from "phaser";
 import { 绑定滑动手势 } from "../../框架/界面/控件";
+import { 计算主界面布局, 计算纯享圆点 } from "../../组件/霓虹街机/主界面布局";
+import { 添加霓虹文字项 } from "../../组件/霓虹街机/文字";
+import { 读取霓虹文字样式 } from "../../组件/霓虹街机/文字样式";
 import type { 背景主题 } from "../配置/再消一行设置";
-import { 游戏外观 } from "../配置/游戏外观";
 import { 创建菜单按钮 } from "./按钮";
 import { 风景浏览列表, 风景说明 } from "./风景浏览";
 
@@ -53,6 +55,9 @@ function 绘制纯享胶囊(
 
 /** 全屏风景上的轻量操作：左右滑动切景，下滑返回；返回键固定右下角。 */
 export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 选项: 纯享层选项): void {
+  const 布局 = 计算主界面布局(宽, 高, "纯享");
+  const 纯享 = 布局.纯享;
+  if (!纯享) return;
   const 范围 = 选项.范围 ?? 风景浏览列表();
   const 说明 = 风景说明(选项.主题);
   const 手势 = 场景.add.rectangle(宽 / 2, 高 / 2, 宽, 高, 0, 0.001).setInteractive();
@@ -61,15 +66,11 @@ export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 
     右滑: () => 选项.切换(-1),
     下滑: 选项.返回,
   });
-  const 返宽 = Math.min(132, Math.max(100, 宽 * 0.24));
-  const 返高 = 40;
-  const 返x = 宽 - 返宽 / 2 - 16;
-  const 返y = 高 - 40;
   const 返回 = 创建菜单按钮(场景, {
-    x: 返x,
-    y: 返y,
-    宽: 返宽,
-    高: 返高,
+    x: 纯享.返回钮.中心X,
+    y: 纯享.返回钮.中心Y,
+    宽: 纯享.返回钮.宽,
+    高: 纯享.返回钮.高,
     文案: 选项.返回文案,
     名称: 选项.返回名称,
     点击: 选项.返回,
@@ -87,7 +88,7 @@ export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 
   });
   if (选项.过场) {
     返回.y = 高 + 48;
-    场景.tweens.add({ targets: 返回, y: 返y, duration: 280, ease: "Cubic.easeOut" });
+    场景.tweens.add({ targets: 返回, y: 纯享.返回钮.中心Y, duration: 280, ease: "Cubic.easeOut" });
   }
   if (选项.切换动态)
     创建菜单按钮(场景, {
@@ -110,32 +111,23 @@ export function 布置纯享层(场景: Phaser.Scene, 宽: number, 高: number, 
         边框透明度: 0,
       },
     });
-  场景.add
-    .text(24, 高 - 78, 说明.标题, {
-      fontFamily: 游戏外观.字体.家族,
-      fontSize: "28px",
-      fontStyle: "bold",
-      color: "#fff8e7",
-      stroke: "#16303a",
-      strokeThickness: 4,
-    })
-    .setName("scenery.title");
-  场景.add
-    .text(25, 高 - 42, 说明.副题, {
-      fontFamily: 游戏外观.字体.家族,
-      fontSize: "13px",
-      color: "#fff4d9",
-      stroke: "#16303a",
-      strokeThickness: 3,
-    })
-    .setName("scenery.caption");
+  添加霓虹文字项(场景, undefined, {
+    文案: 说明.标题,
+    样式: 读取霓虹文字样式("风景标题"),
+    锚点: "左上",
+    x: 纯享.标题.x,
+    y: 纯享.标题.y,
+  }).setName("scenery.title");
+  添加霓虹文字项(场景, undefined, {
+    文案: 说明.副题,
+    样式: 读取霓虹文字样式("风景说明"),
+    锚点: "左上",
+    x: 纯享.说明.x,
+    y: 纯享.说明.y,
+  }).setName("scenery.caption");
   const 点 = 场景.add.graphics();
-  const 总数 = Math.max(1, 范围.length);
   const 当前 = Math.max(0, 范围.indexOf(选项.主题));
-  const 点宽 = Math.min(14, 360 / 总数);
-  范围.forEach((_, i) => {
-    点
-      .fillStyle(0xfff6d8, i === 当前 ? 0.95 : 0.28)
-      .fillCircle(宽 / 2 - ((总数 - 1) * 点宽) / 2 + i * 点宽, 高 - 16, i === 当前 ? 3.5 : 2.2);
-  });
+  for (const [i, 圆点] of 计算纯享圆点(布局, 范围.length, 当前).entries()) {
+    点.fillStyle(0xfff6d8, i === 当前 ? 0.95 : 0.28).fillCircle(圆点.x, 圆点.y, 圆点.半径);
+  }
 }

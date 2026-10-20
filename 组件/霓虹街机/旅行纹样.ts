@@ -1,8 +1,9 @@
-import type Phaser from "phaser";
 import type { 地点纹样 } from "../../代码/框架配置/旅行地点";
+import type { 图形对象 } from "../绘制/图形对象";
 
+/** 地点纹样是纯 Graphics 指令，Phaser Graphics 与 Three 画笔共用同一份。 */
 export function 绘制地点纹样(
-  g: Phaser.GameObjects.Graphics,
+  g: 图形对象,
   x: number,
   y: number,
   格: number,

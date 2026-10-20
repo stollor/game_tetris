@@ -1,4 +1,5 @@
-import { 十六进制颜色, type 四边形合批 } from "../../../框架Three/界面/四边形合批";
+import { 十六进制颜色 } from "../../../框架Three/界面/四边形合批";
+import type { 图元合批 } from "../../../框架Three/界面/图元合批";
 import type { 紫外线矩形 } from "../../../框架Three/界面/文字图集";
 import { type 再消一行状态, 可以放置, type 方块类型, 读取格子 } from "../../玩法/再消一行";
 import { 字体纹理序号, type 字形资源 } from "../接口/上下文";
@@ -23,7 +24,7 @@ import {
 /** 对局页绘制：背景之上的 HUD、棋盘、当前方块/幽灵、提示层与暂停层。只写四边形，不碰渲染器。 */
 
 export interface 绘制环境 {
-  合批: 四边形合批;
+  合批: 图元合批;
   字: 字形资源;
   字号: { 小: number; 中: number; 大: number };
   /** 纯色白块紫外线，来自任一文字图集。 */

@@ -37,7 +37,7 @@ import {
   读取震动偏移,
 } from "../视觉/特效";
 import { type 对局视图, type 提示视图, 绘制对局, type 绘制环境, 计算影子 } from "../视觉/绘制";
-import { 绘制背景 } from "../视觉/背景";
+import { 绘制背景, 读取背景动态 } from "../视觉/背景";
 import { 模式名称, 模式目标文案, 读取对局计时文案, 读取每日日期 } from "./四模式";
 import { 记录最近结算 } from "./最近对局";
 import {
@@ -148,6 +148,8 @@ export class 对局页面 implements 页面实例 {
   private readonly 统计: 对局统计 = { 操作次数: 0, 落块数: 0, 消行次数: 0 };
   private 记录序号 = 0;
   private 启动时刻 = performance.now();
+  /** 背景动画时间轴（秒）：随更新步长累计，不另造时钟。 */
+  private 背景时间秒 = 0;
   private 最后落块序号 = 0;
   private 最后消行序号 = 0;
   private 已结算 = false;
@@ -259,6 +261,7 @@ export class 对局页面 implements 页面实例 {
   更新(固定步长秒: number): void {
     if (!this.已进入) return;
     const 秒 = Math.max(0, 固定步长秒);
+    this.背景时间秒 += 秒;
     this.更新提示(秒);
     const 特效活跃 = 更新特效(this.特效, 秒);
     if (this.状态.阶段 === "进行中") {
@@ -285,19 +288,13 @@ export class 对局页面 implements 页面实例 {
       纯色紫外线: 资源.字.小.读取纯色紫外线(),
       主题: this.上下文.主题,
     };
-    绘制背景(
-      {
-        合批: 资源.合批,
-        纯色紫外线: 环境.纯色紫外线,
-        宽: 资源.逻辑宽,
-        高: 资源.逻辑高,
-      },
-      {
-        主题: this.设置.背景主题,
-        时间秒: performance.now() / 1000,
-        动态: this.设置.背景动态 && this.设置.省电模式 !== "开",
-      },
-    );
+    绘制背景(资源.画笔.图形, {
+      宽: 资源.逻辑宽,
+      高: 资源.逻辑高,
+      主题: this.设置.背景主题,
+      动态: 读取背景动态(this.设置),
+      时间秒: this.背景时间秒,
+    });
     const 偏移 = 读取震动偏移(this.特效);
     const 视图: 对局视图 = {
       状态: this.状态,
@@ -804,7 +801,10 @@ export class 对局页面 implements 页面实例 {
         名称: "对局.离开",
         ...离开按钮,
         深度: 6,
-        回调: () => this.上下文.导航.替换("主界面"),
+        回调: (事件) => {
+          if (事件.类型 !== "抬起") return;
+          this.上下文.导航.替换("主界面");
+        },
       }),
     );
     this.注销命中.push(
@@ -813,7 +813,10 @@ export class 对局页面 implements 页面实例 {
         ...暂停按钮,
         深度: 6,
         禁用: () => this.状态.阶段 === "结束",
-        回调: () => this.设置暂停(this.状态.阶段 !== "暂停"),
+        回调: (事件) => {
+          if (事件.类型 !== "抬起") return;
+          this.设置暂停(this.状态.阶段 !== "暂停");
+        },
       }),
     );
     for (const 按钮 of 暂停按钮列表) {
@@ -823,7 +826,8 @@ export class 对局页面 implements 页面实例 {
           ...按钮.矩形,
           深度: 20,
           禁用: () => this.状态.阶段 !== "暂停",
-          回调: () => {
+          回调: (事件) => {
+            if (事件.类型 !== "抬起") return;
             if (按钮.名称 === "继续") this.设置暂停(false);
             else if (按钮.名称 === "重开") this.开始新局();
             else this.上下文.导航.替换("主界面");

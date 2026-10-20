@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#080B18" />
+    <link rel="icon" href="data:," />
+    <title>再消一行 · Three 资源验收</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #080b18;
+        overflow: hidden;
+      }
+      #游戏容器 {
+        position: fixed;
+        inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+          env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+      }
+      #错误提示 {
+        position: fixed;
+        inset: auto 16px 16px 16px;
+        z-index: 10;
+        padding: 12px 14px;
+        border: 1px solid #ff2d9b;
+        border-radius: 8px;
+        background: #1a0b16;
+        color: #ffd7ec;
+        font: 13px/1.6 "Segoe UI", "Microsoft YaHei", sans-serif;
+        white-space: pre-wrap;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="游戏容器" aria-label="再消一行资源验收"></main>
+    <div id="错误提示" role="alert"></div>
+    <script type="module" src="./代码/three版/资源/验收页.ts"></script>
+  </body>
+</html>

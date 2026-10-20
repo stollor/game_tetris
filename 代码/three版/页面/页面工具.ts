@@ -1,14 +1,23 @@
-import { 填充矩形, 绘制单行文字 } from "../../../框架Three/界面/控件/工具";
+import { 矩形包含, 绘制单行文字 } from "../../../框架Three/界面/控件/工具";
 import type { 按钮选项 } from "../../../框架Three/界面/控件/按钮";
 import { 按钮 } from "../../../框架Three/界面/控件/按钮";
 import type { 控件层选项 } from "../../../框架Three/界面/控件/控件层";
 import { 控件层 } from "../../../框架Three/界面/控件/控件层";
 import type { 滚动容器选项 } from "../../../框架Three/界面/控件/滚动容器";
 import { 滚动容器 } from "../../../框架Three/界面/控件/滚动容器";
-import type { 控件接口, 界面配色, 矩形, 绘制环境 } from "../../../框架Three/界面/控件/类型";
+import type {
+  可捕获控件,
+  控件接口,
+  界面配色,
+  矩形,
+  绘制环境,
+} from "../../../框架Three/界面/控件/类型";
 import { 轻提示队列 } from "../../../框架Three/界面/控件/轻提示";
-import { 主题转界面配色, 绘制背景, 绘制顶栏衬底, 读取背景外观 } from "../主题";
+import type { 指针事件, 逻辑坐标 } from "../../../框架Three/运行时/输入路由";
+import { 绘制背景 } from "../../视觉/背景配方";
+import { 主题转界面配色, 绘制顶栏衬底, 读取背景外观 } from "../主题";
 import type { 界面快照, 界面按钮快照, 页面上下文, 页面实例, 页面编号 } from "../接口/上下文";
+import type { 画笔 } from "../画笔/index";
 import { 创建文字服务 } from "../界面/文字服务";
 
 /**
@@ -27,9 +36,76 @@ export interface 页面选项 {
   深度?: number;
 }
 
+/** 快照只认这两件事：矩形与禁用态；框架按钮与命中热区都满足。 */
+interface 登记控件 extends 控件接口 {
+  读取矩形(): 矩形;
+  读取禁用(): boolean;
+}
+
 interface 按钮登记项 {
   名称: string;
-  控件: 按钮;
+  控件: 登记控件;
+}
+
+export interface 热区选项 {
+  /** 命中名称，调试桥/测试按它点击，必须与页面可见按钮语义一致。 */
+  名称: string;
+  矩形: 矩形;
+  点击: () => void;
+  禁用?: boolean | (() => boolean);
+}
+
+/**
+ * 只参与命中、不参与绘制的透明热区。
+ * 共享视觉配方由页面在 `渲染()` 里用 `画笔` 绘制，命中与快照仍走页面基类的控件层。
+ */
+export class 命中热区 implements 可捕获控件 {
+  private 矩形值: 矩形;
+  private readonly 选项: 热区选项;
+  private 按下中 = false;
+
+  constructor(选项: 热区选项) {
+    this.选项 = 选项;
+    this.矩形值 = { ...选项.矩形 };
+  }
+
+  读取矩形(): 矩形 {
+    return { ...this.矩形值 };
+  }
+
+  设置矩形(矩形: 矩形): void {
+    this.矩形值 = { ...矩形 };
+  }
+
+  读取禁用(): boolean {
+    return typeof this.选项.禁用 === "function" ? this.选项.禁用() : (this.选项.禁用 ?? false);
+  }
+
+  命中(坐标: 逻辑坐标): 控件接口 | null {
+    return this.读取禁用() || !矩形包含(this.矩形值, 坐标) ? null : this;
+  }
+
+  绘制(_环境: 绘制环境): void {}
+
+  处理按下(_事件: 指针事件): 可捕获控件 | null {
+    if (this.读取禁用()) return null;
+    this.按下中 = true;
+    return this;
+  }
+
+  处理移动(事件: 指针事件): void {
+    if (this.按下中 && !矩形包含(this.矩形值, 事件.坐标)) this.按下中 = false;
+  }
+
+  处理抬起(事件: 指针事件): void {
+    if (!this.按下中) return;
+    this.按下中 = false;
+    if (矩形包含(this.矩形值, 事件.坐标)) this.选项.点击();
+  }
+
+  处理取消(): void {
+    this.按下中 = false;
+  }
 }
 
 export abstract class 页面基类 implements 页面实例 {
@@ -89,23 +165,26 @@ export abstract class 页面基类 implements 页面实例 {
     if (this.提示.读取列表().length > 0 || this.读取背景动态()) this.上下文.资源.请求重绘();
   }
 
+  protected get 画笔(): 画笔 {
+    return this.上下文.资源.画笔;
+  }
+
   渲染(): void {
     const 环境 = this.环境;
     if (this.页面选项.背景 !== false) {
-      const 外观 = 读取背景外观();
-      绘制背景(环境, { 左: 0, 上: 0, 宽: this.逻辑宽, 高: this.逻辑高 }, 外观, {
-        时间秒: this.背景时间秒,
+      const 设置 = this.上下文.服务.设置.读取();
+      const 外观 = 读取背景外观(设置);
+      // 背景配方是引擎无关纯函数：Three 页每帧用画笔.图形重画静态+动态，不自己 clear/提交。
+      绘制背景(this.画笔.图形, {
+        宽: this.逻辑宽,
+        高: this.逻辑高,
+        主题: 设置.背景主题,
         动态: this.读取背景动态(),
+        时间秒: this.背景时间秒,
       });
       // 浅底背景下压一层主题底色，保证浅色文字/控件的可读性。
       if (外观.文字基调 === "浅底")
-        填充矩形(
-          环境.合批,
-          环境.文字.读取纯色紫外线(),
-          { 左: 0, 上: 0, 宽: this.逻辑宽, 高: this.逻辑高 },
-          环境.配色.底色,
-          0.34,
-        );
+        this.画笔.图形.fillStyle(环境.配色.底色, 0.34).fillRect(0, 0, this.逻辑宽, this.逻辑高);
     }
     this.绘制内容(环境);
     this.控件层.绘制(环境);
@@ -183,6 +262,14 @@ export abstract class 页面基类 implements 页面实例 {
     const 控件 = new 按钮(选项);
     this.控件层.添加(控件);
     if (名称) this.按钮登记.push({ 名称, 控件 });
+    return 控件;
+  }
+
+  /** 创建一个透明命中热区：视觉由共享配方用画笔绘制，命中与快照仍走控件层。 */
+  protected 创建热区(选项: 热区选项): 命中热区 {
+    const 控件 = new 命中热区(选项);
+    this.控件层.添加(控件);
+    this.按钮登记.push({ 名称: 选项.名称, 控件 });
     return 控件;
   }
 

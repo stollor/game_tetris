@@ -6,8 +6,8 @@ import {
   获取烘焙贴图,
   设置替身贴图,
 } from "../性能/图形烘焙";
+import { 绘制极光帘幕 as 共享绘制极光帘幕 } from "./背景配方/极光帘幕";
 
-const 极光色 = [0x3ff0c0, 0x4de3d8, 0x7ad9ff];
 const 签名表 = new WeakMap<Phaser.GameObjects.Graphics, string>();
 
 /** 帘幕形状只生成一次；Canvas回退仍可按原时间重画。 */
@@ -18,22 +18,7 @@ export function 绘制极光帘幕(
   时间: number,
   条: number,
 ): void {
-  const 色 = 极光色[条] ?? 0x4de3d8;
-  const 基Y = 高 * (0.12 + 条 * 0.05);
-  for (let 遍 = 0; 遍 < 2; 遍++) {
-    const 步长 = Math.max(10, 宽 / (44 + 遍 * 28));
-    const 偏移 = 遍 === 1 ? 步长 * 0.5 : 0;
-    for (let x = -步长; x < 宽 + 步长; x += 步长) {
-      const nx = x / 宽;
-      const 顶 =
-        基Y +
-        Math.sin(nx * 5.2 + 条 * 1.9 + 时间 * 0.00022) * 高 * 0.05 +
-        Math.sin(nx * 11 + 时间 * 0.00035) * 高 * 0.02;
-      const 帘高 = 高 * (0.12 + 0.07 * Math.sin(nx * 6.5 + 条 * 2.2 + 时间 * 0.0003));
-      const 淡 = (遍 === 0 ? 0.052 : 0.03) * (0.8 + 0.2 * Math.sin(nx * 4.2 + 时间 * 0.0005 + 条));
-      g.fillGradientStyle(色, 色, 色, 色, 淡, 淡, 0, 0).fillRect(x + 偏移, 顶, 步长 + 1, 帘高);
-    }
-  }
+  共享绘制极光帘幕(g, 宽, 高, 时间, 条);
 }
 
 export function 移动极光替身(
