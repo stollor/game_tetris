@@ -1,7 +1,7 @@
 import { type 按钮配置, 界面按钮 } from "Phaser框架/界面/按钮";
 import type Phaser from "phaser";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
-import { 读取霓虹按钮配色, type 霓虹按钮变体 } from "./按钮配方";
+import { 读取霓虹按钮配色, 霓虹按钮动效, type 霓虹按钮变体 } from "./按钮配方";
 import { 读取霓虹调色板 } from "./调色板";
 
 export type { 霓虹按钮变体 } from "./按钮配方";
@@ -58,15 +58,21 @@ export function 创建霓虹按钮(场景: Phaser.Scene, 参数: 霓虹按钮参
       场景.tweens.killTweensOf(按钮);
       场景.tweens.add({
         targets: 按钮,
-        scaleX: 0.975,
-        scaleY: 0.96,
-        duration: 65,
+        scaleX: 霓虹按钮动效.按下X,
+        scaleY: 霓虹按钮动效.按下Y,
+        duration: 霓虹按钮动效.按下毫秒,
         ease: "Quad.easeOut",
       });
     },
     松开: () => {
       场景.tweens.killTweensOf(按钮);
-      场景.tweens.add({ targets: 按钮, scaleX: 1, scaleY: 1, duration: 170, ease: "Back.easeOut" });
+      场景.tweens.add({
+        targets: 按钮,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 霓虹按钮动效.松开毫秒,
+        ease: "Back.easeOut",
+      });
     },
     ...参数.覆盖,
   });

@@ -115,6 +115,10 @@ export interface 文字项 {
   锚点: 文字锚点;
   x: number;
   y: number;
+  /** 以锚点缩放字形，动画不改变字体光栅与缓存签名；默认1。 */
+  缩放?: number;
+  缩放X?: number;
+  缩放Y?: number;
   /** 折行最大宽度（逻辑像素）；缺省不折行。 */
   最大宽?: number;
 }

@@ -18,8 +18,11 @@ import {
   读取格子,
   软降一步,
 } from "../../玩法/再消一行";
-import { type 对局布局数据, 计算对局布局 } from "../../视觉/对局布局";
+import { type 对局布局数据, 计算对局布局, 计算对局附属布局 } from "../../视觉/对局布局";
+import { 绘制对局遮光 } from "../../视觉/对局界面配方";
+import { 绘制对局设置, 计算对局设置布局 } from "../../视觉/对局设置配方";
 import { 获取技巧反馈 } from "../../视觉/技巧反馈";
+import { 读取成就提示透明度 } from "../../视觉/特效配方";
 import type { 游戏文案 } from "../../语言/类型";
 import type { 游戏设置 } from "../../配置/再消一行设置";
 import { 读取方块外观方案 } from "../主题/方块";
@@ -51,6 +54,7 @@ import {
   type 金币奖励,
 } from "./结算数据";
 import { type 虚拟键, type 输入动作, 输入状态 } from "./输入";
+import { 准备消行样本 } from "./验收样本";
 
 /**
  * 对局页：把 代码/玩法/再消一行.ts 的纯规则接到 Three 的共享合批/命中分发上。
@@ -79,6 +83,9 @@ export interface 对局快照 {
   列高度: number[];
   最低行空格: number[];
   有效用时: number;
+  特效: 特效状态;
+  提示: 提示状态;
+  对局设置打开: boolean;
 }
 
 export type 操作名 = "左移" | "右移" | "旋转" | "软降" | "硬降" | "暂存" | "重新开始";
@@ -170,6 +177,8 @@ export class 对局页面 implements 页面实例 {
   private 金币奖励: 金币奖励 | null = null;
   private 金币失败原因 = "";
   private 新成就: string[] = [];
+  private 对局设置打开 = false;
+  private 正在调落点影 = false;
 
   constructor(上下文: 页面上下文) {
     this.上下文 = 上下文;
@@ -187,14 +196,28 @@ export class 对局页面 implements 页面实例 {
       准备单行消除: () => {
         this.测试序列 = ["I", "O"];
         this.开始新局();
-        const 底行 = this.状态.棋盘.at(-1);
-        if (底行) {
-          for (let 列 = 0; 列 < 底行.length; 列++) {
-            if (列 < 3 || 列 > 6) 底行[列] = "J";
-          }
-        }
+        准备消行样本(this.状态, 1);
         this.请求重绘();
       },
+      准备四行消除: (继续连击 = false, 保留堆叠 = false) => {
+        if (!继续连击) {
+          this.测试序列 = ["I", "O"];
+          this.开始新局();
+        }
+        准备消行样本(this.状态, 4, 保留堆叠);
+        this.请求重绘();
+      },
+      准备目标达成: () => {
+        this.测试序列 = ["I", "O"];
+        this.开始新局();
+        this.状态.消行数 = 139;
+        this.状态.等级 = 14;
+        this.状态.目标达成 = false;
+        this.目标已提示 = false;
+        准备消行样本(this.状态, 1);
+        this.请求重绘();
+      },
+      读取特效: () => structuredClone(this.特效),
       硬降: () => {
         if (this.状态.阶段 !== "进行中") return;
         this.执行硬降();
@@ -207,14 +230,14 @@ export class 对局页面 implements 页面实例 {
         this.状态.阶段 = "结束";
         this.请求重绘();
       },
-      准备结算: () => {
+      准备结算: (完赛 = false) => {
         this.开始新局();
         this.状态.阶段 = "结束";
-        this.状态.完赛 = false;
+        this.状态.完赛 = 完赛;
         this.状态.有效用时 = 12345;
         this.状态.剩余时间 = 0;
         this.状态.分数 = 4321;
-        this.状态.消行数 = 13;
+        this.状态.消行数 = this.模式 === "冲刺" && 完赛 ? 40 : 13;
         this.状态.等级 = 5;
         this.状态.最长连击 = 3;
         this.请求重绘();
@@ -262,12 +285,20 @@ export class 对局页面 implements 页面实例 {
     this.请求重绘();
   }
 
+  调整尺寸(): void {
+    if (!this.已进入) return;
+    for (const 注销 of this.注销命中) 注销();
+    this.注销命中 = [];
+    this.注册命中();
+    this.请求重绘();
+  }
+
   更新(固定步长秒: number): void {
     if (!this.已进入) return;
     const 秒 = Math.max(0, 固定步长秒);
     this.背景时间秒 += 秒;
-    this.更新提示(秒);
-    const 特效活跃 = 更新特效(this.特效, 秒);
+    if (this.状态.阶段 !== "暂停") this.更新提示(秒);
+    const 特效活跃 = this.状态.阶段 !== "暂停" && 更新特效(this.特效, 秒);
     if (this.状态.阶段 === "进行中") {
       const 动作 = this.输入.更新(秒 * 1000);
       for (const 项 of 动作) this.执行输入动作(项);
@@ -276,7 +307,10 @@ export class 对局页面 implements 页面实例 {
         this.检查事件();
       }
       this.请求重绘();
-    } else if (特效活跃 || this.提示.技巧 || this.提示.成就 || this.提示.目标剩余秒 > 0) {
+    } else if (
+      this.状态.阶段 !== "暂停" &&
+      (特效活跃 || this.提示.技巧 || this.提示.成就 || this.提示.目标剩余秒 > 0)
+    ) {
       this.请求重绘();
     }
     if (this.状态.阶段 === "结束" && !this.已结算) this.生成结算();
@@ -300,6 +334,7 @@ export class 对局页面 implements 页面实例 {
       时间秒: this.背景时间秒,
     });
     const 偏移 = 读取震动偏移(this.特效);
+    绘制对局遮光(环境.图形, 资源.逻辑宽, 资源.逻辑高, this.读取布局().竖屏);
     const 视图: 对局视图 = {
       状态: this.状态,
       方块外观: 读取方块外观方案(this.设置),
@@ -323,7 +358,7 @@ export class 对局页面 implements 页面实例 {
       成就: this.提示.成就
         ? {
             文本: this.提示.成就.文本,
-            比例: Math.min(1, this.提示.成就.剩余秒 / 350),
+            比例: 读取成就提示透明度(this.提示.成就.剩余秒),
           }
         : null,
       目标: this.提示.目标剩余秒 > 0 ? this.提示.目标剩余秒 / 目标提示秒 : null,
@@ -338,10 +373,22 @@ export class 对局页面 implements 页面实例 {
       最佳纪录: this.读取最佳纪录文案(),
       偏移X: 偏移.x,
       偏移Y: 偏移.y,
+      文案: this.文案,
     });
     // 暂停/结算面板压在特效之上；特效是叠加混合批次，必须避免盖住面板。
     if (this.状态.阶段 !== "暂停" && !this.已结算) {
-      绘制特效(环境, this.特效, { 开: this.设置.省电模式 !== "开" }, 偏移.x, 偏移.y);
+      绘制特效(
+        环境,
+        this.特效,
+        { 开: this.设置.省电模式 !== "开" },
+        偏移.x,
+        偏移.y,
+        this.读取布局(),
+      );
+    }
+    if (this.对局设置打开) {
+      for (const 项 of 绘制对局设置(环境.图形, 资源.逻辑宽, 资源.逻辑高, this.设置, this.文案))
+        资源.画笔.绘制文字(项);
     }
   }
 
@@ -374,6 +421,9 @@ export class 对局页面 implements 页面实例 {
       列高度: 读取列高度(this.状态),
       最低行空格: 读取最低行空格(this.状态),
       有效用时: Math.round(this.状态.有效用时),
+      特效: structuredClone(this.特效),
+      提示: structuredClone(this.提示),
+      对局设置打开: this.对局设置打开,
     };
   }
 
@@ -421,10 +471,22 @@ export class 对局页面 implements 页面实例 {
 
   /** 供验收按名称驱动真实点击；坐标与命中注册共用同一份布局。 */
   读取界面(): 界面快照 {
+    if (this.对局设置打开) {
+      const 定位 = 计算对局设置布局(this.上下文.资源.逻辑宽, this.上下文.资源.逻辑高);
+      return {
+        按钮: [
+          ...定位.按钮.map((项) => ({ 名称: 项.名称, ...项.矩形, 可用: true })),
+          { 名称: "落点影透明度", ...定位.滑块, 可用: true },
+        ],
+        文字: [this.文案.对局设置, `${this.设置.落点影透明度}%`],
+      };
+    }
     const 对局定位 = this.读取布局();
     const 进行中 = this.状态.阶段 === "进行中";
     const 暂停中 = this.状态.阶段 === "暂停";
     const 按钮: 界面按钮快照[] = [];
+    const 暂存矩形 = 对局定位.侧栏?.暂存 ?? 计算对局附属布局(对局定位).暂存;
+    按钮.push({ 名称: "暂存", ...暂存矩形, 可用: 进行中 && !this.状态.本块已暂存 });
     for (const 键 of 对局定位.操作区.键) {
       按钮.push({
         名称: 键.名称,
@@ -493,6 +555,7 @@ export class 对局页面 implements 页面实例 {
     this.状态 = 创建新局(this.随机源, this.测试序列, this.模式);
     this.测试序列 = [];
     this.提示.技巧 = null;
+    this.对局设置打开 = false;
     this.提示.成就 = null;
     this.提示.目标剩余秒 = 0;
     清空特效(this.特效);
@@ -539,17 +602,26 @@ export class 对局页面 implements 页面实例 {
       // 窗口失焦自动暂停，回到页面后由玩家按 P/Esc 或点「继续」恢复。
       if (this.状态.阶段 === "进行中") this.设置暂停(true);
     };
+    const 结束拖动 = () => {
+      this.正在调落点影 = false;
+    };
     window.addEventListener("keydown", 按下);
     window.addEventListener("keyup", 松开);
     window.addEventListener("blur", 失焦);
+    window.addEventListener("pointerup", 结束拖动);
+    window.addEventListener("pointercancel", 结束拖动);
     this.撤销绑定.push(() => {
       window.removeEventListener("keydown", 按下);
       window.removeEventListener("keyup", 松开);
       window.removeEventListener("blur", 失焦);
+      window.removeEventListener("pointerup", 结束拖动);
+      window.removeEventListener("pointercancel", 结束拖动);
     });
     this.撤销绑定.push(
       this.上下文.服务.设置.订阅((设置) => {
+        const 适配改变 = 设置.屏幕适配 !== this.设置.屏幕适配;
         this.设置 = 设置;
+        if (适配改变) this.调整尺寸();
         this.请求重绘();
       }),
     );
@@ -564,6 +636,10 @@ export class 对局页面 implements 页面实例 {
 
   /** 键盘按下：返回是否已消费该键（用于 preventDefault）。 */
   private 按下键(代码: string): boolean {
+    if (this.对局设置打开) {
+      if (代码 === "Escape" || 代码 === "KeyP") this.关闭对局设置();
+      return true;
+    }
     if (代码 === "KeyP" || 代码 === "Escape") {
       if (this.状态.阶段 !== "结束") this.设置暂停(this.状态.阶段 !== "暂停");
       return true;
@@ -639,7 +715,7 @@ export class 对局页面 implements 页面实例 {
     if (距离 > 0) {
       this.播放音效("硬降");
       触发硬降(this.特效, 原格子, 距离, 类型);
-      if (this.设置.省电模式 !== "开") 触发震动(this.特效, 2);
+      if (this.设置.省电模式 !== "开" && !this.特效.震动) 触发震动(this.特效);
     }
     this.统计.操作次数++;
     this.检查事件();
@@ -680,6 +756,7 @@ export class 对局页面 implements 页面实例 {
     if (this.状态.阶段 === "结束") return;
     if ((this.状态.阶段 === "暂停") === 暂停) return;
     切换暂停(this.状态);
+    if (!暂停) this.对局设置打开 = false;
     this.输入.清空();
     this.播放音效(暂停 ? "暂停" : "继续");
     this.记录("暂停", 暂停 ? "暂停" : "继续");
@@ -698,7 +775,8 @@ export class 对局页面 implements 页面实例 {
       this.本局落块数++;
       this.统计.落块数++;
       触发锁定(this.特效, 落块.格子);
-      if (落块.行数 === 4 && this.设置.省电模式 !== "开") 触发震动(this.特效, 4);
+      if (落块.行数 > 0 && this.设置.省电模式 !== "开")
+        触发震动(this.特效, 落块.行数 === 4 ? 7 : 2 + 落块.行数, 落块.行数 === 4 ? 0.36 : 0.22);
       this.记录(
         "落块",
         `${落块.类型} ${落块.行数 > 0 ? `消 ${落块.行数} 行` : "落地"}`,
@@ -859,6 +937,19 @@ export class 对局页面 implements 页面实例 {
   private 注册命中(): void {
     const 命中 = this.上下文.资源.命中;
     const 对局定位 = this.读取布局();
+    const 暂存矩形 = 对局定位.侧栏?.暂存 ?? 计算对局附属布局(对局定位).暂存;
+    this.注销命中.push(
+      命中.注册({
+        名称: "对局.暂存",
+        ...暂存矩形,
+        深度: 7,
+        禁用: () => this.状态.阶段 !== "进行中" || this.状态.本块已暂存,
+        回调: (事件) => {
+          事件.停止冒泡();
+          if (事件.类型 === "抬起") this.执行输入动作({ 类型: "暂存" });
+        },
+      }),
+    );
     for (const 键 of 对局定位.操作区.键) {
       this.注销命中.push(
         命中.注册({
@@ -900,6 +991,7 @@ export class 对局页面 implements 页面实例 {
         高: 对局定位.离开按钮.高,
         深度: 6,
         回调: (事件) => {
+          事件.停止冒泡();
           if (事件.类型 !== "抬起") return;
           this.上下文.导航.替换("主界面");
         },
@@ -926,19 +1018,99 @@ export class 对局页面 implements 页面实例 {
           名称: `对局.暂停菜单.${项.名称}`,
           ...项.矩形,
           深度: 20,
-          禁用: () => this.状态.阶段 !== "暂停",
+          禁用: () => this.状态.阶段 !== "暂停" || this.对局设置打开,
           回调: (事件) => {
             if (事件.类型 !== "抬起") return;
             if (项.名称 === "继续") this.设置暂停(false);
             else if (项.名称 === "重开") this.开始新局();
             else if (项.名称 === "设置") {
-              this.设置暂停(false);
-              this.上下文.导航.进入("设置");
+              this.对局设置打开 = true;
+              this.请求重绘();
             } else this.上下文.导航.替换("主界面");
           },
         }),
       );
     }
+    const 设置定位 = 计算对局设置布局(this.上下文.资源.逻辑宽, this.上下文.资源.逻辑高);
+    this.注销命中.push(
+      命中.注册({
+        名称: "对局设置.遮罩",
+        左: 0,
+        上: 0,
+        宽: this.上下文.资源.逻辑宽,
+        高: this.上下文.资源.逻辑高,
+        深度: 29,
+        禁用: () => !this.对局设置打开,
+        回调: (事件) => {
+          事件.停止冒泡();
+          if (事件.类型 !== "抬起") return;
+          const 面板 = 设置定位.面板;
+          if (
+            事件.坐标.x < 面板.左 ||
+            事件.坐标.x > 面板.左 + 面板.宽 ||
+            事件.坐标.y < 面板.上 ||
+            事件.坐标.y > 面板.上 + 面板.高
+          )
+            this.关闭对局设置();
+        },
+      }),
+    );
+    for (const 项 of 设置定位.按钮)
+      this.注销命中.push(
+        命中.注册({
+          名称: `对局设置.${项.名称}`,
+          ...项.矩形,
+          深度: 30,
+          禁用: () => !this.对局设置打开,
+          回调: (事件) => {
+            事件.停止冒泡();
+            if (事件.类型 !== "抬起") return;
+            if (项.名称 === "关闭对局设置" || 项.名称 === "返回暂停菜单") this.关闭对局设置();
+            else if (项.名称.startsWith("网格:"))
+              this.上下文.服务.设置.更新({ 显示网格: 项.名称 === "网格:开" });
+            else if (项.名称.startsWith("按键说明:"))
+              this.上下文.服务.设置.更新({ 显示按键说明: 项.名称 === "按键说明:开" });
+            else if (项.名称.startsWith("上键:")) {
+              const 值 = 项.名称.slice(3);
+              if (值 === "左转" || 值 === "右转" || 值 === "180度")
+                this.上下文.服务.设置.更新({ 手机上键旋转: 值 });
+            }
+          },
+        }),
+      );
+    this.注销命中.push(
+      命中.注册({
+        名称: "对局设置.落点影透明度",
+        ...设置定位.滑块,
+        深度: 30,
+        禁用: () => !this.对局设置打开,
+        回调: (事件) => {
+          事件.停止冒泡();
+          if (事件.类型 === "取消") {
+            this.正在调落点影 = false;
+            return;
+          }
+          if (事件.类型 === "按下") this.正在调落点影 = true;
+          if (!this.正在调落点影) return;
+          if (事件.类型 !== "按下" && 事件.类型 !== "移动" && 事件.类型 !== "抬起") return;
+          const 值 = Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(((事件.坐标.x - 设置定位.滑块.左) / 设置定位.滑块.宽) * 20) * 5,
+            ),
+          );
+          this.上下文.服务.设置.更新({ 落点影透明度: 值 });
+          if (事件.类型 === "抬起") this.正在调落点影 = false;
+        },
+      }),
+    );
+  }
+
+  private 关闭对局设置(): void {
+    this.对局设置打开 = false;
+    this.正在调落点影 = false;
+    this.请求重绘();
   }
 
   /* ---------------------------------------------------------------- */

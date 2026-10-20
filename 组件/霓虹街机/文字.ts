@@ -58,6 +58,8 @@ export function 添加霓虹文字项(
   const 对象 = 场景.add.text(项.x, 项.y, 项.文案, 样式);
   const [原点X, 原点Y] = 锚点原点(项.锚点);
   对象.setOrigin(原点X, 原点Y);
+  if (项.缩放 !== undefined || 项.缩放X !== undefined || 项.缩放Y !== undefined)
+    对象.setScale(项.缩放X ?? 项.缩放 ?? 1, 项.缩放Y ?? 项.缩放 ?? 1);
   容器?.add(对象);
   return 对象;
 }

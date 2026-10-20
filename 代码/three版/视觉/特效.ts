@@ -1,5 +1,12 @@
 import type { 方块类型 } from "../../玩法/再消一行";
-import { 绘制四行庆祝, 绘制消行光带, 绘制落块拖尾, 绘制锁定闪光 } from "../../视觉/特效配方";
+import type { 对局布局数据 } from "../../视觉/对局布局";
+import {
+  绘制四行庆祝,
+  绘制消行光带,
+  绘制落块拖尾,
+  绘制锁定闪光,
+  读取对局震屏偏移,
+} from "../../视觉/特效配方";
 import { 布局 } from "./外观";
 import type { 绘制环境 } from "./绘制";
 
@@ -58,7 +65,6 @@ const 消行时长秒 = 0.65;
 const 四行时长秒 = 0.9;
 const 拖尾时长秒 = 0.24;
 const 锁定时长秒 = 0.15;
-const 震动时长秒 = 0.16;
 
 export function 创建特效状态(): 特效状态 {
   return { 消行: null, 拖尾: null, 锁定: null, 震动: null, 庆祝: 0 };
@@ -92,7 +98,6 @@ export function 触发硬降(
   if (距离 <= 0) return;
   const 列底 = new Map<number, number>();
   for (const [列, 行] of 原格子) {
-    if (行 < 0) continue;
     const 底 = 行 + 1;
     const 旧 = 列底.get(列);
     if (旧 === undefined || 底 > 旧) 列底.set(列, 底);
@@ -105,8 +110,8 @@ export function 触发硬降(
   特效.拖尾 = { 列, 类型, 距离, 经过秒: 0, 时长秒: 拖尾时长秒 };
 }
 
-export function 触发震动(特效: 特效状态, 强度 = 3): void {
-  特效.震动 = { 经过秒: 0, 时长秒: 震动时长秒, 强度 };
+export function 触发震动(特效: 特效状态, 强度 = 2.5, 时长秒 = 0.15): void {
+  特效.震动 = { 经过秒: 0, 时长秒, 强度 };
 }
 
 /** 推进特效计时；返回是否还有动画在播（供按需渲染判断）。 */
@@ -151,12 +156,8 @@ export function 清空特效(特效: 特效状态): void {
 export function 读取震动偏移(特效: 特效状态): { x: number; y: number } {
   const 震动 = 特效.震动;
   if (!震动) return { x: 0, y: 0 };
-  const 进度 = 震动.经过秒 / 震动.时长秒;
-  const 幅度 = 震动.强度 * (1 - 进度) * (1 - 进度);
-  return {
-    x: Math.sin(震动.经过秒 * 140) * 幅度,
-    y: Math.cos(震动.经过秒 * 110) * 幅度 * 0.7,
-  };
+  const 镜头 = 读取对局震屏偏移(震动.经过秒, 震动.时长秒, 震动.强度);
+  return { x: -镜头.x, y: -镜头.y };
 }
 
 export function 绘制特效(
@@ -165,9 +166,11 @@ export function 绘制特效(
   开关: 特效开关,
   偏移X: number,
   偏移Y: number,
+  对局定位?: 对局布局数据,
 ): void {
   const 色 = 环境.主题.颜色;
-  const { 左, 上, 格 } = 布局.棋盘;
+  const { 左, 上 } = 对局定位?.棋盘 ?? 布局.棋盘;
+  const 格 = 对局定位?.格子大小 ?? 布局.棋盘.格;
   const 棋盘左 = 左 + 偏移X;
   const 棋盘上 = 上 + 偏移Y;
   if (特效.拖尾 && 开关.开) {
@@ -205,7 +208,10 @@ export function 绘制特效(
       时间毫秒,
       时长毫秒,
       格,
-      扫过起点: Math.max(0, (布局.棋盘.行 - 1) * 格 * (1 - 时间毫秒 / 600)),
+      扫过起点: Math.max(
+        0,
+        Math.min(...(特效.消行?.行 ?? [布局.棋盘.行 - 1])) * 格 * (1 - 时间毫秒 / 600),
+      ),
       左: 棋盘左,
       上: 棋盘上,
     });

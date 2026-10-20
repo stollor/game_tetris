@@ -1,3 +1,5 @@
+import { 计算霓虹结算布局 } from "../../视觉/结算配方";
+import { 读取结算金币动画 } from "../../视觉/结算金币配方";
 import { 读取方块外观方案 } from "../主题/方块";
 import { 更新最近结算, 读取最近结算 } from "../对局/最近对局";
 import {
@@ -11,7 +13,6 @@ import {
 } from "../对局/结算数据";
 import type { 界面快照, 界面按钮快照, 页面上下文, 页面实例, 页面工厂 } from "../接口/上下文";
 import type { 对局结果 } from "../接口/服务";
-import { 结算菜单按钮, 结算重开按钮 } from "../视觉/外观";
 import { 绘制结算 } from "../视觉/结算绘制";
 import type { 绘制环境 } from "../视觉/绘制";
 
@@ -50,6 +51,7 @@ export class 结算页面 implements 页面实例 {
   private 撤销命中: (() => void)[] = [];
   private 已进入 = false;
   private 上次数秒 = -1;
+  private 动画毫秒 = 0;
 
   constructor(上下文: 页面上下文) {
     this.上下文 = 上下文;
@@ -70,6 +72,7 @@ export class 结算页面 implements 页面实例 {
     this.数据 = 读取最近结算() ?? (结果 ? 兜底结算(结果) : this.数据);
     this.已进入 = true;
     this.上次数秒 = -1;
+    this.动画毫秒 = 0;
     this.注册命中();
     this.上下文.资源.请求重绘();
   }
@@ -80,13 +83,32 @@ export class 结算页面 implements 页面实例 {
     this.已进入 = false;
   }
 
-  更新(): void {
+  调整尺寸(): void {
     if (!this.已进入) return;
+    for (const 注销 of this.撤销命中) 注销();
+    this.撤销命中 = [];
+    this.注册命中();
+    this.上下文.资源.请求重绘();
+  }
+
+  更新(秒: number): void {
+    if (!this.已进入) return;
+    if (
+      this.数据.金币 &&
+      读取结算金币动画(
+        this.动画毫秒,
+        this.数据.金币.新增,
+        this.上下文.服务.设置.读取().省电模式 === "开",
+      ).活跃
+    ) {
+      this.动画毫秒 += Math.max(0, 秒) * 1000;
+      this.上下文.资源.请求重绘();
+    }
     const 剩余 = this.读取锁剩余毫秒();
-    const 秒 = Math.ceil(剩余 / 1000);
+    const 倒计时秒 = Math.ceil(剩余 / 1000);
     // 3 秒防误触期间每秒重绘一次按钮倒计时。
-    if (秒 !== this.上次数秒) {
-      this.上次数秒 = 秒;
+    if (倒计时秒 !== this.上次数秒) {
+      this.上次数秒 = 倒计时秒;
       this.上下文.资源.请求重绘();
     }
   }
@@ -114,10 +136,16 @@ export class 结算页面 implements 页面实例 {
       金币余额: this.读取金币余额(),
       锁剩余毫秒: 锁剩余,
       可重开: 锁剩余 === 0,
+      宽: 资源.逻辑宽,
+      高: 资源.逻辑高,
+      动画毫秒: this.动画毫秒,
+      省电: this.上下文.服务.设置.读取().省电模式 === "开",
+      金币: this.数据.金币,
     });
   }
 
   读取界面(): 界面快照 {
+    const { 重开: 结算重开按钮, 菜单: 结算菜单按钮 } = this.读取按钮矩形();
     const 可重开 = this.读取锁剩余毫秒() === 0;
     const 按钮: 界面按钮快照[] = [
       { 名称: "重新开始", ...结算重开按钮, 可用: 可重开 },
@@ -152,6 +180,14 @@ export class 结算页面 implements 页面实例 {
       奖励文案: 读取奖励文案(this.数据),
       金币余额: this.读取金币余额(),
       重开锁剩余毫秒: this.读取锁剩余毫秒(),
+      动画毫秒: this.动画毫秒,
+      金币动画: this.数据.金币
+        ? 读取结算金币动画(
+            this.动画毫秒,
+            this.数据.金币.新增,
+            this.上下文.服务.设置.读取().省电模式 === "开",
+          )
+        : null,
     };
   }
 
@@ -170,6 +206,7 @@ export class 结算页面 implements 页面实例 {
   }
 
   private 注册命中(): void {
+    const { 重开: 结算重开按钮, 菜单: 结算菜单按钮 } = this.读取按钮矩形();
     const 命中 = this.上下文.资源.命中;
     this.撤销命中.push(
       命中.注册({
@@ -201,6 +238,17 @@ export class 结算页面 implements 页面实例 {
     this.上下文.导航.替换("对局", { 模式: this.数据.结果.模式 });
   }
 
+  private 读取按钮矩形() {
+    const 定位 = 计算霓虹结算布局(this.上下文.资源.逻辑宽, this.上下文.资源.逻辑高);
+    const 转矩形 = (按钮: typeof 定位.重开) => ({
+      左: 按钮.中心X - 按钮.宽 / 2,
+      上: 按钮.中心Y - 按钮.高 / 2,
+      宽: 按钮.宽,
+      高: 按钮.高,
+    });
+    return { 重开: 转矩形(定位.重开), 菜单: 转矩形(定位.菜单) };
+  }
+
   private 返回主菜单(): void {
     this.上下文.导航.替换("主界面");
   }
@@ -217,6 +265,7 @@ export class 结算页面 implements 页面实例 {
           金币失败原因: "",
         };
         更新最近结算(this.数据);
+        this.动画毫秒 = 0;
       } else {
         this.数据 = { ...this.数据, 金币失败原因: 结果.原因 };
       }

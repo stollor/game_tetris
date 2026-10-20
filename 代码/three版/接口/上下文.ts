@@ -52,6 +52,7 @@ export interface 页面资源 {
   请求重绘(): void;
   /** 对局页报告玩法是否进行中；启动层据此做按需渲染/省电限帧。 */
   设置玩法进行中(进行中: boolean): void;
+  设置镜头偏移?(x: number, y: number): void;
 }
 
 export interface 导航服务 {
@@ -77,10 +78,13 @@ export interface 页面上下文 {
 export interface 对局测试控制 {
   设置序列(序列: readonly string[]): void;
   准备单行消除(): void;
+  准备四行消除(继续连击?: boolean, 保留堆叠?: boolean): void;
+  读取特效(): import("../视觉/特效").特效状态;
   硬降(): void;
   设置暂停(暂停: boolean): void;
   结束当前对局(): void;
-  准备结算(): void;
+  准备目标达成(): void;
+  准备结算(完赛?: boolean): void;
 }
 
 /** 页面按钮快照：调试桥按名称驱动真实点击，验收脚本不依赖硬编码坐标。 */
@@ -102,6 +106,7 @@ export interface 界面快照 {
 
 /** 页面实例 = 场景接口 + 可选测试/统计读取（对局页实现，启动层按鸭子类型接入调试桥）。 */
 export interface 页面实例 extends 场景接口<页面上下文> {
+  调整尺寸?(): void;
   测试?: 对局测试控制;
   读取快照?(): unknown;
   读取原始状态?(): unknown;

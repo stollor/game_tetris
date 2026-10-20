@@ -8,6 +8,7 @@ import { 注册模态界面 } from "../../../框架/界面/输入隔离";
 import { 播放游戏音效, 解锁程序音频 } from "../../../框架/音频/音频";
 import { 关闭覆盖页面 } from "../../../框架/页面切换";
 import { 创建收藏按钮, 收藏色 } from "../../../组件/旅行收藏/收藏牌面";
+import { 绘制商店目录底板, 绘制商店部位底板 } from "../../../组件/旅行收藏/收藏牌面配方";
 import { 获取旅行图标 } from "../../../组件/霓虹街机/图标";
 import { 绘制霓虹玻璃 } from "../../../组件/霓虹街机/底板";
 import { 绘制方块单元预制体, 绘制方块辉光 } from "../../../组件/霓虹街机/方块单元";
@@ -20,6 +21,7 @@ import { 计算目录滚动 } from "../../界面/目录滚动";
 import { 布置纯享层 } from "../../界面/纯享风景";
 import { 布置金币条 } from "../../界面/金币条";
 import { 地点浏览列表, 相邻风景 } from "../../界面/风景浏览";
+import { 计算商店布局, 计算商店方块陈列, 计算商店界面示意 } from "../../视觉/商店布局";
 import { 绘制动态霓虹细节, 绘制霓虹背景 } from "../../视觉/霓虹背景";
 import { 添加风景缩略 } from "../../视觉/风景缩略";
 import { 穿戴旅行外观, 获取游戏设置 } from "../../配置/再消一行设置";
@@ -232,14 +234,7 @@ export class 旅行商店 extends Phaser.Scene {
       return;
     }
     this.风景(0, 0, 宽, 高, undefined, true);
-    const 扁 = 高 < 500;
-    const 矮 = 高 < 640;
-    const 部件行 = 2;
-    const 卡高 = 扁 ? 34 : 矮 ? 40 : 48;
-    const 买高 = 扁 ? 32 : 矮 ? 38 : 44;
-    const 地点高 = 扁 ? 72 : 矮 ? 84 : 100;
-    const 页脚高 = 52;
-    const 坞高 = 地点高 + 部件行 * (卡高 + 6) + 买高 + 28 + 页脚高;
+    const { 卡高, 买高, 地点高, 坞高 } = 计算商店布局(宽, 高);
     const 手势 = this.add
       .rectangle(宽 / 2, (高 - 坞高) / 2, 宽, 高 - 坞高, 0, 0.001)
       .setInteractive();
@@ -300,26 +295,7 @@ export class 旅行商店 extends Phaser.Scene {
         .setOrigin(0.5, 1);
   };
   private 绘方块陈列(宽: number, 高: number, 坞高: number): void {
-    const 可用宽 = 宽 - 48;
-    const 可用高 = Math.max(96, 高 - 坞高 - 174);
-    const 列 = 可用宽 < 520 ? (可用宽 < 380 ? 2 : 4) : 7;
-    const 行 = Math.ceil(七种方块.length / 列);
-    const 列距 = 16;
-    const 行距 = 14;
-    const 格 = Math.max(
-      14,
-      Math.min(
-        36,
-        Math.floor((可用宽 - (列 - 1) * 列距) / (列 * 4)),
-        Math.floor((可用高 - (行 - 1) * 行距) / (行 * 2)),
-      ),
-    );
-    const 槽宽 = 格 * 4;
-    const 槽高 = 格 * 2;
-    const 块宽 = 列 * 槽宽 + (列 - 1) * 列距;
-    const 块高 = 行 * 槽高 + (行 - 1) * 行距;
-    const 左 = (宽 - 块宽) / 2;
-    const 顶 = 108 + Math.max(0, (可用高 - 块高) / 2);
+    const { 列, 列距, 行距, 格, 槽宽, 槽高, 块宽, 块高, 左, 顶 } = 计算商店方块陈列(宽, 高, 坞高);
     const 底 = this.add.graphics();
     底
       .fillStyle(颜色值(this.地点.面板), 0.96)
@@ -355,10 +331,7 @@ export class 旅行商店 extends Phaser.Scene {
     });
   }
   private 绘界面示意(宽: number, 高: number, 坞高: number): void {
-    const 面板宽 = Math.min(400, 宽 - 72);
-    const 面板高 = Math.min(188, Math.max(140, 高 - 坞高 - 140));
-    const x = (宽 - 面板宽) / 2;
-    const y = 96 + Math.max(0, (高 - 坞高 - 120 - 面板高) / 2);
+    const { 左: x, 上: y, 宽: 面板宽, 高: 面板高 } = 计算商店界面示意(宽, 高, 坞高);
     const g = this.add.graphics();
     绘制霓虹玻璃(g, x, y, 面板宽, 面板高, { 透明度: 0.72, 圆角: 14 });
     this.文字(x + 20, y + 16, this.地点.名称, 20, "#fff8e7", 面板宽 - 40);
@@ -463,17 +436,13 @@ export class 旅行商店 extends Phaser.Scene {
         },
         覆盖: {
           绘制底板: (图, w, h, s) => {
-            图
-              .clear()
-              .fillStyle(0x071820, this.地点 === 地点 ? 0.55 : s.悬停 ? 0.42 : 0.28)
-              .fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-            图
-              .lineStyle(
-                1.5,
-                this.地点 === 地点 ? 收藏色.金 : 0xffffff,
-                this.地点 === 地点 ? 0.9 : 0.18,
-              )
-              .strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+            图.clear();
+            绘制商店目录底板(
+              图,
+              { 左: -w / 2, 上: -h / 2, 宽: w, 高: h },
+              this.地点 === 地点,
+              s.悬停,
+            );
           },
         },
       });
@@ -519,17 +488,8 @@ export class 旅行商店 extends Phaser.Scene {
         点击: () => this.选中套装内容(部位),
         覆盖: {
           绘制底板: (图, w, h, s) => {
-            图
-              .clear()
-              .fillStyle(0x0c2428, s.悬停 || 预览中 ? 0.72 : 0.42)
-              .fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-            图
-              .lineStyle(
-                1.5,
-                预览中 || 已有 ? 收藏色.金 : 0xffffff,
-                预览中 ? 0.95 : 已有 ? 0.7 : 0.16,
-              )
-              .strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+            图.clear();
+            绘制商店部位底板(图, { 左: -w / 2, 上: -h / 2, 宽: w, 高: h }, 预览中, 已有, s.悬停);
           },
         },
       });

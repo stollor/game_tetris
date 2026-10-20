@@ -1,52 +1,9 @@
 import type Phaser from "phaser";
+
 import { 游戏外观 } from "../../代码/配置/游戏外观";
-import { 绘制霓虹玻璃 } from "./底板";
+
 import { 添加霓虹原生文字 } from "./文字";
 import { 读取霓虹调色板 } from "./调色板";
-
-export interface 霓虹侧栏几何 {
-  左: number;
-  顶: number;
-  宽: number;
-  高: number;
-  竖屏: boolean;
-  紧凑: boolean;
-}
-
-/** 对局侧栏底板与分隔线。位置由场景的响应式布局算出，配色走霓虹配方。 */
-export function 绘制霓虹侧栏(图形: Phaser.GameObjects.Graphics, 几何: 霓虹侧栏几何): void {
-  const 调色板 = 读取霓虹调色板();
-  const { 左, 顶, 宽, 高, 竖屏, 紧凑 } = 几何;
-  if (竖屏) {
-    绘制霓虹玻璃(图形, 左, 顶, 宽, 高, {
-      圆角: 14,
-      透明度: 0.98,
-      边色: 调色板.分组线,
-      边透明度: 0.65,
-    });
-    图形.fillStyle(调色板.分组线, 0.6).fillRect(左 + 10, 顶 + 高 - 144, 宽 - 20, 1);
-    return;
-  }
-  if (紧凑) return;
-  绘制霓虹玻璃(图形, 左, 顶, 宽, 高, {
-    圆角: 18,
-    透明度: 0.98,
-    边色: 调色板.分组线,
-    边透明度: 0.6,
-    强调色: 调色板.强调,
-  });
-  // 分隔线：三段渐变、两端渐隐，不形成横向接缝；位于记录页脚上方
-  const 线X = 左 + 16;
-  const 线宽 = 196;
-  const 线Y = 顶 + 高 - 84;
-  图形
-    .fillGradientStyle(调色板.分组线, 调色板.分组线, 调色板.分组线, 调色板.分组线, 0, 0.32, 0, 0.32)
-    .fillRect(线X, 线Y, 线宽 * 0.35, 1)
-    .fillStyle(调色板.分组线, 0.32)
-    .fillRect(线X + 线宽 * 0.35, 线Y, 线宽 * 0.3, 1)
-    .fillGradientStyle(调色板.分组线, 调色板.分组线, 调色板.分组线, 调色板.分组线, 0.32, 0, 0.32, 0)
-    .fillRect(线X + 线宽 * 0.65, 线Y, 线宽 * 0.35, 1);
-}
 
 export interface 霓虹纪录页脚配置 {
   标签: string;

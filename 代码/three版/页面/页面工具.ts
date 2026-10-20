@@ -271,8 +271,12 @@ export abstract class 页面基类 implements 页面实例 {
   protected readonly 上下文: 页面上下文;
   protected readonly 控件层: 控件层;
   protected readonly 提示 = new 轻提示队列();
-  protected readonly 逻辑宽: number;
-  protected readonly 逻辑高: number;
+  protected get 逻辑宽(): number {
+    return this.上下文.资源.逻辑宽;
+  }
+  protected get 逻辑高(): number {
+    return this.上下文.资源.逻辑高;
+  }
   private readonly 页面选项: 页面选项;
   private readonly 按钮登记: 按钮登记项[] = [];
   private 注销命中: (() => void) | null = null;
@@ -282,8 +286,6 @@ export abstract class 页面基类 implements 页面实例 {
   constructor(上下文: 页面上下文, 选项: 页面选项) {
     this.上下文 = 上下文;
     this.页面选项 = 选项;
-    this.逻辑宽 = 上下文.资源.逻辑宽;
-    this.逻辑高 = 上下文.资源.逻辑高;
     this.控件层 = new 控件层({
       名称: 选项.名称,
       深度: 选项.深度 ?? 0,
@@ -292,14 +294,22 @@ export abstract class 页面基类 implements 页面实例 {
     } satisfies 控件层选项);
   }
 
+  调整尺寸(): void {
+    this.控件层.设置逻辑尺寸(this.逻辑宽, this.逻辑高);
+    if (this.注销命中) this.注销命中 = this.控件层.绑定(this.上下文.资源.命中);
+    this.重建();
+  }
+
   // ---- 场景接口 ----
 
   进入(): void {
+    if (typeof window !== "undefined") window.addEventListener("keydown", this.按键);
     this.注销命中 = this.控件层.绑定(this.上下文.资源.命中);
     this.构建();
   }
 
   退出(): void {
+    if (typeof window !== "undefined") window.removeEventListener("keydown", this.按键);
     this.注销命中?.();
     this.注销命中 = null;
     this.控件层.解除绑定();
@@ -365,6 +375,16 @@ export abstract class 页面基类 implements 页面实例 {
         };
       });
     return { 按钮: 按钮列表, 文字: this.读取文字快照() };
+  }
+
+  private readonly 按键 = (事件: KeyboardEvent): void => {
+    const 当前 = this.上下文.导航.读取当前();
+    if (当前.覆盖 !== null || 当前.页面 !== this.页面选项.名称) return;
+    if (事件.code === "Escape") this.返回();
+  };
+
+  protected 返回(): void {
+    this.上下文.导航.返回();
   }
 
   // ---- 子类实现 ----

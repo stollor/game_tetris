@@ -9,6 +9,7 @@ import {
   生成霓虹按钮内容,
   绘制霓虹按钮,
   绘制霓虹按钮图标,
+  计算霓虹按钮按压,
   读取霓虹按钮文字样式,
   type 霓虹按钮文字选项,
   type 霓虹按钮状态,
@@ -74,6 +75,10 @@ export class 主界面 extends 页面基类 {
   private 模式卡列表: readonly 模式卡绘制项[] = [];
   private 纯享主题: 背景主题 = "极光原野";
   private 按下中 = new Set<string>();
+  private readonly 按钮动效 = new Map<
+    string,
+    { 按下: boolean; 毫秒: number; 起始X: number; 起始Y: number; x: number; y: number }
+  >();
 
   constructor(上下文: 页面上下文) {
     super(上下文, { 名称: "主界面" });
@@ -102,6 +107,14 @@ export class 主界面 extends 页面基类 {
     super.更新(秒);
     // 纯享态风景始终动态（与 Phaser 版一致），需要持续重绘。
     if (this.状态 === "纯享") this.请求重绘();
+    for (const [名称, 状态] of this.按钮动效) {
+      状态.毫秒 += 秒 * 1000;
+      const 缩放 = 计算霓虹按钮按压(状态.按下, 状态.毫秒, 状态.起始X, 状态.起始Y);
+      状态.x = 缩放.x;
+      状态.y = 缩放.y;
+      if (!缩放.完成) this.请求重绘();
+      else if (!状态.按下) this.按钮动效.delete(名称);
+    }
   }
 
   protected 构建(): void {
@@ -203,9 +216,6 @@ export class 主界面 extends 页面基类 {
   private 构建纯享(): void {
     const 纯享 = 计算纯享布局(this.逻辑宽, this.逻辑高);
     if (!纯享) return;
-    const 解锁 = 已解锁风景列表();
-    const 当前 = 获取设置背景主题(this.上下文);
-    this.纯享主题 = 解锁.includes(当前) ? 当前 : (解锁[0] ?? 当前);
     this.创建滑动热区({
       矩形: 全屏区域(this.逻辑宽, this.逻辑高),
       滑动: (方向) => {
@@ -225,6 +235,15 @@ export class 主界面 extends 页面基类 {
   }
 
   private 按下刷新(名称: string, 按下: boolean): void {
+    const 当前 = this.按钮动效.get(名称);
+    this.按钮动效.set(名称, {
+      按下,
+      毫秒: 0,
+      起始X: 当前?.x ?? 1,
+      起始Y: 当前?.y ?? 1,
+      x: 当前?.x ?? 1,
+      y: 当前?.y ?? 1,
+    });
     if (按下) this.按下中.add(名称);
     else this.按下中.delete(名称);
     this.请求重绘();
@@ -254,6 +273,11 @@ export class 主界面 extends 页面基类 {
     if (this.状态 === 状态) return;
     this.状态 = 状态;
     this.重建();
+  }
+
+  protected 返回(): void {
+    if (this.状态 === "纯享") this.退出纯享();
+    else if (this.状态 === "模式选择") this.切换状态("菜单");
   }
 
   private 开始游戏(模式: 游戏模式): void {
@@ -295,6 +319,7 @@ export class 主界面 extends 页面基类 {
             图标尺寸: 18,
             图文方向: "竖排",
             按下: this.按下中.has(名称),
+            名称,
           },
         );
       });
@@ -306,6 +331,7 @@ export class 主界面 extends 页面基类 {
         面板透明度: 0.78,
         强调色: 调色板.强调色,
         按下: this.按下中.has("开始游戏"),
+        名称: "开始游戏",
       });
       return;
     }
@@ -326,6 +352,7 @@ export class 主界面 extends 页面基类 {
         面板透明度: 0.78,
         强调色: 调色板.次要按钮.边框,
         按下: this.按下中.has("返回"),
+        名称: "返回",
       },
     );
   }
@@ -363,13 +390,26 @@ export class 主界面 extends 页面基类 {
     画笔: 画笔,
     区域: 按钮区域布局,
     文案: string,
-    选项: 霓虹按钮文字选项 & 霓虹按钮状态,
+    选项: 霓虹按钮文字选项 & 霓虹按钮状态 & { 名称?: string },
   ): void {
     const 标签尺寸 = 画笔.测量文字(文案, 读取霓虹按钮文字样式(选项));
     const 内容 = 生成霓虹按钮内容(区域.中心X, 区域.中心Y, 文案, 选项, 标签尺寸);
+    const 缩放 = 选项.名称 ? this.按钮动效.get(选项.名称) : undefined;
+    图形.save();
+    图形.translateCanvas(区域.中心X, 区域.中心Y);
+    图形.scaleCanvas(缩放?.x ?? 1, 缩放?.y ?? 1);
+    图形.translateCanvas(-区域.中心X, -区域.中心Y);
     绘制霓虹按钮(图形, 区域.中心X, 区域.中心Y, 区域.宽, 区域.高, 选项);
     if (内容.图标) 绘制霓虹按钮图标(图形, 内容.图标);
-    if (内容.文字项) 画笔.绘制文字(内容.文字项);
+    图形.restore();
+    if (内容.文字项)
+      画笔.绘制文字({
+        ...内容.文字项,
+        x: 区域.中心X + (内容.文字项.x - 区域.中心X) * (缩放?.x ?? 1),
+        y: 区域.中心Y + (内容.文字项.y - 区域.中心Y) * (缩放?.y ?? 1),
+        缩放X: 缩放?.x,
+        缩放Y: 缩放?.y,
+      });
   }
 
   protected 读取文字快照(): readonly string[] {

@@ -138,3 +138,17 @@ export function 绘制四行庆祝(绘图: 图形对象, 参数: 四行庆祝参
     .lineStyle(1, 0xffffff, 淡 * 0.6)
     .strokeRoundedRect(左 + 4, 上 + 4, 10 * 格 - 8, 20 * 格 - 8, 格 * 0.2);
 }
+/** Phaser 成就提示末尾350ms淡出，调用方以秒计时。 */
+export function 读取成就提示透明度(剩余秒: number): number {
+  return Math.max(0, Math.min(1, 剩余秒 / 0.35));
+}
+
+/** Phaser 棋盘更新特效采用的主镜头 scroll 偏移。 */
+export function 读取对局震屏偏移(经过秒: number, 时长秒: number, 强度: number) {
+  const 进度 = 时长秒 > 0 ? Math.min(1, Math.max(0, 经过秒 / 时长秒)) : 1;
+  const 幅度 = (1 - 进度) ** 2 * 强度;
+  return {
+    x: Math.cos(进度 * Math.PI * 12) * 幅度 * 0.55,
+    y: Math.sin(进度 * Math.PI * 15 + Math.PI / 2) * 幅度,
+  };
+}

@@ -1,4 +1,4 @@
-import type { 图形对象, 文字项 } from "../绘制/图形对象";
+import type { 图形对象, 文字项, 矩形 } from "../绘制/图形对象";
 import { 派生霓虹文字样式 } from "../霓虹街机/文字样式";
 
 /**
@@ -96,3 +96,34 @@ export function 生成收藏按钮文字项(
     y: 中心Y,
   };
 }
+
+/** 旅行商店部位卡：和 Phaser 版现行陈列保持相同底色与收藏描边。 */
+export function 绘制商店部位底板(
+  绘图: 图形对象,
+  区: 矩形,
+  预览中: boolean,
+  已有: boolean,
+  悬停 = false,
+): void {
+  绘图
+    .fillStyle(0x0c2428, 悬停 || 预览中 ? 0.72 : 0.42)
+    .fillRoundedRect(区.左, 区.上, 区.宽, 区.高, 8);
+  绘图
+    .lineStyle(1.5, 预览中 || 已有 ? 收藏色.金 : 0xffffff, 预览中 ? 0.95 : 已有 ? 0.7 : 0.16)
+    .strokeRoundedRect(区.左, 区.上, 区.宽, 区.高, 8);
+}
+
+export function 绘制商店目录底板(绘图: 图形对象, 区: 矩形, 选中: boolean, 悬停 = false): void {
+  绘图
+    .fillStyle(0x071820, 选中 ? 0.55 : 悬停 ? 0.42 : 0.28)
+    .fillRoundedRect(区.左, 区.上, 区.宽, 区.高, 8);
+  绘图
+    .lineStyle(1.5, 选中 ? 收藏色.金 : 0xffffff, 选中 ? 0.9 : 0.18)
+    .strokeRoundedRect(区.左, 区.上, 区.宽, 区.高, 8);
+}
+
+export function 绘制商店部位预览底板(绘图: 图形对象, 区: 矩形): void {
+  绘图.fillStyle(0x122824, 0.9).fillRoundedRect(区.左, 区.上, 区.宽, 区.高, 6);
+}
+
+export const 商店确认遮罩 = { 颜色: 0x030a13, 透明度: 0.82 } as const;

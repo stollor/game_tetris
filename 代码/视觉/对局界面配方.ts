@@ -1,6 +1,10 @@
 import type { 图形对象, 矩形 } from "../../组件/绘制/图形对象";
 import { 绘制玻璃按钮底板, 绘制玻璃面板基底 } from "../../组件/绘制/玻璃绘制";
 
+export function 绘制对局遮光(绘图: 图形对象, 宽: number, 高: number, 竖屏: boolean): void {
+  绘图.fillStyle(0x050914, 竖屏 ? 0.22 : 0.16).fillRect(0, 0, 宽, 高);
+}
+
 /**
  * 对局界面的引擎无关配方与布局（Three 对局/结算消费；Phaser 侧同类绘制保留原实现）。
  *
