@@ -8,6 +8,11 @@ const 归一 = (路径: string): string => 路径.replaceAll("\\", "/");
 const 组件前缀 = `${归一(join(项目, "组件"))}/`;
 const 预览前缀 = `${归一(join(项目, "组件/预览"))}/`;
 const 跳过目录 = new Set(["资源", "node_modules"]);
+/**
+ * 不是可视配方的接口层：`组件/绘制/` 只放引擎无关的绘制契约与类型，
+ * 由组件/场景在内部引用，不产生可在看板预览的样品，因此不要求被预览库引用。
+ */
+const 非可视前缀 = [`${归一(join(项目, "组件/绘制"))}/`];
 
 async function 收集(目录: string): Promise<string[]> {
   const 结果: string[] = [];
@@ -54,6 +59,7 @@ async function 未登记组件(): Promise<string[]> {
   }
   return 组件
     .filter((文件) => !归一(文件).startsWith(预览前缀))
+    .filter((文件) => !非可视前缀.some((前缀) => 归一(文件).startsWith(前缀)))
     .filter((文件) => !已载.has(文件))
     .map((文件) => 归一(relative(项目, 文件)))
     .sort((前, 后) => 前.localeCompare(后));
