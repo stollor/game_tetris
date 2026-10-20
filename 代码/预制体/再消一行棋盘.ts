@@ -15,6 +15,7 @@ import {
 } from "../玩法/再消一行";
 import { 绘制方块单元预制体, 绘制方块辉光 } from "../界面/方块单元";
 import { 创建图像池, type 图像池 } from "../视觉/图像池";
+import { 绘制棋盘外框, 绘制棋盘网格 } from "../视觉/对局界面配方";
 import { 消行特效 } from "../视觉/消行特效";
 import { 落块特效 } from "../视觉/落块特效";
 import { 获取游戏设置 } from "../配置/再消一行设置";
@@ -133,34 +134,26 @@ export class 再消一行棋盘 extends Phaser.GameObjects.Container {
     this.固定辉光.设置尺寸(宽, 高);
     const 背景色 = 游戏外观.棋盘.背景色;
     const 边框色 = 游戏外观.棋盘.边框色;
-    const 圆角 = Math.max(10, 格子大小 * 0.5);
-    // 外侧柔影
-    for (let 层 = 0; 层 < 3; 层 += 1) {
-      this.框体
-        .fillStyle(0x03060d, (0.2 - 层 * 0.055) * 透明度)
-        .fillRoundedRect(
-          -12 - 层 * 3,
-          -8 + 层 * 6,
-          宽 + 24 + 层 * 6,
-          高 + 20 + 层 * 5,
-          圆角 + 层 * 3,
-        );
-    }
-    this.框体
-      .fillStyle(背景色, 0.99)
-      .fillRoundedRect(-10, -10, 宽 + 20, 高 + 20, 圆角)
-      .lineStyle(1.2, 边框色, 0.95)
-      .strokeRoundedRect(-10, -10, 宽 + 20, 高 + 20, 圆角);
+    绘制棋盘外框(this.框体, {
+      左: 0,
+      上: 0,
+      宽,
+      高,
+      格子: 格子大小,
+      透明度,
+      背景色,
+      边框色,
+    });
     // 内部网格
-    this.网格层.clear().lineStyle(1, 颜色值(界面主题().游戏区域.网格线), 0.5);
-    for (let 列 = 1; 列 < 棋盘宽度; 列 += 1) {
-      this.网格层.lineBetween(列 * 格子大小, 0, 列 * 格子大小, 高);
-    }
-    for (let 行 = 1; 行 < 可见高度; 行 += 1) {
-      this.网格层.lineBetween(0, 行 * 格子大小, 宽, 行 * 格子大小);
-    }
-    // 中央竖向柔光，增加玻璃纵深
-    this.网格层.fillStyle(0xffffff, 0.022).fillRect(宽 * 0.3, 0, 宽 * 0.4, 高);
+    this.网格层.clear();
+    绘制棋盘网格(this.网格层, {
+      宽,
+      高,
+      格子: 格子大小,
+      列数: 棋盘宽度,
+      行数: 可见高度,
+      网格色: 颜色值(界面主题().游戏区域.网格线),
+    });
     return this;
   }
 

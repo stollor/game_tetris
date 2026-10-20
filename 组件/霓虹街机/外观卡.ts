@@ -1,6 +1,5 @@
 import { 界面控件, 绑定按钮手势 } from "Phaser框架/界面/控件";
 import { 界面滚动区域 } from "Phaser框架/界面/滚动区域";
-import { 选取对比文字色, 颜色字符串 } from "Phaser框架/界面/颜色工具";
 import type Phaser from "phaser";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import { 添加风景缩略 } from "../../代码/视觉/风景缩略";
@@ -8,8 +7,32 @@ import type { 背景主题 } from "../../代码/配置/再消一行设置";
 import { type 方块外观名称, 解析方块外观 } from "../../代码/配置/方块外观";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import type { 样式选择 } from "../../框架/设置/设置";
+import {
+  外观卡列表常量,
+  type 外观卡数据,
+  外观卡预览矩形,
+  生成外观卡文字项,
+  生成外观标题牌文字项,
+  绘制外观卡预览,
+  绘制外观标题牌底板,
+} from "./外观卡配方";
+import { 添加霓虹文字项 } from "./文字";
 import { 绘制方块单元预制体 } from "./方块单元";
 import { 读取霓虹调色板 } from "./调色板";
+
+function 转外观卡数据(配置: 外观卡配置): 外观卡数据 {
+  return {
+    标签: 配置.标签,
+    面板色: 配置.面板色,
+    背景色: 配置.背景色,
+    强调色: 配置.强调色,
+    类型: 配置.类型,
+    方块方案: 配置.方块方案,
+    背景值: 配置.背景值,
+    样式值: 配置.样式值,
+    已选: 配置.已选,
+  };
+}
 
 /** 设置页竖排标题牌：中文逐字竖排，英文整句旋转。 */
 export class 外观标题牌 extends 界面控件 {
@@ -20,15 +43,12 @@ export class 外观标题牌 extends 界面控件 {
   ) {
     super(场景, 0, 0, 配置.宽, 配置.高);
     const 背板 = 场景.add.graphics();
-    背板
-      .fillStyle(配置.面板色, 0.32)
-      .fillRoundedRect(-配置.宽 / 2 + 4, -配置.高 / 2 + 8, 配置.宽 - 8, 配置.高 - 16, 6)
-      .lineStyle(1, 配置.强调色, 0.45)
-      .strokeRoundedRect(-配置.宽 / 2 + 4, -配置.高 / 2 + 8, 配置.宽 - 8, 配置.高 - 16, 6);
+    绘制外观标题牌底板(背板, 0, 0, 配置.宽, 配置.高, 配置.面板色, 配置.强调色);
     this.add(背板);
 
     const 字号 = 标题.length > 6 ? "11px" : "14px";
     if (配置.英文) {
+      // 英文整句旋转 -90°；文字项暂不支持旋转，保留 Phaser 原生文字。
       const 文本 = 场景.add
         .text(0, 0, 标题, {
           fontFamily: 游戏外观.字体.家族,
@@ -41,20 +61,8 @@ export class 外观标题牌 extends 界面控件 {
         .setAngle(-90);
       this.add(文本);
     } else {
-      const 字符 = [...标题];
-      const 行高 = 17;
-      字符.forEach((字, 索引) => {
-        const 文本 = 场景.add
-          .text(0, (索引 - (字符.length - 1) / 2) * 行高, 字, {
-            fontFamily: 游戏外观.字体.家族,
-            fontSize: 字号,
-            fontStyle: "bold",
-            color: 配置.文字色,
-            align: "center",
-          })
-          .setOrigin(0.5);
-        this.add(文本);
-      });
+      for (const 项 of 生成外观标题牌文字项(标题, false, 0, 0, 配置.文字色))
+        添加霓虹文字项(场景, this, 项);
     }
     场景.add.existing(this);
   }
@@ -76,7 +84,7 @@ export interface 外观卡配置 {
   选择: () => void;
 }
 
-/** 设置页的样式/背景外观卡：缩略预览随样式与背景取值绘制。 */
+/** 设置页的样式/背景外观卡：缩略预览与标签由 `外观卡配方.ts` 绘制，命中仍用整卡矩形。 */
 export class 外观选择卡片 extends 界面控件 {
   private readonly 底板: Phaser.GameObjects.Rectangle;
   private readonly 预览: Phaser.GameObjects.Graphics;
@@ -86,78 +94,33 @@ export class 外观选择卡片 extends 界面控件 {
     super(场景, 0, 0, 配置.宽, 配置.高);
     this.name = 配置.名称;
     const 边色 = 配置.已选 ? 配置.强调色 : 0x718092;
+    const 数据 = 转外观卡数据(配置);
     this.底板 = 场景.add
       .rectangle(0, 0, 配置.宽, 配置.高, 配置.面板色, 1)
       .setName(配置.名称)
       .setStrokeStyle(配置.已选 ? 2 : 1, 边色, 配置.已选 ? 1 : 0.42);
     this.预览 = 场景.add.graphics();
-    const 预览高 = 配置.类型 === "背景" ? 配置.高 - 30 : 配置.高 - 31;
-    const 预览宽 = 配置.宽 - 12;
-    const x = -预览宽 / 2;
-    const y = -配置.高 / 2 + 5;
-    if (配置.类型 === "方块") {
-      this.预览.fillStyle(配置.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
-      const 方案 = 解析方块外观(配置.方块方案);
-      const 格 = Math.min(16, (预览宽 - 12) / 4, (预览高 - 6) / 2);
-      for (const [i, 类型] of (["I", "T", "L", "O"] as const).entries())
-        绘制方块单元预制体(this.预览, x + 预览宽 / 2 - 格 * 2 + i * 格, y + (预览高 - 格) / 2, {
+    const 画了 = 绘制外观卡预览(
+      this.预览,
+      { 中心X: 0, 中心Y: 0, 宽: 配置.宽, 高: 配置.高 },
+      数据,
+      (绘图, 左, 上, 格, 方案, 类型) =>
+        绘制方块单元预制体(绘图, 左, 上, {
           格子: 格,
-          方案: 方案.名称,
-          色值: 方案.颜色[类型],
-        });
-    } else if (配置.类型 === "背景" && 配置.背景值) {
+          方案,
+          色值: 解析方块外观(方案).颜色[类型],
+        }),
+    );
+    if (!画了 && 配置.背景值) {
+      const 矩形 = 外观卡预览矩形({ 中心X: 0, 中心Y: 0, 宽: 配置.宽, 高: 配置.高 }, 数据);
       // 缩略图烘焙成恰好卡片大小的纹理：无需裁剪区域，设置页滚动时也不再逐帧绘制风景
-      添加风景缩略(场景, this, x, y, 预览宽, 预览高, 配置.背景值);
-    } else if (配置.类型 === "背景") {
-      this.预览
-        .fillGradientStyle(配置.背景色, 配置.背景色, 配置.强调色, 配置.强调色, 1, 1, 0.8, 0.8)
-        .fillRoundedRect(x, y, 预览宽, 预览高, 5);
-      this.预览
-        .fillStyle(0xffedbd, 0.92)
-        .fillCircle(x + 预览宽 * 0.74, y + 9, Math.max(3, Math.min(6, 预览高 * 0.13)));
-      this.预览.fillStyle(配置.强调色, 0.9).fillTriangle(x, y + 30, x + 18, y + 13, x + 38, y + 30);
-      this.预览
-        .fillStyle(配置.背景色, 0.72)
-        .fillTriangle(x + 21, y + 30, x + 43, y + 12, x + 66, y + 30);
-      this.预览.fillStyle(0xffffff, 0.25).fillRect(x + 3, y + 32, Math.max(1, 预览宽 - 6), 1);
-    } else {
-      this.预览.fillStyle(配置.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
-      const 古典 = 配置.样式值 === "暖纸古典";
-      const 未来 = 配置.样式值 === "青蓝未来";
-      this.预览.lineStyle(1, 配置.强调色, 古典 ? 0.55 : 0.22);
-      if (未来) {
-        for (let gx = x + 6; gx < x + 预览宽; gx += 12)
-          this.预览.lineBetween(gx, y + 3, gx, y + 预览高 - 3);
-        for (let gy = y + 6; gy < y + 预览高; gy += 12)
-          this.预览.lineBetween(x + 3, gy, x + 预览宽 - 3, gy);
-      } else {
-        this.预览.strokeRect(x + 4, y + 4, 预览宽 - 8, 预览高 - 8);
-      }
-      const 格 = Math.min(12, (预览宽 - 20) / 5);
-      const 左 = x + 预览宽 / 2 - 格 * 1.5;
-      const 顶 = y + 预览高 / 2 - 格;
-      for (const [列, 行] of [
-        [0, 1],
-        [1, 0],
-        [1, 1],
-        [2, 1],
-      ]) {
-        const 块x = 左 + 列 * 格,
-          块y = 顶 + 行 * 格;
-        this.预览.fillStyle(配置.强调色).fillRoundedRect(块x, 块y, 格 - 2, 格 - 2, 古典 ? 1 : 2);
-        this.预览.fillStyle(0xffffff, 0.55).fillRect(块x + 1, 块y + 1, 格 - 4, 1);
-      }
-      this.预览.fillStyle(配置.强调色, 0.75).fillRect(x + 8, y + 预览高 - 10, 预览宽 - 16, 2);
+      添加风景缩略(场景, this, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 配置.背景值);
     }
-    this.标签 = 场景.add
-      .text(0, 配置.高 / 2 - 12, 配置.标签, {
-        fontFamily: 游戏外观.字体.家族,
-        fontSize: 配置.宽 < 88 ? "9px" : "11px",
-        color: 选取对比文字色(颜色字符串(配置.面板色)),
-        align: "center",
-        wordWrap: { width: 配置.宽 - 6 },
-      })
-      .setOrigin(0.5);
+    this.标签 = 添加霓虹文字项(
+      场景,
+      undefined,
+      生成外观卡文字项({ 中心X: 0, 中心Y: 0, 宽: 配置.宽, 高: 配置.高 }, 数据),
+    );
     this.add([this.底板, this.预览, this.标签]);
     this.sendToBack(this.底板);
     this.底板.setInteractive({ useHandCursor: true });
@@ -180,8 +143,9 @@ export function 创建外观选择列表(
   名称 = "preview.appearance",
 ): void {
   const 色 = 读取霓虹调色板();
-  const 卡宽 = 96,
-    间距 = 8,
+  const 卡宽 = 外观卡列表常量.卡宽,
+    卡高 = 外观卡列表常量.卡高,
+    间距 = 外观卡列表常量.间距,
     可视宽 = 宽;
   const 内容宽 = 卡片.length * (卡宽 + 间距) - 间距;
   舞台.add(
@@ -204,7 +168,7 @@ export function 创建外观选择列表(
   舞台.add(列表);
   卡片.forEach((配置, i) => {
     列表.内容容器.add(
-      new 外观选择卡片(场景, { ...配置, 宽: 卡宽, 高: 100 }).setPosition(
+      new 外观选择卡片(场景, { ...配置, 宽: 卡宽, 高: 卡高 }).setPosition(
         卡宽 / 2 + i * (卡宽 + 间距),
         82,
       ),

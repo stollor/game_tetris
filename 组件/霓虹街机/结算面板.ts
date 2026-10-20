@@ -1,8 +1,13 @@
 import type { 界面按钮 } from "Phaser框架/界面/按钮";
 import Phaser from "phaser";
+import {
+  绘制结算遮罩,
+  绘制结算面板,
+  计算霓虹结算布局,
+  type 霓虹结算几何,
+} from "../../代码/视觉/结算配方";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import { 获取旅行图标 } from "./图标";
-import { 绘制霓虹玻璃 } from "./底板";
 import { 创建霓虹按钮 } from "./按钮";
 import { 添加霓虹原生文字 } from "./文字";
 import { 读取霓虹调色板 } from "./调色板";
@@ -19,14 +24,6 @@ export interface 霓虹结算文案 {
 export interface 霓虹结算回调 {
   重开: () => void;
   菜单: () => void;
-}
-
-export interface 霓虹结算几何 {
-  中心X: number;
-  顶: number;
-  宽: number;
-  高: number;
-  比例: number;
 }
 
 export interface 霓虹结算数据 {
@@ -142,35 +139,39 @@ export class 霓虹结算面板 extends Phaser.GameObjects.Container {
   }
 
   布局(屏宽: number, 屏高: number): 霓虹结算几何 {
-    const 比例 = Math.min(1, (屏宽 - 28) / 380, (屏高 - 28) / 400);
-    const 中心X = 屏宽 / 2;
-    const 顶 = (屏高 - 400 * 比例) / 2;
-    const 面板宽 = 380 * 比例;
+    const 布局 = 计算霓虹结算布局(屏宽, 屏高);
+    const { 几何, 比例 } = { 几何: 布局.几何, 比例: 布局.几何.比例 };
     this.徽标文字
-      .setPosition(中心X, 顶 + 34 * 比例)
+      .setPosition(布局.徽标.中心X, 布局.徽标.上)
       .setFontSize(`${12 * 比例}px`)
-      .setWordWrapWidth(面板宽 - 32 * 比例);
-    this.分数文字.setPosition(中心X, 顶 + 132 * 比例).setFontSize(`${38 * 比例}px`);
-    const 左 = 中心X - 面板宽 / 2;
-    const 列宽 = 面板宽 / 3;
+      .setWordWrapWidth(几何.宽 - 32 * 比例);
+    this.分数文字.setPosition(布局.分数.中心X, 布局.分数.上).setFontSize(`${38 * 比例}px`);
     this.统计标签.forEach((文字, i) => {
-      文字.setPosition(左 + 列宽 * (i + 0.5), 顶 + 180 * 比例).setFontSize(`${11 * 比例}px`);
+      文字
+        .setPosition(布局.左 + 布局.列宽 * (i + 0.5), 布局.统计标签Y)
+        .setFontSize(`${11 * 比例}px`);
     });
     this.统计数值.forEach((文字, i) => {
-      文字.setPosition(左 + 列宽 * (i + 0.5), 顶 + 210 * 比例).setFontSize(`${18 * 比例}px`);
+      文字
+        .setPosition(布局.左 + 布局.列宽 * (i + 0.5), 布局.统计数值Y)
+        .setFontSize(`${18 * 比例}px`);
     });
     this.比例 = 比例;
-    this.金币行Y = 顶 + 247 * 比例;
+    this.金币行Y = 布局.金币行Y;
     this.金币图标.setDisplaySize(22 * 比例, 22 * 比例);
     this.金币数字.setFontSize(`${20 * 比例}px`);
-    this.排列金币行(中心X);
+    this.排列金币行(几何.中心X);
     this.奖励文字
-      .setPosition(中心X, 顶 + (this.已播金币 ? 269 : 258) * 比例)
+      .setPosition(几何.中心X, 布局.奖励Y + (this.已播金币 ? 11 * 比例 : 0))
       .setFontSize(`${12 * 比例}px`)
-      .setWordWrapWidth(面板宽 - 36 * 比例, true);
-    this.重开按钮.setPosition(中心X, 顶 + 307 * 比例).设置布局尺寸(面板宽 - 48 * 比例, 44 * 比例);
-    this.菜单按钮.setPosition(中心X, 顶 + 356 * 比例).设置布局尺寸(面板宽 - 48 * 比例, 38 * 比例);
-    return { 中心X, 顶, 宽: 面板宽, 高: 400 * 比例, 比例 };
+      .setWordWrapWidth(几何.宽 - 36 * 比例, true);
+    this.重开按钮
+      .setPosition(布局.重开.中心X, 布局.重开.中心Y)
+      .设置布局尺寸(布局.重开.宽, 布局.重开.高);
+    this.菜单按钮
+      .setPosition(布局.菜单.中心X, 布局.菜单.中心Y)
+      .设置布局尺寸(布局.菜单.宽, 布局.菜单.高);
+    return 几何;
   }
 
   设置重开文案(文案: string): void {
@@ -178,34 +179,12 @@ export class 霓虹结算面板 extends Phaser.GameObjects.Container {
   }
 
   绘制(几何: 霓虹结算几何, 屏宽: number, 屏高: number, 数据: 霓虹结算数据): void {
-    const 调色板 = 读取霓虹调色板();
-    const { 中心X, 顶, 宽: 面板宽, 高: 面板高, 比例 } = 几何;
-    const 左 = 中心X - 面板宽 / 2;
+    const 布局数据 = 计算霓虹结算布局(屏宽, 屏高);
+    const { 中心X, 顶, 比例 } = 几何;
     this.遮罩图形.clear();
     this.面板图形.clear();
-    this.遮罩图形.fillStyle(调色板.遮罩, 0.56).fillRect(0, 0, 屏宽, 屏高);
-    绘制霓虹玻璃(this.面板图形, 左, 顶, 面板宽, 面板高, {
-      圆角: 20,
-      透明度: 0.98,
-      边色: 调色板.面板描边,
-      边透明度: 0.85,
-      强调色: 调色板.强调,
-      高光: true,
-    });
-    this.面板图形
-      .fillStyle(调色板.强调, 0.9)
-      .fillRoundedRect(左 + 面板宽 / 2 - 64, 顶 + 12, 128, 4, 2)
-      .lineStyle(1, 调色板.分组线, 0.9)
-      .lineBetween(左 + 18, 顶 + 158 * 比例, 左 + 面板宽 - 18, 顶 + 158 * 比例);
-    const 列宽 = 面板宽 / 3;
-    for (let 索引 = 1; 索引 < 3; 索引 += 1) {
-      this.面板图形.lineBetween(
-        左 + 列宽 * 索引,
-        顶 + 170 * 比例,
-        左 + 列宽 * 索引,
-        顶 + 232 * 比例,
-      );
-    }
+    绘制结算遮罩(this.遮罩图形, 屏宽, 屏高);
+    绘制结算面板(this.面板图形, 布局数据);
     if (this.徽标文字.text !== 数据.徽标) this.徽标文字.setText(数据.徽标);
     if (this.分数文字.text !== 数据.分数) this.分数文字.setText(数据.分数);
     const 金币 = 数据.金币;

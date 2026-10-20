@@ -16,7 +16,14 @@ import { 轻提示队列 } from "../../../框架Three/界面/控件/轻提示";
 import type { 指针事件, 逻辑坐标 } from "../../../框架Three/运行时/输入路由";
 import { 绘制背景 } from "../../视觉/背景配方";
 import { 主题转界面配色, 绘制顶栏衬底, 读取背景外观 } from "../主题";
-import type { 界面快照, 界面按钮快照, 页面上下文, 页面实例, 页面编号 } from "../接口/上下文";
+import type {
+  界面快照,
+  界面按钮快照,
+  页面上下文,
+  页面参数,
+  页面实例,
+  页面编号,
+} from "../接口/上下文";
 import type { 画笔 } from "../画笔/index";
 import { 创建文字服务 } from "../界面/文字服务";
 
@@ -48,11 +55,15 @@ interface 按钮登记项 {
 }
 
 export interface 热区选项 {
-  /** 命中名称，调试桥/测试按它点击，必须与页面可见按钮语义一致。 */
-  名称: string;
+  /** 命中名称；需要进界面快照（调试桥/验收可点）时必填。 */
+  名称?: string;
   矩形: 矩形;
   点击: () => void;
   禁用?: boolean | (() => boolean);
+  /** 按下/松开/取消回调：让页面能画「按下态」视觉（Phaser 用缩放 tween）。 */
+  按下?: () => void;
+  松开?: () => void;
+  取消?: () => void;
 }
 
 /**
@@ -90,21 +101,169 @@ export class 命中热区 implements 可捕获控件 {
   处理按下(_事件: 指针事件): 可捕获控件 | null {
     if (this.读取禁用()) return null;
     this.按下中 = true;
+    this.选项.按下?.();
     return this;
   }
 
   处理移动(事件: 指针事件): void {
-    if (this.按下中 && !矩形包含(this.矩形值, 事件.坐标)) this.按下中 = false;
+    if (this.按下中 && !矩形包含(this.矩形值, 事件.坐标)) {
+      this.按下中 = false;
+      this.选项.取消?.();
+    }
   }
 
   处理抬起(事件: 指针事件): void {
     if (!this.按下中) return;
     this.按下中 = false;
+    this.选项.松开?.();
     if (矩形包含(this.矩形值, 事件.坐标)) this.选项.点击();
   }
 
   处理取消(): void {
     this.按下中 = false;
+    this.选项.取消?.();
+  }
+}
+
+export type 滑动方向 = "上" | "下" | "左" | "右";
+
+export interface 滑动热区选项 {
+  矩形: 矩形;
+  阈值?: number;
+  /** 轻点（无滑动）时的回调，可选。 */
+  点击?: () => void;
+  滑动: (方向: 滑动方向) => void;
+}
+
+/** 只参与手势的全屏热区：上/下/左/右滑（主界面进入纯享、纯享切换风景）。 */
+export class 滑动热区 implements 可捕获控件 {
+  private readonly 矩形值: 矩形;
+  private readonly 选项: 滑动热区选项;
+  private 起始: 逻辑坐标 | null = null;
+
+  constructor(选项: 滑动热区选项) {
+    this.选项 = 选项;
+    this.矩形值 = { ...选项.矩形 };
+  }
+
+  读取矩形(): 矩形 {
+    return { ...this.矩形值 };
+  }
+
+  设置矩形(矩形: 矩形): void {
+    Object.assign(this.矩形值, 矩形);
+  }
+
+  命中(坐标: 逻辑坐标): 控件接口 | null {
+    return 矩形包含(this.矩形值, 坐标) ? this : null;
+  }
+
+  绘制(_环境: 绘制环境): void {}
+
+  处理按下(事件: 指针事件): 可捕获控件 | null {
+    this.起始 = 事件.坐标;
+    return this;
+  }
+
+  处理移动(): void {}
+
+  处理抬起(事件: 指针事件): void {
+    const 起始 = this.起始;
+    this.起始 = null;
+    if (!起始) return;
+    const 阈值 = this.选项.阈值 ?? 48;
+    const 位移X = 事件.坐标.x - 起始.x;
+    const 位移Y = 事件.坐标.y - 起始.y;
+    if (Math.max(Math.abs(位移X), Math.abs(位移Y)) < 阈值) {
+      this.选项.点击?.();
+      return;
+    }
+    const 方向: 滑动方向 =
+      Math.abs(位移X) > Math.abs(位移Y) ? (位移X > 0 ? "右" : "左") : 位移Y > 0 ? "下" : "上";
+    this.选项.滑动(方向);
+  }
+
+  处理取消(): void {
+    this.起始 = null;
+  }
+}
+
+export interface 滑块热区选项 {
+  名称?: string;
+  矩形: 矩形;
+  值: number;
+  /** 0..100，默认 100。 */
+  最大值?: number;
+  步进?: number;
+  变化: (值: number) => void;
+  禁用?: boolean | (() => boolean);
+}
+
+/**
+ * 只参与命中/拖动的滑块热区：视觉由页面用共享配方自绘，取值/拖动语义与 GM 滑块一致。
+ * 放在 `滚动容器` 里时声明拖动方向为横向，纵向拖动让位给容器滚动。
+ */
+export class 滑块热区 implements 可捕获控件 {
+  private 矩形值: 矩形;
+  private readonly 选项: 滑块热区选项;
+  private 拖动中 = false;
+
+  constructor(选项: 滑块热区选项) {
+    this.选项 = 选项;
+    this.矩形值 = { ...选项.矩形 };
+  }
+
+  读取矩形(): 矩形 {
+    return { ...this.矩形值 };
+  }
+
+  设置矩形(矩形: 矩形): void {
+    this.矩形值 = { ...矩形 };
+  }
+
+  读取禁用(): boolean {
+    return typeof this.选项.禁用 === "function" ? this.选项.禁用() : (this.选项.禁用 ?? false);
+  }
+
+  读取值(): number {
+    return this.选项.值;
+  }
+
+  读取拖动方向(): "横向" | null {
+    return "横向";
+  }
+
+  命中(坐标: 逻辑坐标): 控件接口 | null {
+    return this.读取禁用() || !矩形包含(this.矩形值, 坐标) ? null : this;
+  }
+
+  绘制(_环境: 绘制环境): void {}
+
+  处理按下(事件: 指针事件): 可捕获控件 | null {
+    if (this.读取禁用()) return null;
+    this.拖动中 = true;
+    this.回报(事件.坐标);
+    return this;
+  }
+
+  处理移动(事件: 指针事件): void {
+    if (this.拖动中) this.回报(事件.坐标);
+  }
+
+  处理抬起(): void {
+    this.拖动中 = false;
+  }
+
+  处理取消(): void {
+    this.拖动中 = false;
+  }
+
+  private 回报(坐标: 逻辑坐标): void {
+    const 比例 = Math.max(0, Math.min(1, (坐标.x - this.矩形值.左) / Math.max(1, this.矩形值.宽)));
+    const 最大值 = this.选项.最大值 ?? 100;
+    const 步进 = this.选项.步进 ?? 1;
+    const 值 = Math.round((比例 * 最大值) / 步进) * 步进;
+    this.选项.变化(Math.max(0, Math.min(最大值, 值)));
   }
 }
 
@@ -266,11 +425,30 @@ export abstract class 页面基类 implements 页面实例 {
   }
 
   /** 创建一个透明命中热区：视觉由共享配方用画笔绘制，命中与快照仍走控件层。 */
-  protected 创建热区(选项: 热区选项): 命中热区 {
+  protected 创建热区(选项: 热区选项 & { 名称: string }): 命中热区 {
     const 控件 = new 命中热区(选项);
     this.控件层.添加(控件);
     this.按钮登记.push({ 名称: 选项.名称, 控件 });
     return 控件;
+  }
+
+  /** 创建一个透明滑块热区（页面自绘滑块视觉）。 */
+  protected 创建滑块(选项: 滑块热区选项): 滑块热区 {
+    const 控件 = new 滑块热区(选项);
+    this.控件层.添加(控件);
+    return 控件;
+  }
+
+  /** 创建一个只参与手势的滑动热区（页面自绘手势提示）。 */
+  protected 创建滑动热区(选项: 滑动热区选项): 滑动热区 {
+    const 控件 = new 滑动热区(选项);
+    this.控件层.添加(控件);
+    return 控件;
+  }
+
+  /** 页面累计的背景动画时间（纯享态/动态背景重画用）。 */
+  protected 读取背景时间秒(): number {
+    return this.背景时间秒;
   }
 
   protected 添加控件<控件 extends 控件接口>(控件: 控件): 控件 {
@@ -329,8 +507,8 @@ export abstract class 页面基类 implements 页面实例 {
     return this.页面选项.名称;
   }
 
-  protected 跳转(页面: 页面编号): void {
-    this.上下文.导航.进入(页面);
+  protected 跳转(页面: 页面编号, 参数?: 页面参数): void {
+    this.上下文.导航.进入(页面, 参数);
   }
 }
 

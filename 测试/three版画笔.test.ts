@@ -76,6 +76,7 @@ function 记录合批() {
     设置纯色: (图案: { 纹理?: number; 紫外线: 紫外线矩形 }) => {
       设置纯色.push(图案);
     },
+    读取纯色: () => 设置纯色.at(-1) ?? null,
   };
   return { 纯色, 三角形, 四边形, 注册纹理, 设置纯色, 清空图层, 状态, 合批 };
 }
@@ -204,19 +205,19 @@ test("渐变矩形按网格逐顶点插值，四角颜色精确", () => {
   expect(三角形[0]?.顶点[0]?.颜色?.[0]).toBeCloseTo(1);
 });
 
-test("描边扩成线段四边形并补圆角连接/端点，线宽随画布缩放", () => {
+test("描边扩成线段四边形，折点补外侧 bevel，线宽随画布缩放", () => {
   const { 图形, 三角形 } = 创建图形();
   图形.lineStyle(4, 0xffffff, 0.5).setAlpha(0.5).strokeRect(0, 0, 10, 10);
-  // 4 段 × 2 三角形 + 4 个连接圆点 × 8 = 40。
-  expect(三角形.length).toBe(40);
+  // 4 段 × 2 三角形 + 4 个折点外侧 bevel × 1 = 12（逐点圆点会让圆角描边膨胀十几倍）。
+  expect(三角形.length).toBe(12);
   const 颜色 = 三角形[0]?.顶点[0]?.颜色;
   expect(颜色?.[0]).toBeCloseTo(1);
   expect(颜色?.[3]).toBeCloseTo(0.25);
 
   三角形.length = 0;
   图形.lineBetween(0, 0, 20, 0);
-  // 线段 2 + 两个端点圆点 2×8。
-  expect(三角形.length).toBe(18);
+  // 线段 2 个三角形；端点不再画圆帽（与 Phaser 平头描边一致）。
+  expect(三角形.length).toBe(2);
 
   // 缩放 2 倍后线宽翻倍：同一线段两侧顶点的间距 = 线宽 × 缩放。
   三角形.length = 0;
@@ -242,7 +243,7 @@ test("路径 API 累积折线，fillPath 三角化、strokePath 描边，arc 追
 
   三角形.length = 0;
   图形.lineStyle(2, 0xffffff).beginPath().moveTo(0, 0).lineTo(20, 0).strokePath();
-  expect(三角形.length).toBeGreaterThan(2);
+  expect(三角形.length).toBeGreaterThanOrEqual(2);
 
   三角形.length = 0;
   图形.fillStyle(0xffffff).beginPath().moveTo(0, 0);
@@ -421,6 +422,94 @@ test("文字项锚点/折行/字距/描边/阴影都落实成图集绘制调用"
   expect(调色板.调用[0]).toMatchObject({ 左: 2, 上: 3 });
   // 测量走同一套字距口径。
   expect(服务.测量("abc", { ...样式, 字距: 5 })).toEqual({ 宽: 40, 高: 20 });
+});
+
+// —— 画笔裁剪：滚动容器自绘内容用（压入可视矩形，图形/文字/图片统一裁剪） ——
+
+test("画笔裁剪：四边形按矩形裁剪并重映射 UV，嵌套取交集，弹出/重置恢复", () => {
+  const 记录 = 记录合批();
+  const 图集记录: 假图集记录[] = [];
+  const 文字 = 创建文字服务({
+    登记纹理: () => () => undefined,
+    创建图集: 假图集工厂(图集记录),
+  });
+  const 资源层: 资源层 = {
+    读取帧: () => ({ 页: 0, 紫外线: { u: 0, v: 0, 宽: 0.5, 高: 0.5 }, 源宽: 100, 源高: 100 }),
+    读取页纹理: () => new Texture(),
+    读取散图: () => ({ 纹理: new Texture(), 宽: 100, 高: 100 }),
+    读取统计: () => ({ 图集数: 1, 页数: 1, 帧数: 1, 纹理字节: 0, 散图数: 1 }),
+    销毁: () => undefined,
+  };
+  const 画笔 = 创建画笔({ 合批: 记录.合批, 文字服务: 文字, 资源层 });
+
+  // 裁剪一半：方块只保留右半，纹理 UV 跟着重映射。
+  画笔.压入裁剪({ 左: 50, 上: 0, 宽: 100, 高: 100 });
+  画笔.绘制散图("图标", { 左: 0, 上: 0, 宽: 100, 高: 100 });
+  const 裁剪后 = 记录.四边形.at(-1);
+  expect(裁剪后).toMatchObject({ 左: 50, 上: 0, 宽: 50, 高: 100 });
+  expect(裁剪后?.紫外线).toMatchObject({ u: 0.5, v: 0, 宽: 0.5, 高: 1 });
+
+  // 图形写入同样被裁剪：轴对齐矩形求交（裁剪写入器把纯色块转成裁剪后的四边形）。
+  画笔.图形.fillStyle(0xffffff).fillRect(90, 10, 100, 100);
+  expect(记录.四边形.at(-1)).toMatchObject({ 左: 90, 上: 10, 宽: 60, 高: 90 });
+
+  // 嵌套裁剪取交集：内层可见区只有 (50..70, 0..60)。
+  画笔.压入裁剪({ 左: 0, 上: 0, 宽: 70, 高: 60 });
+  画笔.图形.fillRect(0, 0, 100, 100);
+  expect(记录.四边形.at(-1)).toMatchObject({ 左: 50, 上: 0, 宽: 20, 高: 60 });
+  画笔.弹出裁剪();
+  画笔.图形.fillRect(0, 0, 100, 100);
+  expect(记录.四边形.at(-1)).toMatchObject({ 左: 50, 上: 0, 宽: 50, 高: 100 });
+
+  // 弹出到栈空恢复整幅；重置也清空裁剪栈。
+  画笔.弹出裁剪();
+  画笔.图形.fillRect(0, 0, 100, 100);
+  expect(记录.纯色.at(-1)).toMatchObject({ 左: 0, 上: 0, 宽: 100, 高: 100 });
+  画笔.压入裁剪({ 左: 0, 上: 0, 宽: 10, 高: 10 });
+  画笔.重置();
+  画笔.图形.fillRect(0, 0, 100, 100);
+  expect(记录.纯色.at(-1)).toMatchObject({ 左: 0, 上: 0, 宽: 100, 高: 100 });
+});
+
+test("画笔裁剪：三角形逐顶点裁剪后仍保留颜色/UV 插值", () => {
+  const 记录 = 记录合批();
+  const 图集记录: 假图集记录[] = [];
+  const 文字 = 创建文字服务({
+    登记纹理: () => () => undefined,
+    创建图集: 假图集工厂(图集记录),
+  });
+  const 资源层: 资源层 = {
+    读取帧: () => undefined,
+    读取页纹理: () => undefined,
+    读取散图: () => undefined,
+    读取统计: () => ({ 图集数: 0, 页数: 0, 帧数: 0, 纹理字节: 0, 散图数: 0 }),
+    销毁: () => undefined,
+  };
+  const 画笔 = 创建画笔({ 合批: 记录.合批, 文字服务: 文字, 资源层 });
+  画笔.压入裁剪({ 左: 50, 上: 0, 宽: 100, 高: 100 });
+  画笔.图形.fillGradientStyle(0xff0000, 0xff0000, 0x0000ff, 0x0000ff).fillRect(0, 0, 100, 100);
+  expect(记录.三角形.length).toBeGreaterThan(0);
+  // 所有三角形顶点都在裁剪区内，且颜色仍是渐变端点色。
+  for (const 形 of 记录.三角形)
+    for (const 顶点 of 形.顶点) {
+      expect(顶点.x).toBeGreaterThanOrEqual(50 - 1e-6);
+      expect(顶点.y).toBeGreaterThanOrEqual(-1e-6);
+    }
+  const 顶点列表 = 记录.三角形.flatMap((形) => 形.顶点);
+  const 左半 = 顶点列表.filter((顶点) => 顶点.x <= 50 + 1e-6);
+  expect(左半.length).toBeGreaterThan(0);
+  // 渐变在 0..100 上从红插值到蓝（上红下蓝）：裁剪后颜色仍在范围内，
+  // 且左边界中点 (50, 50) 的红色分量约 0.5，证明裁剪点做了属性插值。
+  for (const 顶点 of 顶点列表) {
+    expect(顶点.颜色?.[0]).toBeGreaterThanOrEqual(-1e-6);
+    expect(顶点.颜色?.[0]).toBeLessThanOrEqual(1.0001);
+    expect(顶点.颜色?.[3]).toBeGreaterThan(0.99);
+  }
+  const 边界中点 = 顶点列表.find(
+    (顶点) => Math.abs(顶点.x - 50) < 0.01 && Math.abs(顶点.y - 50) < 0.01,
+  );
+  expect(边界中点?.颜色?.[0]).toBeCloseTo(0.5);
+  画笔.弹出裁剪();
 });
 
 // —— 画笔接线：图集帧 / 散图 / 文字项 ——

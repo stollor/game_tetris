@@ -150,3 +150,8 @@ export function 解析颜色数值(颜色: number | string): number {
   }
   throw new Error(`无法解析颜色：${文本}`);
 }
+
+/** 十六进制颜色 + 透明度 → 合批顶点色（0..1 四元组）；0xRRGGBB 语义，渲染器 LinearSRGB 直通。 */
+export function 十六进制颜色(颜色: number, 透明度 = 1): readonly [number, number, number, number] {
+  return [((颜色 >> 16) & 0xff) / 255, ((颜色 >> 8) & 0xff) / 255, (颜色 & 0xff) / 255, 透明度];
+}

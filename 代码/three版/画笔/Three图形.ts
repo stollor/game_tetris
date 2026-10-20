@@ -68,7 +68,6 @@ interface 子路径 {
 const 单位矩阵: 矩阵 = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 const 圆周率 = Math.PI;
 const 圆段数 = 32;
-const 连接段数 = 8;
 const 容差 = 1e-9;
 
 function 初始状态(): 图形状态 {
@@ -205,14 +204,14 @@ function 圆角矩形点集(左: number, 上: number, 宽: number, 高: number, 
  *
  * - 纯色图元复用文字图集白块 UV + 顶点色 tint，不额外开纹理；
  * - 圆/椭圆/圆角/任意多边形用折线近似后 ear-clipping 三角化（凹多边形也不会填出轮廓）；
- * - 描边把每段折线扩成四边形并补圆角连接/端点，线宽随画布缩放；
+ * - 描边把每段折线扩成四边形，折点补外侧 bevel 三角（端点平头，与 Phaser 一致），线宽随画布缩放；
  * - 四角渐变用网格三角形逐顶点插值（矩形四角精确、路径按包围盒双线性同语义）；
  * - `save/restore` 保存矩阵、填充/描边样式、透明度与混合；`translateCanvas/rotateCanvas/
  *   scaleCanvas` 影响之后的所有图元和路径；
  * - alpha 乘进当前填充/描边透明度；混合 0=普通、1=叠加，与 Phaser 数值语义一致。
  */
 export class Three图形 implements 图形对象 {
-  private readonly 合批: 图形合批接口;
+  private 合批: 图形合批接口;
   private readonly 纯色纹理序号: number;
   private readonly 纯色U: number;
   private readonly 纯色V: number;
@@ -226,6 +225,14 @@ export class Three图形 implements 图形对象 {
     this.纯色纹理序号 = 选项.纯色纹理序号;
     this.纯色U = 选项.纯色紫外线.u + 选项.纯色紫外线.宽 / 2;
     this.纯色V = 选项.纯色紫外线.v + 选项.纯色紫外线.高 / 2;
+  }
+
+  /**
+   * 切换目标写入器：画笔在压入/弹出裁剪时把本图形换到裁剪写入器上，
+   * 已记录的变换/路径/样式状态保持不变（裁剪是绘制期的写入包装，不是画布状态）。
+   */
+  设置合批(合批: 图形合批接口): void {
+    this.合批 = 合批;
   }
 
   // —— 样式 ——
@@ -656,8 +663,38 @@ export class Three图形 implements 图形对象 {
       if (首 && 尾) 段列表.push([尾, 首]);
     }
     for (const [甲, 乙] of 段列表) this.绘制线段(甲, 乙, 半宽, 颜色);
-    const 连接点 = 闭合 ? 世界点 : 世界点;
-    for (const 项 of 连接点) this.绘制圆点(项, 半宽, 颜色);
+    // 折点只补「外侧缺口」一个三角（bevel）：逐点画圆会让圆角矩形描边从
+    // 十几块三角形膨胀到上百块，方块单元/按钮底板一多就顶满合批容量。
+    // 近似折线（圆弧采样）的折角很小，相邻线段四边形已重叠，直接跳过。
+    // 端点不画圆帽：与 Phaser Graphics 的平头（butt）描边一致。
+    const 顶点数 = 世界点.length;
+    const 起 = 闭合 ? 0 : 1;
+    const 止 = 闭合 ? 顶点数 : 顶点数 - 1;
+    for (let 序号 = 起; 序号 < 止; 序号++) {
+      const 前 = 世界点[(序号 - 1 + 顶点数) % 顶点数];
+      const 中 = 世界点[序号];
+      const 后 = 世界点[(序号 + 1) % 顶点数];
+      if (!前 || !中 || !后) continue;
+      const 甲长 = Math.hypot(中.x - 前.x, 中.y - 前.y);
+      const 乙长 = Math.hypot(后.x - 中.x, 后.y - 中.y);
+      if (甲长 < 容差 || 乙长 < 容差) continue;
+      const 甲X = (中.x - 前.x) / 甲长;
+      const 甲Y = (中.y - 前.y) / 甲长;
+      const 乙X = (后.x - 中.x) / 乙长;
+      const 乙Y = (后.y - 中.y) / 乙长;
+      const 叉积 = 甲X * 乙Y - 甲Y * 乙X;
+      if (Math.abs(叉积) < 0.25) continue;
+      // 屏幕坐标 y 向下：叉积 > 0 时外侧在 -法线 方向。
+      const 符号 = 叉积 > 0 ? -1 : 1;
+      this.添加纯色三角形(
+        [
+          中,
+          { x: 中.x - 甲Y * 半宽 * 符号, y: 中.y + 甲X * 半宽 * 符号 },
+          { x: 中.x - 乙Y * 半宽 * 符号, y: 中.y + 乙X * 半宽 * 符号 },
+        ],
+        颜色,
+      );
+    }
   }
 
   private 绘制线段(甲: 点, 乙: 点, 半宽: number, 颜色: 顶点颜色): void {
@@ -673,16 +710,6 @@ export class Three图形 implements 图形对象 {
     const 顶点乙一 = { x: 甲.x - 法线X, y: 甲.y - 法线Y };
     this.添加纯色三角形([顶点甲一, 顶点甲二, 顶点乙二], 颜色);
     this.添加纯色三角形([顶点甲一, 顶点乙二, 顶点乙一], 颜色);
-  }
-
-  private 绘制圆点(圆心: 点, 半径: number, 颜色: 顶点颜色): void {
-    if (半径 < 0.5) return;
-    const 采样 = 圆弧点(圆心.x, 圆心.y, 半径, 半径, 0, 圆周率 * 2, 连接段数);
-    for (let 序号 = 0; 序号 < 采样.length - 1; 序号++) {
-      const 甲 = 采样[序号];
-      const 乙 = 采样[序号 + 1];
-      if (甲 && 乙) this.添加纯色三角形([圆心, 甲, 乙], 颜色);
-    }
   }
 
   private 添加纯色三角形(顶点: readonly [点, 点, 点], 颜色: 顶点颜色): void {

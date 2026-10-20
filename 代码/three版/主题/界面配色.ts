@@ -1,4 +1,5 @@
 import type { 界面配色 } from "../../../框架Three/界面/控件/类型";
+import { 收藏色 } from "../../../组件/旅行收藏/收藏牌面配方";
 import type { 游戏主题 } from "../接口/服务";
 
 /**
@@ -14,7 +15,7 @@ function 亮度(色值: number): number {
 
 /** 在给定底色上应使用的文字色。 */
 export function 主题对比字色(底色: number): number {
-  return 亮度(底色) > 150 ? 0x141a22 : 0xf6f8fc;
+  return 亮度(底色) > 150 ? 收藏色.墨 : 收藏色.纸;
 }
 
 function 提亮(颜色: number, 比例: number): number {
@@ -24,7 +25,7 @@ function 提亮(颜色: number, 比例: number): number {
 
 export function 主题转界面配色(主题: 游戏主题): 界面配色 {
   const { 颜色 } = 主题;
-  const 遮罩 = 主题.深色 ? 0x02060f : 0x1b2320;
+  const 遮罩 = 主题.深色 ? 收藏色.夜 : 收藏色.墨;
   return {
     底色: 颜色.底色,
     面板: 颜色.面板,

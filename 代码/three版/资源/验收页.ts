@@ -47,7 +47,7 @@ async function 启动(): Promise<void> {
     按需渲染: true,
     纹理预算字节,
   });
-  const 合批 = new 图元合批({ 最大四边形数: 1024, 最大三角形数: 16384 });
+  const 合批 = new 图元合批();
   渲染.场景.add(合批.提交());
 
   const 来源列表: string[] = [];
