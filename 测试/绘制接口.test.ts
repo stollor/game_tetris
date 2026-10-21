@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type Phaser from "phaser";
-import type { Three图形 } from "../代码/three版/画笔/Three图形";
 import { type 图形对象, 混合模式, 解析颜色数值 } from "../框架Three/界面/绘制/协议";
+import type { Three图形 } from "../框架Three/界面/绘制/图形";
 
 /**
  * 绘制契约的接线测试：Phaser Graphics 必须能直接当 `图形对象` 传给共享配方，

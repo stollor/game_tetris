@@ -1,8 +1,9 @@
 import { 创建渲染编排 } from "../../../框架Three/世界/渲染编排";
 import { 图元合批 } from "../../../框架Three/界面/图元合批";
+import { 创建文字服务 } from "../../../框架Three/界面/文字服务";
 import type { 文字样式 } from "../../../框架Three/界面/绘制/协议";
-import { 创建画笔 } from "../画笔/index";
-import { 创建文字服务 } from "../画笔/文字服务";
+import { 创建画笔 } from "../../../框架Three/界面/绘制/画笔";
+import { 默认字体栈 } from "../界面/文字配置";
 import type { 资源层实例 } from "./index";
 import { 创建资源层, 读取默认散图 } from "./index";
 
@@ -18,7 +19,7 @@ import { 创建资源层, 读取默认散图 } from "./index";
 const 逻辑宽 = 390;
 const 逻辑高 = 844;
 const 纹理预算字节 = 64 * 1024 * 1024;
-const 字体 = '"Segoe UI", "Microsoft YaHei", sans-serif';
+const 字体 = 默认字体栈;
 
 const 样式 = {
   标题: { 字体, 字号: 20, 字重: "粗体", 颜色: 0x00e5ff } satisfies 文字样式,

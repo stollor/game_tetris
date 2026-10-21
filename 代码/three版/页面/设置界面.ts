@@ -1,6 +1,8 @@
 import { 探测Tap能力 } from "../../../框架/平台/TapTap/宿主探测";
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
 import type { 图形对象, 文字项, 矩形 } from "../../../框架Three/界面/绘制/协议";
+import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
+import { 命中热区, 滑块热区 } from "../../../框架Three/界面/页面基类";
 import {
   外观卡列表常量,
   type 外观卡布局,
@@ -36,8 +38,7 @@ import { type 方块外观名称, 方块外观方案表, 解析方块外观 } fr
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
 import { 背景主题选项 } from "../../配置/背景主题";
 import type { 页面上下文 } from "../接口/上下文";
-import type { 画笔 } from "../画笔/index";
-import { 命中热区, 滑块热区, 页面基类 } from "./页面工具";
+import { 页面基类 } from "./游戏页面基类";
 
 /**
  * 设置页（7C）：与 Phaser 版设置覆盖页同构——遮罩 + 中央面板 + 标题 + 可滚动分组 + 页脚。

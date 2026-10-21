@@ -1,5 +1,7 @@
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
 import type { 图形对象, 矩形 } from "../../../框架Three/界面/绘制/协议";
+import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
+import { 命中热区 } from "../../../框架Three/界面/页面基类";
 import {
   商店像素对齐描边,
   商店目录角标底色,
@@ -53,9 +55,8 @@ import { 解析方块外观, 设置预览方块外观 } from "../../配置/方�
 import { 颜色值 } from "../../配置/界面主题";
 import { type 外观部位, 外观部位列表 } from "../../项目配置/旅行皮肤";
 import type { 页面上下文 } from "../接口/上下文";
-import type { 画笔 } from "../画笔/index";
 import { 已购数量, 整套已拥有, 计算报价 } from "./商店定价";
-import { 命中热区, 页面基类 } from "./页面工具";
+import { 页面基类 } from "./游戏页面基类";
 
 /**
  * 商店 / 旅行收藏（7C）：与 Phaser 版同构——全屏风景（动态）+ 金币条 + 地点标题 +

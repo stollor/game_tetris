@@ -1,4 +1,5 @@
 import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
+import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
 import {
   type 主界面布局,
   type 模式卡区域,
@@ -35,8 +36,7 @@ import { 已解锁风景列表, 相邻已解锁风景, 风景说明 } from "../.
 import { 绘制背景 } from "../../视觉/背景配方";
 import type { 背景主题 } from "../../配置/再消一行设置";
 import type { 页面上下文 } from "../接口/上下文";
-import type { 画笔 } from "../画笔/index";
-import { 页面基类 } from "./页面工具";
+import { 页面基类 } from "./游戏页面基类";
 
 /**
  * 主界面（7A/7C）：与 Phaser 版同款三态。

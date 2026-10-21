@@ -1,6 +1,6 @@
 import { LinearFilter, type Texture, TextureLoader } from "three";
 import { 创建图集纹理, type 图集纹理 } from "../../../框架Three/世界/图集纹理";
-import type { 图集帧渲染, 散图渲染, 资源层, 资源统计 } from "../画笔/index";
+import type { 图集帧渲染, 散图渲染, 资源层, 资源统计 } from "../../../框架Three/界面/绘制/画笔";
 
 /**
  * Three 版资源层：把 GM 静态图集（`清单.json` + 页图）与游戏散图（图标 / GM 套件图）

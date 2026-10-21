@@ -2,6 +2,7 @@ import { 亮色 } from "../../../框架/界面/颜色工具";
 import type { 图元合批 } from "../../../框架Three/界面/图元合批";
 import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
 import { 十六进制颜色, type 文字样式, 解析颜色数值 } from "../../../框架Three/界面/绘制/协议";
+import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
 import { 绘制方块单元 } from "../../../组件/霓虹街机/方块单元";
 import { 读取霓虹调色板 } from "../../../组件/霓虹街机/调色板";
 import { type 再消一行状态, 可以放置, type 方块类型, 读取格子 } from "../../玩法/再消一行";
@@ -16,7 +17,6 @@ import type { 方块外观方案 } from "../../配置/方块外观";
 import { 游戏外观 } from "../../配置/游戏外观";
 import { 界面主题, 颜色值 } from "../../配置/界面主题";
 import type { 游戏主题 } from "../接口/服务";
-import type { 画笔 } from "../画笔/index";
 import {
   布局,
   操作按钮,

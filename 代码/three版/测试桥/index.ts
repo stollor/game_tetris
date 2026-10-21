@@ -1,10 +1,10 @@
 import type { 渲染编排 } from "../../../框架Three/世界/渲染编排";
 import type { 图元合批, 图元合批统计 } from "../../../框架Three/界面/图元合批";
+import type { 资源统计 } from "../../../框架Three/界面/绘制/画笔";
 import type { 场景栈 } from "../../../框架Three/运行时/场景栈";
 import type { 游戏循环 } from "../../../框架Three/运行时/循环";
 import type { 界面快照, 页面上下文, 页面实例, 页面编号 } from "../接口/上下文";
 import type { 应用服务 } from "../接口/服务";
-import type { 资源统计 } from "../画笔/index";
 
 /**
  * 调试桥：启动层统一挂 window.__three版__ 与 window.__再消一行测试__。
