@@ -16,8 +16,8 @@ import type {
   顶点颜色,
 } from "../框架Three/界面/图元合批";
 import type { 文字图集选项 } from "../框架Three/界面/文字图集";
-import type { 文字样式, 点, 矩形 } from "../组件/绘制/图形对象";
-import { 混合模式 } from "../组件/绘制/图形对象";
+import type { 文字样式, 点, 矩形 } from "../框架Three/界面/绘制/协议";
+import { 混合模式 } from "../框架Three/界面/绘制/协议";
 
 /**
  * Three 画笔规则测试：用记录型假合批断言「配方指令 → 三角形/颜色/UV/变换」，

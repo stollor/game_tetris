@@ -6,7 +6,7 @@ import type {
   文字绘制请求,
 } from "../../../框架Three/界面/控件/类型";
 import { 换行文本 } from "../../../框架Three/界面/文本换行";
-import type { 文字样式 } from "../../../组件/绘制/图形对象";
+import type { 文字样式 } from "../../../框架Three/界面/绘制/协议";
 import { 读取霓虹文字样式 } from "../../../组件/霓虹街机/文字样式";
 import type { 页面资源 } from "../接口/上下文";
 

@@ -6,7 +6,7 @@ import {
   解析方块外观,
   读取当前方块外观,
 } from "../../代码/配置/方块外观";
-import type { 图形对象 } from "../绘制/图形对象";
+import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 import { 绘制地点纹样 } from "./旅行纹样";
 
 export interface 方块单元外观 {

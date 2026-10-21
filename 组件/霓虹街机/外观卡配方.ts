@@ -2,7 +2,7 @@ import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import type { 背景主题 } from "../../代码/配置/再消一行设置";
 import { type 方块外观名称, 解析方块外观 } from "../../代码/配置/方块外观";
 import type { 样式选择 } from "../../框架/设置/设置";
-import type { 图形对象, 文字项, 矩形 } from "../绘制/图形对象";
+import type { 图形对象, 文字项, 矩形 } from "../../框架Three/界面/绘制/协议";
 import { 派生霓虹文字样式 } from "./文字样式";
 
 /**

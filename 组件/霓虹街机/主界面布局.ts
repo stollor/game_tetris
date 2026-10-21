@@ -1,6 +1,6 @@
 import type { 游戏模式 } from "../../代码/玩法/再消一行";
 import { 游戏模式顺序 } from "../../代码/配置/游戏外观";
-import type { 文字项 } from "../绘制/图形对象";
+import type { 文字项 } from "../../框架Three/界面/绘制/协议";
 import type { 旅行图标名称 } from "./图标";
 import { 读取霓虹文字样式 } from "./文字样式";
 

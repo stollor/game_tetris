@@ -15,7 +15,8 @@ const 端口 = {
 };
 const 基线 = process.argv.includes("--基线");
 const 仅手机 = process.argv.includes("--仅手机");
-const 组合 = 仅手机
+const 指定组合 = process.argv.find((项) => 项.startsWith("--仅="))?.slice("--仅=".length);
+const 候选组合 = 仅手机
   ? [
       [390, 844, 1],
       [390, 844, 2],
@@ -30,6 +31,10 @@ const 组合 = 仅手机
       [1280, 720, 1],
       [1280, 720, 2],
     ];
+const 组合 = 指定组合
+  ? 候选组合.filter(([宽, 高, 倍率]) => 指定组合.split(",").includes(`${宽}x${高}@${倍率}`))
+  : 候选组合;
+assert.ok(组合.length > 0, "--仅 没有匹配的视口，示例：--仅=390x844@1,1280x720@1");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 记录: object[] = [];

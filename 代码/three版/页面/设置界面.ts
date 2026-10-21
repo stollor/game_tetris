@@ -1,6 +1,6 @@
 import { 探测Tap能力 } from "../../../框架/平台/TapTap/宿主探测";
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
-import type { 图形对象, 文字项, 矩形 } from "../../../组件/绘制/图形对象";
+import type { 图形对象, 文字项, 矩形 } from "../../../框架Three/界面/绘制/协议";
 import {
   外观卡列表常量,
   type 外观卡布局,

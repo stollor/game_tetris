@@ -1,5 +1,5 @@
 import { 游戏外观 } from "../../代码/配置/游戏外观";
-import type { 文字样式 } from "../绘制/图形对象";
+import type { 文字样式 } from "../../框架Three/界面/绘制/协议";
 import { 读取霓虹调色板 } from "./调色板";
 
 /**

@@ -1,7 +1,7 @@
 import { 界面文字 } from "Phaser框架/界面/控件";
 import type Phaser from "phaser";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
-import type { 文字锚点, 文字项 } from "../绘制/图形对象";
+import type { 文字锚点, 文字项 } from "../../框架Three/界面/绘制/协议";
 
 export {
   派生霓虹文字样式,

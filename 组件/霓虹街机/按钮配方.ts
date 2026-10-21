@@ -1,4 +1,9 @@
-import { type 图形对象, type 文字样式, type 文字项, 解析颜色数值 } from "../绘制/图形对象";
+import {
+  type 图形对象,
+  type 文字样式,
+  type 文字项,
+  解析颜色数值,
+} from "../../框架Three/界面/绘制/协议";
 import { 绘制玻璃按钮底板 } from "../绘制/玻璃绘制";
 import { type 旅行图标名称, 绘制旅行图标 } from "./图标";
 import { 派生霓虹文字样式 } from "./文字样式";

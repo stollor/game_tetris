@@ -11,7 +11,7 @@ import {
 } from "../代码/视觉/背景配方";
 import type { 背景主题 } from "../代码/配置/再消一行设置";
 import { 背景主题选项, 背景主题配置 } from "../代码/配置/背景主题";
-import type { 图形对象 } from "../组件/绘制/图形对象";
+import type { 图形对象 } from "../框架Three/界面/绘制/协议";
 
 /**
  * 背景配方的规则测试：16 个主题（内置四套 + 旅行 12 地点）在静态/动态两态都能完整绘制，
@@ -242,7 +242,7 @@ test("背景外观配色取自共享配置", () => {
   expect(成都外观.文字基调).toBe("深底");
 });
 
-test("纯配方模块不 import Phaser 运行时或 Three 框架", () => {
+test("纯配方模块只允许框架绘制协议类型，不依赖引擎运行时", () => {
   const 目录 = join(import.meta.dir, "../代码/视觉");
   const 文件 = [
     "背景配方.ts",
@@ -253,7 +253,10 @@ test("纯配方模块不 import Phaser 运行时或 Three 框架", () => {
     const 依赖行 = 内容.match(/^\s*import[^;]*from\s+"[^"]+";/gm) ?? [];
     for (const 行 of 依赖行) {
       expect(行.includes("phaser")).toBe(false);
-      expect(行.includes("框架Three")).toBe(false);
+      if (行.includes("框架Three")) {
+        expect(行.trimStart().startsWith("import type ")).toBe(true);
+        expect(/from "(?:\.\.\/)+框架Three\/界面\/绘制\/协议";/.test(行)).toBe(true);
+      }
     }
   }
 });

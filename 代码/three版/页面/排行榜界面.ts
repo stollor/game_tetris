@@ -1,6 +1,6 @@
 import type { Tap排行榜分数 } from "../../../框架/平台/TapTap/宿主类型";
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
-import type { 文字项, 矩形 } from "../../../组件/绘制/图形对象";
+import type { 文字项, 矩形 } from "../../../框架Three/界面/绘制/协议";
 import { 读取页面语义色, type 页面语义色 } from "../../../组件/霓虹街机/页面配方";
 import {
   加载排行榜数据,

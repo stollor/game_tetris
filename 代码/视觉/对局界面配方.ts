@@ -1,4 +1,4 @@
-import type { 图形对象, 矩形 } from "../../组件/绘制/图形对象";
+import type { 图形对象, 矩形 } from "../../框架Three/界面/绘制/协议";
 import { 绘制玻璃按钮底板, 绘制玻璃面板基底 } from "../../组件/绘制/玻璃绘制";
 
 export function 绘制对局遮光(绘图: 图形对象, 宽: number, 高: number, 竖屏: boolean): void {

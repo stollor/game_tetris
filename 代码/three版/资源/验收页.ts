@@ -1,6 +1,6 @@
 import { 创建渲染编排 } from "../../../框架Three/世界/渲染编排";
 import { 图元合批 } from "../../../框架Three/界面/图元合批";
-import type { 文字样式 } from "../../../组件/绘制/图形对象";
+import type { 文字样式 } from "../../../框架Three/界面/绘制/协议";
 import { 创建画笔 } from "../画笔/index";
 import { 创建文字服务 } from "../画笔/文字服务";
 import type { 资源层实例 } from "./index";

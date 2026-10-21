@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import type { 图形对象 } from "../绘制/图形对象";
+import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 
 export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | "成就" | "商店" | "排行";
 

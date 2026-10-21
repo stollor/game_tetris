@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../../组件/绘制/图形对象";
+import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
 
 /** 极光帘幕配色（动态演出的三条帘幕），与原 Phaser 版一致。 */
 export const 极光帘幕色 = [0x3ff0c0, 0x4de3d8, 0x7ad9ff] as const;

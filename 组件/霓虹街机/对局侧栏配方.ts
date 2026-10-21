@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../绘制/图形对象";
+import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 import { 绘制霓虹玻璃 } from "./底板";
 import { 读取霓虹调色板 } from "./调色板";
 export interface 霓虹侧栏几何 {

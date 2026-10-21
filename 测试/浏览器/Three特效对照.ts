@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../代码/three版/启动";
 import type {} from "../../代码/场景/对局/对局";
 
-const 输出 = resolve("reports/视觉返工/特效对照");
+const 输出 = resolve(process.argv[2] ?? "reports/视觉返工/特效对照");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 错误: string[] = [];
@@ -30,7 +30,9 @@ try {
         JSON.stringify({ 背景动态: false, 省电模式: "关", 音乐音量: 0, 音效音量: 80 }),
       ),
     );
-    await 页.goto(`http://127.0.0.1:${引擎 === "three" ? 3000 : 3220}/?perf-debug`);
+    const 端口 =
+      引擎 === "three" ? (process.env.THREE_PORT ?? 3000) : (process.env.PHASER_PORT ?? 3220);
+    await 页.goto(`http://127.0.0.1:${端口}/?perf-debug`);
     await 页.waitForFunction(
       (引擎) => (引擎 === "three" ? !!window.__three版__ : !!window.__GAMEMAKER_TEST__),
       引擎,

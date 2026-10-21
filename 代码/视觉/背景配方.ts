@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../组件/绘制/图形对象";
+import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 import { 查找地点 } from "../框架配置/旅行地点";
 import type { 背景主题 } from "../配置/再消一行设置";
 import { 背景主题配置 } from "../配置/背景主题";

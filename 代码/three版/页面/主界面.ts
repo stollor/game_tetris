@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../../组件/绘制/图形对象";
+import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
 import {
   type 主界面布局,
   type 模式卡区域,

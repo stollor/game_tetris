@@ -1,4 +1,4 @@
-import type { 图形对象, 文字项 } from "../../组件/绘制/图形对象";
+import type { 图形对象, 文字项 } from "../../框架Three/界面/绘制/协议";
 import { 绘制旅行图标 } from "../../组件/霓虹街机/图标";
 import { 游戏外观 } from "../配置/游戏外观";
 import type { 霓虹结算布局 } from "./结算配方";

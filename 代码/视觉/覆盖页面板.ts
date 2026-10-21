@@ -1,4 +1,4 @@
-import type { 图形对象, 矩形 } from "../../组件/绘制/图形对象";
+import type { 图形对象, 矩形 } from "../../框架Three/界面/绘制/协议";
 
 /**
  * 覆盖页面板/分隔线：复刻 Phaser `Rectangle`（`setStrokeStyle` / 高 1 的填充矩形）的落地像素。

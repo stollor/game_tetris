@@ -1,5 +1,5 @@
 import { 亮色, 混色 } from "../../框架/界面/颜色工具";
-import type { 文字样式, 矩形 } from "../../组件/绘制/图形对象";
+import type { 文字样式, 矩形 } from "../../框架Three/界面/绘制/协议";
 import { 读取霓虹调色板 } from "../../组件/霓虹街机/调色板";
 import type { 游戏模式, 游戏阶段 } from "../玩法/再消一行";
 import type { 屏幕适配选择, 手机上键旋转 } from "../配置/再消一行设置";

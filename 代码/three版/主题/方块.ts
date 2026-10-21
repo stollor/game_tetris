@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../../组件/绘制/图形对象";
+import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
 import { 绘制方块单元, 绘制方块单元辉光 } from "../../../组件/霓虹街机/方块单元";
 import { type 方块类型, 预览格子 } from "../../玩法/再消一行";
 import type { 游戏设置 } from "../../配置/再消一行设置";

@@ -311,7 +311,7 @@ export abstract class 页面基类 implements 页面实例 {
   进入(): void {
     if (typeof window !== "undefined") window.addEventListener("keydown", this.按键);
     this.注销命中 = this.控件层.绑定(this.上下文.资源.命中);
-    this.构建();
+    this.重建();
   }
 
   退出(): void {

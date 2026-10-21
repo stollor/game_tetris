@@ -1,4 +1,4 @@
-import type { 图形对象, 文字项 } from "../绘制/图形对象";
+import type { 图形对象, 文字项 } from "../../框架Three/界面/绘制/协议";
 import { type 纯享布局, 计算主界面布局 } from "./主界面布局";
 import { 读取霓虹文字样式 } from "./文字样式";
 

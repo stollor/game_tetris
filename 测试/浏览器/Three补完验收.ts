@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../代码/three版/启动";
 import type { 界面按钮快照 } from "../../代码/three版/接口/上下文";
 
-const 输出 = resolve("reports/视觉返工/补完交互");
+const 输出 = resolve(process.argv[3] ?? "reports/视觉返工/补完交互");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
