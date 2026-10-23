@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
-import type { Tap云存档项 } from "../../框架/平台/TapTap/宿主类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架Three/平台/TapTap/宿主探测";
+import type { Tap云存档项 } from "../../框架Three/平台/TapTap/宿主类型";
 import { 迁移更名前存档 } from "../存档/更名迁移";
 import {
   序列化快照,
@@ -19,7 +19,24 @@ let 上次上传 = 0;
 function 异步化<T>(
   执行: (成功: (值: T) => void, 失败: (错误: unknown) => void) => void,
 ): Promise<T> {
-  return new Promise((resolve, reject) => 执行(resolve, reject));
+  return new Promise((resolve, reject) => {
+    const 定时 = setTimeout(() => reject(new Error("云存档宿主回调超时")), 8000);
+    try {
+      执行(
+        (值) => {
+          clearTimeout(定时);
+          resolve(值);
+        },
+        (错误) => {
+          clearTimeout(定时);
+          reject(错误);
+        },
+      );
+    } catch (错误) {
+      clearTimeout(定时);
+      reject(错误);
+    }
+  });
 }
 
 export interface 云同步结果 {

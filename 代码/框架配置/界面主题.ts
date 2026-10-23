@@ -1,7 +1,7 @@
-import { 夜空鎏金, 暖纸古典, 青蓝未来 } from "../../框架/样式/主题";
-import { 配置游戏主题 } from "../../框架/样式/样式";
-import type { 游戏主题 } from "../../框架/样式/类型";
-import type { 样式选择 } from "../../框架/设置/设置";
+import { 夜空鎏金, 暖纸古典, 青蓝未来 } from "../../框架Three/样式/主题";
+import { 配置游戏主题 } from "../../框架Three/样式/样式";
+import type { 游戏主题 } from "../../框架Three/样式/类型";
+import type { 样式选择 } from "../../框架Three/设置/设置";
 
 /** 保留框架的语义与状态，游戏只替换视觉配方。 */
 export const 再消一行主题: Record<样式选择, 游戏主题> = {

@@ -1,8 +1,14 @@
-import { 探测Tap能力 } from "../../../框架/平台/TapTap/宿主探测";
+import { 探测Tap能力 } from "../../../框架Three/平台/TapTap/宿主探测";
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
+import type { 绘制环境 } from "../../../框架Three/界面/控件/类型";
 import type { 图形对象, 文字项, 矩形 } from "../../../框架Three/界面/绘制/协议";
 import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
-import { 命中热区, 滑块热区 } from "../../../框架Three/界面/页面基类";
+import {
+  命中热区,
+  滑块热区,
+  页面绘制层,
+  type 页面背景信息,
+} from "../../../框架Three/界面/页面基类";
 import {
   外观卡列表常量,
   type 外观卡布局,
@@ -143,9 +149,38 @@ export class 设置界面 extends 页面基类 {
   private readonly 外观位置 = new Map<string, number>();
   private 语言菜单: 矩形 | null = null;
   private 云同步中 = false;
+  /** 上一帧滚动位置：滚动容器惯性只让控件层变化，页面视觉画在内容层。 */
+  private 上次滚动 = 0;
+  private readonly 上次外观滚动 = new Map<string, number>();
 
   constructor(上下文: 页面上下文) {
-    super(上下文, { 名称: "设置", 独占: true, 背景: false });
+    // 设置页是不透明覆盖页：遮罩+面板走背景静层，滚动内容走内容层，两者独立失效。
+    super(上下文, { 名称: "设置", 独占: true });
+  }
+
+  更新(秒: number): void {
+    super.更新(秒);
+    let 滚动变化 = false;
+    const 位置 = this.滚动?.读取滚动位置() ?? 0;
+    if (位置 !== this.上次滚动) {
+      this.上次滚动 = 位置;
+      滚动变化 = true;
+    }
+    for (const [标题, 列表] of this.外观列表) {
+      const 横 = 列表.读取滚动位置();
+      if (this.上次外观滚动.get(标题) !== 横) {
+        this.上次外观滚动.set(标题, 横);
+        滚动变化 = true;
+      }
+    }
+    if (滚动变化) this.标记失效([页面绘制层.内容], "内容");
+  }
+
+  protected 绘制背景静底(_环境: 绘制环境, 信息: 页面背景信息): void {
+    const 图形 = this.上下文.资源.画笔.图形;
+    const 外观 = this.外观;
+    绘制遮罩(图形, 信息.宽, 信息.高, 外观.遮罩, 外观.遮罩透明度);
+    绘制覆盖页面板(图形, this.面板矩形, 外观.页面背景, 外观.强调色, 0.75);
   }
 
   protected 构建(): void {
@@ -185,7 +220,10 @@ export class 设置界面 extends 页面基类 {
     this.控件层.添加(this.滚动);
     this.滚动.设置滚动位置(this.滚动位置);
     this.滚动位置 = this.滚动.读取滚动位置();
+    this.上次滚动 = this.滚动.读取滚动位置();
+    this.上次外观滚动.clear();
     this.填充交互(设置, 英文);
+    for (const [标题, 列表] of this.外观列表) this.上次外观滚动.set(标题, 列表.读取滚动位置());
     this.创建页脚(英文);
     if (this.语言菜单) this.创建语言菜单(英文);
   }
@@ -396,8 +434,6 @@ export class 设置界面 extends 页面基类 {
     const 英文 = this.上下文.服务.语言.是否英文();
     const 外观 = this.外观;
     this.内容偏移 = { x: 0, y: 0 };
-    绘制遮罩(图形, this.逻辑宽, this.逻辑高, 外观.遮罩, 外观.遮罩透明度);
-    绘制覆盖页面板(图形, this.面板矩形, 外观.页面背景, 外观.强调色, 0.75);
     this.文字(画笔, {
       文案: 英文 ? "Settings" : "设置",
       样式: 派生霓虹文字样式("正文", { 字号: 25, 字重: "常规", 颜色: 外观.强调色, 对齐: "中" }),

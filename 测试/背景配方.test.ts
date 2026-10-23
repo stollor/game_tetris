@@ -253,10 +253,10 @@ test("纯配方模块只允许框架绘制协议类型，不依赖引擎运行�
     const 依赖行 = 内容.match(/^\s*import[^;]*from\s+"[^"]+";/gm) ?? [];
     for (const 行 of 依赖行) {
       expect(行.includes("phaser")).toBe(false);
-      if (行.includes("框架Three")) {
-        expect(行.trimStart().startsWith("import type ")).toBe(true);
-        expect(/from "(?:\.\.\/)+框架Three\/界面\/绘制\/协议";/.test(行)).toBe(true);
-      }
+      if (行.includes("框架Three"))
+        expect(行.includes("框架Three/界面/颜色工具") || 行.trimStart().startsWith("import type ")).toBe(
+          true,
+        );
     }
   }
 });

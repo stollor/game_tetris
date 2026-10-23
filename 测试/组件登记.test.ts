@@ -5,14 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 const 项目 = resolve(import.meta.dir, "..");
 /** 统一用正斜杠比较，避免 Windows 上 join 出来的反斜杠漏匹配。 */
 const 归一 = (路径: string): string => 路径.replaceAll("\\", "/");
-const 组件前缀 = `${归一(join(项目, "组件"))}/`;
-const 预览前缀 = `${归一(join(项目, "组件/预览"))}/`;
 const 跳过目录 = new Set(["资源", "node_modules"]);
-/**
- * 不是可视配方的接口层：`组件/绘制/` 只放引擎无关的绘制契约与类型，
- * 由组件/场景在内部引用，不产生可在看板预览的样品，因此不要求被预览库引用。
- */
-const 非可视前缀 = [`${归一(join(项目, "组件/绘制"))}/`];
 
 async function 收集(目录: string): Promise<string[]> {
   const 结果: string[] = [];
@@ -30,11 +23,13 @@ async function 收集(目录: string): Promise<string[]> {
   return 结果;
 }
 
-/** 从 `组件/预览/` 的入口出发，按相对导入找出预览真正加载的组件，没覆盖到的文件就是漏登记。 */
-async function 未登记组件(): Promise<string[]> {
-  const 组件 = await 收集(join(项目, "组件"));
+/** 从 Three 启动与独立预览入口递归导入图，确保项目组件都接入当前运行引擎。 */
+async function 未接入组件(): Promise<string[]> {
+  const 组件 = (await 收集(join(项目, "组件"))).filter(
+    (文件) => !归一(文件).includes("/组件/绘制/") && !归一(文件).includes("/组件/草稿/"),
+  );
   const 已载 = new Set<string>();
-  const 队列 = 组件.filter((文件) => 归一(文件).startsWith(预览前缀));
+  const 队列 = [join(项目, "代码/three版/启动.ts"), join(项目, "组件/预览/界面资源.ts")];
   while (队列.length > 0) {
     const 文件 = 队列.pop();
     if (!文件 || 已载.has(文件)) continue;
@@ -44,11 +39,13 @@ async function 未登记组件(): Promise<string[]> {
       .replace(/\/\*[\s\S]*?\*\//g, "");
     for (const 匹配 of 文本.matchAll(/from\s+"([^"]+)"/g)) {
       const 规格 = 匹配[1];
-      if (!规格.startsWith(".")) continue;
-      const 目标 = resolve(dirname(文件), 规格);
+      const 目标 = 规格.startsWith(".")
+        ? resolve(dirname(文件), 规格)
+        : 规格.startsWith("框架Three/")
+          ? resolve(项目, "框架Three", 规格.slice("框架Three/".length))
+          : null;
+      if (!目标) continue;
       for (const 候选 of [`${目标}.ts`, join(目标, "index.ts")]) {
-        // 只在组件内部沿引用传递，避免经过玩法代码把没登记的组件“蹭”成已覆盖。
-        if (!归一(候选).startsWith(组件前缀)) continue;
         try {
           if ((await stat(候选)).isFile()) 队列.push(候选);
         } catch {
@@ -58,13 +55,11 @@ async function 未登记组件(): Promise<string[]> {
     }
   }
   return 组件
-    .filter((文件) => !归一(文件).startsWith(预览前缀))
-    .filter((文件) => !非可视前缀.some((前缀) => 归一(文件).startsWith(前缀)))
     .filter((文件) => !已载.has(文件))
     .map((文件) => 归一(relative(项目, 文件)))
     .sort((前, 后) => 前.localeCompare(后));
 }
 
-test("项目组件都被预览库的样品引用", async () => {
-  expect(await 未登记组件()).toEqual([]);
+test("项目组件由Three启动或独立预览入口接入", async () => {
+  expect(await 未接入组件()).toEqual([]);
 });

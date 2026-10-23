@@ -1,5 +1,5 @@
-import type { 游戏主题 } from "../../框架/样式/类型";
-import { 选取对比文字色 } from "../../框架/界面/颜色工具";
+import type { 游戏主题 } from "../../框架Three/样式/类型";
+import { 选取对比文字色 } from "../../框架Three/界面/颜色工具";
 import { 地点皮肤表 } from "./旅行地点";
 import { 再消一行主题 } from "./界面主题";
 

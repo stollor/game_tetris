@@ -1,4 +1,3 @@
-import type Phaser from "phaser";
 import { 查找地点 } from "../../代码/框架配置/旅行地点";
 import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 import { type 玻璃面板选项, 绘制玻璃面板基底 } from "../绘制/玻璃绘制";
@@ -8,7 +7,7 @@ import { 读取霓虹调色板 } from "./调色板";
 /**
  * 霓虹玻璃底板：主题面板底/描边、地点纹样与角饰的游戏视觉。
  * 引擎无关的玻璃质感原语（柔影/玻璃面板/玻璃按钮）已收敛到 `组件/绘制/玻璃绘制.ts`，
- * 这里只是按主题取色并 re-export，Phaser 调用点无需改 import 路径。
+ * 这里只是按主题取色并 re-export，Three 绘制调用共用同一份配方。
  */
 
 export {
@@ -57,18 +56,3 @@ export function 绘制霓虹玻璃(
   }
 }
 
-/** 新建一块玻璃底板并挂到容器；返回图形对象以便继续叠加装饰。 */
-export function 添加霓虹面板(
-  场景: Phaser.Scene,
-  容器: Phaser.GameObjects.Container | undefined,
-  x: number,
-  y: number,
-  宽: number,
-  高: number,
-  选项: 玻璃面板选项 = {},
-): Phaser.GameObjects.Graphics {
-  const 图形 = 场景.add.graphics();
-  绘制霓虹玻璃(图形, x, y, 宽, 高, 选项);
-  容器?.add(图形);
-  return 图形;
-}

@@ -11,7 +11,7 @@ import type { 图形对象, 矩形 } from "../../框架Three/界面/绘制/协�
 
 const 面板填充透明度 = 0.98;
 
-/** 画布像素比：与 `框架/界面/画布像素比.计算画布像素比` 同口径（上限由画质统一为 4）。 */
+/** 画布像素比：与 `框架Three/界面/画布像素比.计算画布像素比` 同口径（上限由画质统一为 4）。 */
 function 读取画布像素比(): number {
   if (typeof window === "undefined") return 1;
   const 设备 = window.devicePixelRatio;

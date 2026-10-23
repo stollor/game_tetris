@@ -32,7 +32,7 @@ bun run gm -- 打包游戏 再消一行
 | 测试 ZIP / 二维码 / 上传回执 | `reports/TapTap/<日期>/` | **忽略** |
 | 平台公开配置 | `代码/平台/配置.ts` | 提交 |
 
-装配 ZIP：单一顶层目录（常用名 `one-more-line-travel/`），内含 `index.html`、主 bundle、css、外置 `phaser.esm.min.js`。以游戏根为 cwd 调用：
+装配 ZIP：单一顶层目录（常用名 `one-more-line-travel/`），内含 `index.html`、Three 游戏 bundle 和项目静态资源。包内不再包含旧引擎文件。以游戏根为 cwd 调用：
 
 ```powershell
 taptap-cli upload-h5-package reports/TapTap/<日期>/<zip> --dev-id 363566 --app-id 977300 --screen-orientation 1 --idempotency-key <唯一键> --yes
@@ -118,7 +118,7 @@ taptap-cli test-qr-code --dev-id 363566 --app-id 977300 --data '{"package_id":<h
 
 正式包走 GM `打包游戏`（已禁用 `--minify-whitespace` + 解析自检）。
 
-本仓库 `bun run build`（`运行/构建游戏.ts`）额外扫描产物是否出现 `中文instanceof`；命中则失败并提示给左操作数加括号，例如 `(项.节点) instanceof 界面控件`。
+本仓库 `bun run build`（`运行/构建Three版.ts`）额外扫描产物是否出现 `中文instanceof`；命中则失败并提示给左操作数加括号，例如 `(项.节点) instanceof 界面控件`。
 
 真机黑屏优先怀疑 minify 粘连，而不是「二维码过期」。
 
@@ -134,6 +134,6 @@ taptap-cli test-qr-code --dev-id 363566 --app-id 977300 --data '{"package_id":<h
 ## 9. 相关代码入口
 
 - `代码/平台/配置.ts` — ClientID、16 榜、成就映射、云槽
-- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts`；宿主协议与探测复用 `框架/平台/TapTap/`
-- `代码/场景/` — 主菜单排行入口、设置云存档栏、成就页
-- `运行/构建游戏.ts` — 构建后 `中文instanceof` 校验
+- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts`；宿主协议与探测复用 `框架Three/平台/TapTap/`
+- `代码/three版/` — 主菜单排行入口、设置云存档栏、成就页
+- `运行/构建Three版.ts` — 构建后 `中文instanceof` 校验

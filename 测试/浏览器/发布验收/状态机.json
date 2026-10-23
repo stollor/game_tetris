@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "name": "发布进入对局",
+  "initialState": "主界面",
+  "timeoutMs": 15000,
+  "steps": [
+    {
+      "name": "选模式",
+      "from": "主界面",
+      "action": "开始游戏",
+      "to": "主界面",
+      "expectInteractives": {
+        "开始:马拉松": true
+      }
+    },
+    {
+      "name": "开始对局",
+      "from": "主界面",
+      "action": "开始:马拉松",
+      "to": "对局",
+      "expectInteractives": {
+        "暂停": true
+      }
+    }
+  ]
+}

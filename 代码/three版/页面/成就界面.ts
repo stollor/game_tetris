@@ -1,6 +1,8 @@
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架Three/界面/控件/滚动容器";
+import type { 绘制环境 } from "../../../框架Three/界面/控件/类型";
 import type { 图形对象, 文字项 } from "../../../框架Three/界面/绘制/协议";
 import type { 画笔 } from "../../../框架Three/界面/绘制/画笔";
+import { 页面绘制层, type 页面背景信息 } from "../../../框架Three/界面/页面基类";
 import { 绘制列表行, 读取页面语义色, type 页面语义色 } from "../../../组件/霓虹街机/页面配方";
 import { 成就定义 } from "../../成就/再消一行成就";
 import { 生成金币条文字项, 绘制金币条, 计算金币条 } from "../../界面/金币条配方";
@@ -19,9 +21,25 @@ export class 成就界面 extends 页面基类 {
   private 滚动: 滚动容器 | null = null;
   private 滚动位置 = 0;
   private 色: 页面语义色 = 读取页面语义色(this.上下文.服务.设置.读取().样式);
+  /** 上一帧列表滚动位置：惯性滚动只让控件层变化，列表视觉画在内容层。 */
+  private 上次滚动 = 0;
 
   constructor(上下文: 页面上下文) {
-    super(上下文, { 名称: "成就", 独占: true, 背景: false });
+    // 整页不透明底走背景静层；标题/列表/按钮走内容层，滚动时只重画内容。
+    super(上下文, { 名称: "成就", 独占: true });
+  }
+
+  更新(秒: number): void {
+    super.更新(秒);
+    const 位置 = this.滚动?.读取滚动位置() ?? 0;
+    if (位置 !== this.上次滚动) {
+      this.上次滚动 = 位置;
+      this.标记失效([页面绘制层.内容], "内容");
+    }
+  }
+
+  protected 绘制背景静底(_环境: 绘制环境, 信息: 页面背景信息): void {
+    this.上下文.资源.画笔.图形.fillStyle(this.色.面板, 1).fillRect(0, 0, 信息.宽, 信息.高);
   }
 
   进入(): void {
@@ -57,6 +75,7 @@ export class 成就界面 extends 页面基类 {
     this.控件层.添加(this.滚动);
     this.滚动.设置滚动位置(this.滚动位置);
     this.滚动位置 = this.滚动.读取滚动位置();
+    this.上次滚动 = this.滚动.读取滚动位置();
     this.创建热区({
       名称: "返回主菜单",
       矩形: 页面布局.返回,
@@ -71,7 +90,6 @@ export class 成就界面 extends 页面基类 {
     const 英文 = this.上下文.服务.语言.是否英文();
     const 色 = this.色;
     const 金币 = this.上下文.服务.金币.读取().金币;
-    图形.fillStyle(色.面板, 1).fillRect(0, 0, this.逻辑宽, this.逻辑高);
     const 金币布局 = 计算金币条(16, 12, 金币);
     绘制金币条(图形, 金币布局);
     for (const 项 of 生成金币条文字项(金币布局, 金币)) 画笔.绘制文字(项);

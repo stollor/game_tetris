@@ -7,7 +7,7 @@ import { 音效库 } from "../代码/框架配置/音效";
 import { 方块外观方案表 } from "../代码/配置/方块外观";
 import { 背景主题配置 } from "../代码/配置/背景主题";
 import { 外观原价, 外观部位列表 } from "../代码/项目配置/旅行皮肤";
-import { 计算颜色对比度 } from "../框架/界面/颜色工具";
+import { 计算颜色对比度 } from "../框架Three/界面/颜色工具";
 
 function 建档() {
   const 内容 = new Map<string, string>();

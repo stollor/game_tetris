@@ -27,7 +27,7 @@ export interface 金币奖励 {
 export interface 最近结算 {
   编号: string;
   结果: 对局结果;
-  /** 马拉松 140 行目标是否已达成（完成后仍可继续）。 */
+  /** 配置的马拉松行数目标是否已达成（完成后仍可继续）。 */
   目标达成: boolean;
   刷新纪录: boolean;
   历史最佳: 对局纪录 | null;

@@ -1,10 +1,10 @@
 import { type 地点名称, 地点皮肤表 } from "../../代码/框架配置/旅行地点";
 import { 游戏外观 } from "../../代码/配置/游戏外观";
 import { 界面主题, 颜色值 } from "../../代码/配置/界面主题";
-import { 游戏主题表 } from "../../框架/样式/主题";
-import type { 样式选择 } from "../../框架/设置/设置";
+import { 游戏主题表 } from "../../框架Three/样式/主题";
+import type { 样式选择 } from "../../框架Three/设置/设置";
 
-export const 霓虹界面主题 = [
+export const 霓虹界面主题: readonly (样式选择 | 地点名称)[] = [
   ...(Object.keys(游戏主题表) as 样式选择[]),
   ...地点皮肤表.map((项) => 项.名称),
 ];

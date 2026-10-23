@@ -87,11 +87,9 @@ test("Three 页面不得自造硬编码布局表（白名单外零容忍）", as
   expect(违规).toEqual([]);
 });
 
-/** 解析 import 目标：相对路径、Phaser框架/*、GM预览协议；返回绝对路径（去扩展名）。 */
+/** 解析 import 目标：相对路径、框架Three/*、GM预览协议；返回绝对路径（去扩展名）。 */
 function 解析导入(来源文件: string, 规格: string): string | null {
   if (规格.startsWith(".")) return resolve(dirname(来源文件), 规格);
-  if (规格.startsWith("Phaser框架/"))
-    return resolve(项目, "框架", 规格.slice("Phaser框架/".length));
   if (规格 === "GM预览协议") return resolve(项目, "GM预览协议");
   if (规格.startsWith("框架Three/")) return resolve(项目, 规格);
   return null;

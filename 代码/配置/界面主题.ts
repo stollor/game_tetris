@@ -1,5 +1,5 @@
-import { 获取游戏主题, 配置游戏主题 } from "../../框架/样式/样式";
-import { type 样式选择, 获取游戏设置 } from "../../框架/设置/设置";
+import { 获取游戏主题, 配置游戏主题 } from "../../框架Three/样式/样式";
+import { type 样式选择, 获取游戏设置 } from "../../框架Three/设置/设置";
 import { 旅行主题表 } from "../框架配置/旅行主题";
 import { type 地点名称, 查找地点 } from "../框架配置/旅行地点";
 import { 再消一行主题 } from "../框架配置/界面主题";

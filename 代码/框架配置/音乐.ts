@@ -1,5 +1,5 @@
-import type { 音乐条目 } from "../../框架/音频/音乐目录";
-import type { 曲谱 } from "../../框架/音频/音乐编排";
+import type { 音乐条目 } from "../../框架Three/音频/音乐目录";
+import type { 曲谱 } from "../../框架Three/音频/音乐编排";
 import { 地点皮肤表 } from "./旅行地点";
 
 /** 菜单：更低的宫调、大量气口，和各地旅行曲拉开距离。 */

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { 成就定义, 记录落块成就 } from "../代码/成就/再消一行成就";
 import { 创建新局, 硬降 } from "../代码/玩法/再消一行";
-import { 成就系统 } from "../框架/进度/成就";
+import { 成就系统 } from "../框架Three/进度/成就";
 
 test("真实四行全清驱动成就和累计行数，普通落块不伪造消行成就", () => {
   const 系统 = new 成就系统(成就定义, { getItem: () => null, setItem: () => {} }, "test");

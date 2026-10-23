@@ -1,4 +1,4 @@
-import { 亮色 } from "../../../框架/界面/颜色工具";
+import { 亮色 } from "../../../框架Three/界面/颜色工具";
 import type { 图形对象 } from "../../../框架Three/界面/绘制/协议";
 
 /**

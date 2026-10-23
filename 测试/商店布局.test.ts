@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { 计算商店布局, 计算商店方块陈列, 计算商店界面示意 } from "../代码/视觉/商店布局";
 import { 计算下拉展开区域 } from "../组件/霓虹街机/页面配方";
 
-test("手机商店沿用Phaser坞、目录与陈列尺寸", () => {
+test("手机商店坞区、目录与陈列尺寸稳定", () => {
   const 页面 = 计算商店布局(390, 844);
   expect(页面.坞高).toBe(332);
   expect(页面.坞顶).toBe(504);

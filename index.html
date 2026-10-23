@@ -1,23 +1,28 @@
 <!doctype html>
-<html lang="zh-CN" data-style="青蓝未来" data-theme="dark">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#080B18" />
+    <link rel="icon" href="data:," />
     <title>再消一行</title>
-    <link rel="stylesheet" href="./框架/样式/宿主样式.css" />
-    <link rel="stylesheet" href="./框架/样式/样式.css" />
     <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #080b18;
+        overflow: hidden;
+      }
       #游戏容器 {
+        position: fixed;
         inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
           env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-        width: auto;
-        height: auto;
       }
     </style>
   </head>
   <body>
     <main id="游戏容器" aria-label="再消一行"></main>
-    <script type="module" src="./代码/启动.ts"></script>
+    <script type="module" src="./代码/three版/启动.ts"></script>
   </body>
 </html>

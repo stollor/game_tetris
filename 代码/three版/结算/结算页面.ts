@@ -93,14 +93,7 @@ export class 结算页面 implements 页面实例 {
 
   更新(秒: number): void {
     if (!this.已进入) return;
-    if (
-      this.数据.金币 &&
-      读取结算金币动画(
-        this.动画毫秒,
-        this.数据.金币.新增,
-        this.上下文.服务.设置.读取().省电模式 === "开",
-      ).活跃
-    ) {
+    if (this.读取需要连续帧()) {
       this.动画毫秒 += Math.max(0, 秒) * 1000;
       this.上下文.资源.请求重绘();
     }
@@ -111,6 +104,16 @@ export class 结算页面 implements 页面实例 {
       this.上次数秒 = 倒计时秒;
       this.上下文.资源.请求重绘();
     }
+  }
+
+  /** 金币动画播放期间需要连续帧；启动层据此暂缓空闲降频，避免动画掉成 10fps。 */
+  读取需要连续帧(): boolean {
+    if (!this.已进入 || !this.数据.金币) return false;
+    return 读取结算金币动画(
+      this.动画毫秒,
+      this.数据.金币.新增,
+      this.上下文.服务.设置.读取().省电模式 === "开",
+    ).活跃;
   }
 
   渲染(): void {

@@ -45,8 +45,7 @@ function 测试清单(): Record<string, unknown> {
 
 const 图片尺寸: Record<string, { 宽: number; 高: number }> = {
   "页-1.webp": { 宽: 512, 高: 512 },
-  "游戏图标.png": { 宽: 512, 高: 512 },
-  "圣所.png": { 宽: 1536, 高: 2048 },
+  "裁剪.svg": { 宽: 256, 高: 320 },
 };
 
 function 测试环境(
@@ -87,15 +86,10 @@ function 测试环境(
   return { 创建, 请求, 登记, 纹理表 };
 }
 
-test("加载项目图集与默认散图：帧查询、散图尺寸、纹理统计、请求来源顺序", async () => {
+test("加载项目图集与默认验收散图：帧查询、纹理统计、请求来源顺序", async () => {
   const { 创建, 请求, 登记 } = 测试环境();
   const 资源 = await 创建;
-  expect(请求).toEqual([
-    "/图集/清单.json",
-    "/图集/页-1.webp",
-    "/资源/图标/游戏图标.png",
-    "/GM套件/暗黑风格/资源/圣所.png",
-  ]);
+  expect(请求).toEqual(["./图集/清单.json", "./图集/页-1.webp", "./测试资源/裁剪.svg"]);
 
   const 帧 = 资源.读取帧("再消一行", "图标/游戏图标.png");
   expect(帧).toEqual({
@@ -111,29 +105,22 @@ test("加载项目图集与默认散图：帧查询、散图尺寸、纹理统�
   expect(资源.读取帧("不存在的图集", "x")).toBeUndefined();
   expect(资源.读取页纹理("再消一行", 9)).toBeUndefined();
 
-  const 游戏图标 = 资源.读取散图("图标/游戏图标");
-  expect(游戏图标?.宽).toBe(512);
-  expect(游戏图标?.高).toBe(512);
-  const 圣所 = 资源.读取散图("套件/圣所");
-  expect(圣所?.宽).toBe(1536);
-  expect(圣所?.高).toBe(2048);
+  const 裁剪图 = 资源.读取散图("测试/裁剪");
+  expect(裁剪图?.宽).toBe(256);
+  expect(裁剪图?.高).toBe(320);
   expect(资源.读取散图("不存在")).toBeUndefined();
 
-  // 图集页 512²×4 + 游戏图标 512²×4 + 圣所 1536×2048×4。
+  // 图集页 512²×4 + GM 验收样张 256×320×4。
   expect(资源.读取统计()).toEqual({
     图集数: 1,
     页数: 1,
     帧数: 1,
-    纹理字节: 512 * 512 * 4 + 512 * 512 * 4 + 1536 * 2048 * 4,
-    散图数: 2,
+    纹理字节: 512 * 512 * 4 + 256 * 320 * 4,
+    散图数: 1,
   });
   expect(资源.读取图集名列表()).toEqual(["再消一行"]);
-  expect(登记.map((项) => 项.键)).toEqual([
-    "图集/再消一行/页-1.webp",
-    "散图/图标/游戏图标",
-    "散图/套件/圣所",
-  ]);
-  expect(登记.map((项) => 项.字节)).toEqual([512 * 512 * 4, 512 * 512 * 4, 1536 * 2048 * 4]);
+  expect(登记.map((项) => 项.键)).toEqual(["图集/再消一行/页-1.webp", "散图/测试/裁剪"]);
+  expect(登记.map((项) => 项.字节)).toEqual([512 * 512 * 4, 256 * 320 * 4]);
 
   资源.销毁();
   expect(登记.every((项) => 项.释放次数 === 1)).toBe(true);
@@ -176,23 +163,20 @@ test("页图与散图加载失败给出明确中文错误并释放已加载资�
     取JSON: async () => 测试清单(),
     加载纹理: async (地址) => {
       散图失败.push(地址);
-      if (地址.includes("圣所")) throw new Error("HTTP 404");
+      if (地址.includes("裁剪.svg")) throw new Error("HTTP 404");
       const 纹理 = new Texture();
       纹理.image = { width: 512, height: 512 };
       return 纹理;
     },
     登记纹理: () => () => undefined,
   });
-  await expect(创建).rejects.toThrow(/读取散图「套件\/圣所」失败/);
-  await expect(创建).rejects.toThrow(/\/GM套件\/暗黑风格\/资源\/圣所\.png/);
-  expect(散图失败.some((地址) => 地址.includes("游戏图标"))).toBe(true);
+  await expect(创建).rejects.toThrow(/读取散图「测试\/裁剪」失败/);
+  await expect(创建).rejects.toThrow(/\.\/测试资源\/裁剪\.svg/);
+  expect(散图失败).toEqual(["./图集/页-1.webp", "./测试资源/裁剪.svg"]);
 });
 
-test("散图键与清单名可配置，默认散图包含游戏图标与 GM 套件圣所", async () => {
-  expect(读取默认散图()).toEqual([
-    { 键: "图标/游戏图标", 来源: "资源", 路径: "图标/游戏图标.png" },
-    { 键: "套件/圣所", 来源: "GM套件", 路径: "暗黑风格/资源/圣所.png" },
-  ]);
+test("散图键与清单名可配置，默认散图只包含项目测试图片", async () => {
+  expect(读取默认散图()).toEqual([{ 键: "测试/裁剪", 来源: "测试资源", 路径: "裁剪.svg" }]);
 
   const 请求: string[] = [];
   const 资源 = await 创建资源层({

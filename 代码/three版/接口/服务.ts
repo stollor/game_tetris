@@ -68,6 +68,7 @@ export interface 成就定义项 {
 }
 
 export interface 成就服务 {
+  读取保存成功(): boolean;
   全部定义(): readonly 成就定义项[];
   /** 返回本次新解锁的成就编号。 */
   记录落块(状态: 再消一行状态): string[];
@@ -81,6 +82,7 @@ export interface 成就服务 {
 export type 音效编号 = string;
 
 export interface 音频服务 {
+  设置暂停(暂停: boolean): void;
   播放音乐(编号: string): void;
   停止音乐(): void;
   播放音效(编号: 音效编号): void;
@@ -98,6 +100,8 @@ export interface 音频服务 {
     音效音量: number;
     上下文: string;
     当前音乐: string | null;
+    当前氛围: string | null;
+    暂停: boolean;
   };
   停止全部(): void;
 }

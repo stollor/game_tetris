@@ -1,15 +1,17 @@
-import { type 程序音频环境, 释放程序声部, 释放程序输出 } from "../../../框架/音频/程序音频";
-import { 演奏曲谱 } from "../../../框架/音频/音乐编排";
-import { 演奏音效 } from "../../../框架/音频/音效编排";
-import { 创建节流音效 } from "../../../框架/音频/音效节流";
+import { 释放曲谱缓冲 } from "../../../框架Three/音频/曲谱缓冲";
+import { type 程序音频环境, 释放程序声部, 释放程序输出 } from "../../../框架Three/音频/程序音频";
+import { 演奏曲谱 } from "../../../框架Three/音频/音乐编排";
+import { 演奏音效 } from "../../../框架Three/音频/音效编排";
+import { 创建节流音效 } from "../../../框架Three/音频/音效节流";
 import { 场景氛围表, type 氛围主题 } from "../../框架配置/场景氛围";
+import { 应用装备音效 } from "../../框架配置/旅行音效";
 import { 音乐库 } from "../../框架配置/音乐";
 import { 消行谱, 连击谱, 音效库 } from "../../框架配置/音效";
 import type { 设置服务, 音频服务 } from "../接口/服务";
 
 /**
  * Three 版音频：只做 WebAudio 上下文/总线/音量/静音/氛围调度；
- * 合成谱与曲谱展开直接复用 框架/音频/ 里 Phaser 无关的模块（程序音频/音乐编排/音效编排/音效节流），
+ * 合成谱与曲谱展开直接复用 Three 框架Three/音频/中的通用模块（程序音频/音乐编排/音效编排/音效节流），
  * 谱数据只 import 代码/框架配置/ 的三份表，不复制。
  * 浏览器要求用户手势后才能出声：启动层在首次 pointerdown/keydown 调 解锁()。
  */
@@ -24,8 +26,19 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
   let 当前音乐编号: string | null = null;
   let 氛围节点: { 停止: () => void } | null = null;
   let 噪声缓冲: AudioBuffer | null = null;
+  let 已销毁 = false,
+    场景暂停 = false,
+    已解锁 = false;
+  let 场景音乐: string | null = null,
+    当前氛围: string | null = null;
+  let 氛围主题: 氛围主题 | null = null;
+  const 宿主活跃 = () =>
+    !已销毁 && (typeof document === "undefined" || (!document.hidden && document.hasFocus()));
+
+  const 可以播放 = () => 宿主活跃() && !场景暂停;
 
   const 确保环境 = (): 程序音频环境 | null => {
+    if (已销毁) return null;
     if (环境) return 环境;
     if (typeof AudioContext === "undefined") return null;
     上下文 = new AudioContext();
@@ -53,11 +66,15 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
     音效库.find((项) => 项.id === 编号 || 项.id === `再消一行.${编号}` || 项.名称 === 编号);
 
   const 直接播放音效 = (编号: string): boolean => {
+    if (!宿主活跃()) return false;
     const 当前 = 确保环境();
     if (!当前) return false;
     const 条目 = 解析音效(编号);
     if (条目?.类型 !== "合成") return false;
-    演奏音效(当前, 条目.谱);
+    演奏音效(
+      当前,
+      条目.id.startsWith("再消一行.") ? 应用装备音效(条目.谱, 设置.读取().旅行音效) : 条目.谱,
+    );
     return true;
   };
 
@@ -85,6 +102,7 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
   const 停止氛围节点 = () => {
     氛围节点?.停止();
     氛围节点 = null;
+    当前氛围 = null;
   };
 
   const 生成噪声缓冲 = (当前: 程序音频环境): AudioBuffer => {
@@ -127,6 +145,8 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
           } catch {
             // 声源可能还没开始。
           }
+          声源.disconnect();
+          滤波.disconnect();
           释放程序输出(增益);
         },
       });
@@ -143,6 +163,7 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
         Math.max(1000, 点缀.间隔秒 * 1000),
       );
     }
+    当前氛围 = 主题;
     氛围节点 = {
       停止: () => {
         if (定时) clearInterval(定时);
@@ -152,55 +173,94 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
     };
   };
 
-  设置.订阅(() => 应用音量());
+  const 同步播放 = () => {
+    应用音量();
+    if (!可以播放() || !已解锁) {
+      停止当前音乐();
+      停止氛围节点();
+      if (!宿主活跃() && 上下文?.state === "running") void 上下文.suspend().catch(() => {});
+      return;
+    }
+    if (上下文?.state === "suspended") void 上下文.resume().catch(() => {});
+    const 值 = 设置.读取();
+    const 编号 = 场景音乐 && (值.旅行音乐 ? "旅行." + 值.旅行音乐 : 场景音乐);
+    const 条目 = 编号 ? 解析音乐(编号) : undefined;
+    if (!值.背景音乐 || 值.音乐音量 <= 0 || 条目?.类型 !== "曲谱") 停止当前音乐();
+    else if (当前音乐编号 !== 条目.id) {
+      停止当前音乐();
+      const 当前 = 确保环境();
+      if (当前) {
+        停止音乐 = 演奏曲谱(当前, 条目.曲谱);
+        当前音乐编号 = 条目.id;
+      }
+    }
+    const 主题 = 氛围主题;
+    if (!主题 || 值.背景音效音量 <= 0) 停止氛围节点();
+    else if (当前氛围 !== 主题) {
+      停止氛围节点();
+      播放氛围配方(主题);
+    }
+  };
+  const 取消设置 = 设置.订阅(() => {
+    if (氛围主题) 氛围主题 = 设置.读取().背景主题;
+    同步播放();
+  });
 
   const 解锁 = () => {
+    if (已销毁) return;
+    已解锁 = true;
     确保环境();
-    节流.解锁();
-    应用音量();
+    if (宿主活跃()) 节流.解锁();
+    同步播放();
   };
 
+  const 解锁一次 = () => {
+    解锁();
+    window.removeEventListener("pointerdown", 解锁一次);
+    window.removeEventListener("keydown", 解锁一次);
+  };
   if (typeof window !== "undefined") {
-    const 解锁一次 = () => {
-      解锁();
-      window.removeEventListener("pointerdown", 解锁一次);
-      window.removeEventListener("keydown", 解锁一次);
-    };
     window.addEventListener("pointerdown", 解锁一次);
     window.addEventListener("keydown", 解锁一次);
+    window.addEventListener("blur", 同步播放);
+    window.addEventListener("focus", 同步播放);
+    document.addEventListener("visibilitychange", 同步播放);
   }
 
   return {
     解锁,
-    播放音乐: (编号) => {
-      const 当前 = 确保环境();
-      if (!当前) return;
-      const 条目 = 解析音乐(编号);
-      if (条目?.类型 !== "曲谱") return;
-      停止当前音乐();
-      停止音乐 = 演奏曲谱(当前, 条目.曲谱);
-      当前音乐编号 = 条目.id;
+    设置暂停: (暂停) => {
+      场景暂停 = 暂停;
+      同步播放();
     },
-    停止音乐: 停止当前音乐,
+    播放音乐: (编号) => {
+      场景音乐 = 编号;
+      同步播放();
+    },
+    停止音乐: () => {
+      场景音乐 = null;
+      停止当前音乐();
+    },
     播放音效: (编号) => {
       解锁();
       节流.播放(编号, "手动");
     },
     播放消行: (消行数, 连击) => {
+      if (!可以播放()) return;
       const 当前 = 确保环境();
       if (!当前) return;
       if (设置.读取().音效音量 <= 0) return;
-      演奏音效(当前, 消行谱(消行数));
-      if (连击 >= 2) 演奏音效(当前, 连击谱(连击));
+      演奏音效(当前, 应用装备音效(消行谱(消行数), 设置.读取().旅行音效));
+      if (连击 >= 2) 演奏音效(当前, 应用装备音效(连击谱(连击), 设置.读取().旅行音效));
     },
     播放氛围: (主题) => {
-      停止氛围节点();
-      if (!主题) return;
-      const 当前 = 确保环境();
-      if (!当前) return;
-      播放氛围配方(主题 as 氛围主题);
+      氛围主题 = 主题 && Object.hasOwn(场景氛围表, 主题) ? (主题 as 氛围主题) : null;
+      同步播放();
     },
-    停止氛围: 停止氛围节点,
+    停止氛围: () => {
+      氛围主题 = null;
+      停止氛围节点();
+    },
     设置音量: 应用音量,
     读取状态: () => {
       const 设置值 = 设置.读取();
@@ -210,13 +270,34 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
         音效音量: 设置值.音效音量,
         上下文: 上下文?.state ?? "未创建",
         当前音乐: 当前音乐编号,
+        当前氛围,
+        暂停: !可以播放(),
       };
     },
     停止全部: () => {
+      if (已销毁) return;
+      已销毁 = true;
+      取消设置();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("pointerdown", 解锁一次);
+        window.removeEventListener("keydown", 解锁一次);
+        window.removeEventListener("blur", 同步播放);
+        window.removeEventListener("focus", 同步播放);
+        document.removeEventListener("visibilitychange", 同步播放);
+      }
       停止当前音乐();
       停止氛围节点();
-      if (上下文) 释放程序声部(上下文);
+      if (上下文) {
+        释放程序声部(上下文);
+        释放曲谱缓冲(上下文);
+      }
       节流.清理();
+      音乐输出?.disconnect();
+      音效输出?.disconnect();
+      氛围输出?.disconnect();
+      if (上下文) void 上下文.close().catch(() => {});
+      环境 = null;
+      噪声缓冲 = null;
     },
   };
 }

@@ -1,10 +1,10 @@
-import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
+import { 探测Tap能力, 读取Tap宿主 } from "../../框架Three/平台/TapTap/宿主探测";
 import type {
   Tap当前玩家分数结果,
   Tap排行榜分数,
   Tap排行榜分数结果,
   Tap排行榜周期,
-} from "../../框架/平台/TapTap/宿主类型";
+} from "../../框架Three/平台/TapTap/宿主类型";
 import type { 游戏模式 } from "../玩法/再消一行";
 import { 记录Tap用户身份 } from "./用户身份";
 import { 是未登录错误 } from "./登录";

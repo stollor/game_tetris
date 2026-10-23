@@ -1,4 +1,4 @@
-import { 获取文案, 解析语言 } from "../../../框架/设置/多语言";
+import { 获取文案, 解析语言 } from "../../../框架Three/设置/多语言";
 import { 文案 as 英文 } from "../../语言/English";
 import { 文案 as 简体中文 } from "../../语言/简体中文";
 import type { 设置服务, 语言服务 } from "../接口/服务";

@@ -1,4 +1,4 @@
-import { type 存储接口, 存档 } from "../../框架/存档";
+import { type 存储接口, 存档 } from "../../框架Three/存档";
 import { 成就定义 } from "../成就/再消一行成就";
 import { type 地点名称, type 地点皮肤, 地点皮肤表, 查找地点 } from "../框架配置/旅行地点";
 import {

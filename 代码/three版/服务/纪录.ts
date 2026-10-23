@@ -9,7 +9,7 @@ export function 创建纪录服务(存储: Storage = localStorage): 纪录服务
     保存: (模式, 纪录, 日期 = 旅行日期()) => {
       const 存档 = 创建纪录存档(模式, 日期, 存储);
       if (!是否刷新纪录(模式, 纪录, 存档.读取())) return false;
-      存档.保存(纪录);
+      if (!存档.保存(纪录)) throw new Error("本地纪录保存失败，停止本次云上传");
       return true;
     },
   };

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "Three标准桥导航",
+  "initialState": "主界面",
+  "timeoutMs": 10000,
+  "steps": [
+    {
+      "name": "打开设置",
+      "from": "主界面",
+      "action": "设置",
+      "to": "设置"
+    },
+    {
+      "name": "返回菜单",
+      "from": "设置",
+      "action": "返回主菜单",
+      "to": "主界面"
+    }
+  ]
+}

@@ -13,20 +13,22 @@ import { gzipSync } from "node:zlib";
 /**
  * 构建《再消一行》Three 版：产物写 `产物-three/`，并把运行时资源一起复制进产物：
  * - 项目静态图集（`.gamemaker/图集/项目/再消一行/`）→ `产物-three/图集/`
- * - 用到的散图（游戏图标、GM 套件样张）→ `产物-three/资源/`、`产物-three/GM套件/`
+ * - 项目测试图（仅 --验收）→ `产物-three/测试资源/`
  * 构建后自检图片存在且非空；包体统计区分「脚本/页面（有 gzip 对照）」与「图片资源
  * （webp/png 已是压缩格式，gzip 对照没有意义，只报原始字节）」。
  */
 
 const 产物目录 = "./产物-three";
 const 图集源目录 = "./.gamemaker/图集/项目/再消一行";
-const 散图列表 = [
-  { 源: "./资源/图标/游戏图标.png", 目标: "./资源/图标/游戏图标.png" },
-  {
-    源: "../../projects/GameMaker-v2/游戏模块库/UI组件库/套件/暗黑风格/资源/圣所.png",
-    目标: "./GM套件/暗黑风格/资源/圣所.png",
-  },
-];
+const 包含验收 = Bun.argv.includes("--验收");
+const 散图列表 = 包含验收
+  ? [
+      {
+        源: "测试/资源/裁剪.svg",
+        目标: "./测试资源/裁剪.svg",
+      },
+    ]
+  : [];
 
 // Bun 在子进程里对中文目录直接 rmSync 会误报 ENOENT，先逐文件删再删目录。
 if (existsSync(产物目录)) {
@@ -36,9 +38,19 @@ if (existsSync(产物目录)) {
 }
 
 const 构建结果 = await Bun.build({
-  entrypoints: ["./index.three.html", "./index.资源验收.html"],
+  entrypoints: 包含验收 ? ["./index.three.html", "./index.资源验收.html"] : ["./index.three.html"],
   outdir: 产物目录,
   target: "browser",
+  plugins: [
+    {
+      name: "exclude-resource-drafts",
+      setup(b) {
+        b.onLoad({ filter: /[\\/]资源草稿[\\/]|[\\/]组件[\\/]草稿[\\/]/ }, () => {
+          throw Error("正式构建不得引入资源草稿；请先明确接入正式资源");
+        });
+      },
+    },
+  ],
 });
 
 if (!构建结果.success) {
@@ -46,6 +58,7 @@ if (!构建结果.success) {
   process.exitCode = 1;
 } else {
   复制图集();
+  if (包含验收) cpSync("测试/资源/图集", join(产物目录, "测试资源/图集"), { recursive: true });
   复制散图();
   自检资源();
   打印包体();
@@ -101,8 +114,8 @@ function 自检资源(): void {
   const 清单 = JSON.parse(readFileSync(清单路径, "utf8")) as {
     页?: { 文件?: unknown }[];
   };
-  const 页列表 = Array.isArray(清单.页) ? 清单.页 : [];
-  if (页列表.length === 0) throw new Error(`构建产物图集清单没有页：${resolve(清单路径)}`);
+  if (!Array.isArray(清单.页)) throw new Error(`构建产物图集清单页字段无效：${resolve(清单路径)}`);
+  const 页列表 = 清单.页;
   for (const 页 of 页列表) {
     if (typeof 页.文件 !== "string") throw new Error(`构建产物图集清单页文件名非法：${清单路径}`);
     const 页路径 = join(产物目录, "图集", 页.文件);
@@ -115,7 +128,7 @@ function 自检资源(): void {
       throw new Error(`构建产物缺少散图：${resolve(路径)}`);
   }
   console.log(
-    `资源自检通过：图集 ${页列表.length} 页，散图 ${散图列表.length} 张（图集/ + 资源/ + GM套件/）`,
+    `资源自检通过：图集 ${页列表.length} 页，验收散图 ${散图列表.length} 张（图集/ + 测试资源/）`,
   );
 }
 

@@ -16,6 +16,8 @@ import type { 界面快照, 界面按钮快照 } from "../../代码/three版/接
  */
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
+/** 默认与历史证据一致用 DPR1；P3 手机验收要求 DPR2，可用 --DPR=2 复跑。 */
+const DPR = Number(process.argv.find((项) => 项.startsWith("--DPR="))?.split("=")[1] ?? 1);
 const 输出 = resolve("reports/three版");
 await mkdir(输出, { recursive: true });
 
@@ -28,7 +30,10 @@ type 验收记录 = {
 
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 try {
-  const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const 页 = await 浏览器.newPage({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: DPR,
+  });
   const 页面错误: string[] = [];
   const 控制台日志: string[] = [];
   页.on("pageerror", (错误) => 页面错误.push(错误.message));
@@ -372,8 +377,13 @@ try {
     统计 = await 读取统计();
   }
   assert.equal(页面错误.length, 0, `运行中报错：${页面错误.join("；")}`);
-  assert.deepEqual(统计.画布, { 宽: 390, 高: 844, 视口宽: "390", 视口高: "844" });
-  assert.equal(统计.设备像素比, 1);
+  assert.deepEqual(统计.画布, {
+    宽: 390 * DPR,
+    高: 844 * DPR,
+    视口宽: "390",
+    视口高: "844",
+  });
+  assert.equal(统计.设备像素比, DPR);
   assert.ok(统计.循环.帧数 >= 300, `帧数不足：${统计.循环.帧数}`);
   assert.ok(统计.循环.首帧毫秒 !== null, "首帧耗时缺失");
   assert.ok(统计.循环.平均工作毫秒 < 16, `单帧脚本耗时过高：${统计.循环.平均工作毫秒}`);
@@ -383,7 +393,7 @@ try {
 
   const 结果 = {
     地址,
-    视口: { 宽: 390, 高: 844, 设备像素比: 1 },
+    视口: { 宽: 390, 高: 844, 设备像素比: DPR },
     步骤,
     对局证据,
     消行证据,

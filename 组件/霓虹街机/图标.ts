@@ -1,11 +1,10 @@
-import type Phaser from "phaser";
 import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
 
 export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | "成就" | "商店" | "排行";
 
 /**
  * 旅行图标的引擎无关绘制：在 32×32 逻辑方格里画图形指令。
- * Phaser 版把它生成纹理（`获取旅行图标`），Three 版用画笔.图形 直接缩放绘制，形状只有这一份来源。
+ * Three 版用画笔.图形直接缩放绘制，形状只有这一份来源。
  */
 export function 绘制旅行图标(绘图: 图形对象, 名称: 旅行图标名称): void {
   if (名称 === "关闭")
@@ -78,13 +77,3 @@ export function 绘制旅行图标(绘图: 图形对象, 名称: 旅行图标名
   }
 }
 
-/** 图标作为真实纹理交给框架按钮，命中与交互仍使用通用按钮。 */
-export function 获取旅行图标(场景: Phaser.Scene, 名称: 旅行图标名称): string {
-  const 键 = 名称 === "排行" ? `旅行图标.${名称}.v2` : `旅行图标.${名称}`;
-  if (场景.textures.exists(键)) return 键;
-  const g = 场景.make.graphics({}, false);
-  绘制旅行图标(g, 名称);
-  g.generateTexture(键, 32, 32);
-  g.destroy();
-  return 键;
-}

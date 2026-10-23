@@ -1,5 +1,5 @@
 import { 界面主题, 颜色值 } from "../../代码/配置/界面主题";
-import type { 样式选择 } from "../../框架/设置/设置";
+import type { 样式选择 } from "../../框架Three/设置/设置";
 import type { 图形对象, 文字项, 矩形 } from "../../框架Three/界面/绘制/协议";
 import { 派生霓虹文字样式 } from "./文字样式";
 
