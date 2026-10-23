@@ -134,6 +134,6 @@ taptap-cli test-qr-code --dev-id 363566 --app-id 977300 --data '{"package_id":<h
 ## 9. 相关代码入口
 
 - `代码/平台/配置.ts` — ClientID、16 榜、成就映射、云槽
-- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts`；宿主协议与探测复用 `框架Three/平台/TapTap/`
+- `代码/平台/排行榜.ts` / `平台成就.ts` / `云存档.ts`；宿主协议与探测复用 `框架/平台/TapTap/`
 - `代码/three版/` — 主菜单排行入口、设置云存档栏、成就页
 - `运行/构建Three版.ts` — 构建后 `中文instanceof` 校验

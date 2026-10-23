@@ -1,27 +1,22 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 创建游戏主题 } from "../代码/three版/主题/游戏主题";
-import {
-  字号档设置,
-  文字档位配置,
-  读取档位文字样式,
-  默认字体栈,
-} from "../代码/three版/界面/文字配置";
-import { 添加矩形, 绘制文字, 绘制文字行高, type 绘制环境 } from "../代码/three版/视觉/绘制";
-import { 默认设置 } from "../代码/配置/再消一行设置";
-import { 方块外观方案表 } from "../代码/配置/方块外观";
-import { 游戏外观 } from "../代码/配置/游戏外观";
-import type { 紫外线矩形 } from "../框架Three/界面/图元合批";
-import { 图元合批 } from "../框架Three/界面/图元合批";
-import { 创建控件文字服务 } from "../框架Three/界面/控件文字";
-import type { 文字图集选项 } from "../框架Three/界面/文字图集";
-import { 创建文字服务, type 文字图集接口 } from "../框架Three/界面/文字服务";
-import { 创建画笔, type 资源层 } from "../框架Three/界面/绘制/画笔";
+import { 创建游戏主题 } from "../代码/应用/主题/游戏主题";
+import { 字号档设置, 文字档位配置, 读取档位文字样式, 默认字体栈 } from "../代码/应用/界面/文字配置";
+import { 添加矩形, 绘制文字, 绘制文字行高, type 绘制环境 } from "../代码/应用/视觉/绘制";
+import { 方块外观方案表 } from "../代码/视觉/外观/方块外观";
+import { 游戏外观 } from "../代码/视觉/外观/游戏外观";
+import { 默认设置 } from "../代码/设置/游戏设置";
+import type { 紫外线矩形 } from "../框架/界面/图元合批";
+import { 图元合批 } from "../框架/界面/图元合批";
+import { 创建控件文字服务 } from "../框架/界面/控件文字";
+import type { 文字图集选项 } from "../框架/界面/文字图集";
+import { 创建文字服务, type 文字图集接口 } from "../框架/界面/文字服务";
+import { 创建画笔, type 资源层 } from "../框架/界面/绘制/画笔";
 import { 读取霓虹文字样式 } from "../组件/霓虹街机/文字样式";
 
 /**
  * 游戏侧画笔装配/配方接入测试：GM 已承载文字服务/画笔/控件文字适配的通用用例
- * （GM `测试/规则/框架Three/Three*.test.ts`），这里只验证《再消一行》自己的注入值：
+ * （GM `测试/规则/框架/Three*.test.ts`），这里只验证《再消一行》自己的注入值：
  * 默认字体栈、三档字号映射、文字档位配置派生、档位样式 token，以及启动层同款装配后
  * 控件文字与页面自绘文字都落到同一个画笔上。不依赖 canvas/WebGL。
  */

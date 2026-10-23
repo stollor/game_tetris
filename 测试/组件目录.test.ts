@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { 校验界面资源目录 } from "../框架Three/开发/界面资源协议";
+import { 校验界面资源目录 } from "../框架/开发/界面资源协议";
+import { 项目界面资源 } from "../组件/资源目录";
 import { 界面主题目录, 界面资源样品 } from "../组件/预览/界面资源";
-import { 项目界面资源 } from "../组件/预览/组件目录";
 
 test("看板目录登记游戏真实的套件、配色、组件、按钮和图标", () => {
   expect(new Set(项目界面资源.map((项) => 项.分类))).toEqual(

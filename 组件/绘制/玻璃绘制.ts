@@ -1,9 +1,9 @@
-import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象 } from "../../框架/界面/绘制/协议";
 
 /**
  * 引擎无关的玻璃质感绘制原语（柔影 / 玻璃面板 / 玻璃按钮）。
  *
- * 逐字复刻 GM `游戏模块库/Phaser框架Three/界面/玻璃绘制.ts` 的算法，只把 Phaser Graphics
+ * 逐字复刻 GM `游戏模块库/Phaser框架/界面/玻璃绘制.ts` 的算法，只把 Phaser Graphics
  * 换成 `图形对象` 契约，供 Phaser 版、Three 版与预览共用同一份像素指令。
  * 本文件只依赖 `图形对象` 与纯颜色运算：不 import Phaser 运行时，Three 包可直接引用。
  * 主题/地点纹样/角饰等游戏视觉留在 `组件/霓虹街机/底板.ts`。

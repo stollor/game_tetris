@@ -1,7 +1,7 @@
-import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象 } from "../../框架/界面/绘制/协议";
 import { 查找地点 } from "../框架配置/旅行地点";
-import type { 背景主题 } from "../配置/再消一行设置";
-import { 背景主题配置 } from "../配置/背景主题";
+import type { 背景主题 } from "../设置/游戏设置";
+import { 背景主题配置 } from "./外观/背景主题";
 import { 内置主题外观, 是内置主题, 绘制内置背景动态, 绘制内置背景静底 } from "./背景配方/内置主题";
 import { 绘制旅行动态, 绘制旅行风景 } from "./背景配方/旅行风景";
 

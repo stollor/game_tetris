@@ -15,9 +15,8 @@
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "skipLibCheck": true,
-    "paths": { "GM预览协议": ["./GM预览协议.ts"] }
+    "skipLibCheck": true
   },
-  "include": ["代码", "运行", "框架Three", "组件", "测试"],
+  "include": ["代码", "运行", "框架", "组件", "测试"],
   "exclude": ["node_modules", "组件/草稿"]
 }

@@ -1,8 +1,8 @@
 import { expect, spyOn, test } from "bun:test";
-import { 创建纪录服务 } from "../代码/three版/服务/纪录";
 import * as 云 from "../代码/平台/云存档";
 import { 清空分析缓冲, 读取分析缓冲 } from "../代码/平台/分析";
 import { 结算后同步平台 } from "../代码/平台/结算同步";
+import { 创建纪录服务 } from "../代码/应用/服务/纪录";
 
 test("纪录存储失败不被误报为刷新成功", () => {
   const 存储: Storage = {

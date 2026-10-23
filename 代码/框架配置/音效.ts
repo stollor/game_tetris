@@ -1,4 +1,4 @@
-import type { 音效条目, 音效谱 } from "../../框架Three/音频/音效目录";
+import type { 音效条目, 音效谱 } from "../../框架/音频/音效目录";
 import { 场景氛围库 } from "./场景氛围";
 import { 构建旅行音效库 } from "./旅行音效";
 

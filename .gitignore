@@ -1,8 +1,6 @@
 产物/
-产物-three/
 node_modules/
 框架/
-框架Three/
 GM预览协议.ts
 *.log
 
@@ -39,3 +37,6 @@ reports/
 .gamemaker/
 
 游戏模块库/
+
+# GM构建工具只在运行/脚本使用，不提交本机联接
+GM工具/

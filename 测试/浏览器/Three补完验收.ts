@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type {} from "../../代码/three版/启动";
-import type { 界面按钮快照 } from "../../代码/three版/接口/上下文";
+import type {} from "../../代码/应用/启动";
+import type { 界面按钮快照 } from "../../代码/应用/接口/上下文";
 
 const 输出 = resolve(process.argv[3] ?? "reports/视觉返工/补完交互");
 await mkdir(输出, { recursive: true });

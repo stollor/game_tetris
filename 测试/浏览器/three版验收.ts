@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type { 调试状态, 调试统计 } from "../../代码/three版/启动";
-import type { 对局快照 } from "../../代码/three版/对局/index";
-import type { 界面快照, 界面按钮快照 } from "../../代码/three版/接口/上下文";
+import type { 调试状态, 调试统计 } from "../../代码/应用/启动";
+import type { 对局快照 } from "../../代码/应用/对局/index";
+import type { 界面快照, 界面按钮快照 } from "../../代码/应用/接口/上下文";
 
 /**
  * 《再消一行》Three 版完整功能实机验收：390×844 DPR1，只截当前视口。

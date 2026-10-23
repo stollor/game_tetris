@@ -17,9 +17,9 @@ const 入口 = join(入口目录, "入口.ts");
 const 前缀 = relative(入口目录, resolve(".")).replaceAll("\\", "/") + "/";
 
 const 实验源码 = `
-import { 创建渲染编排 } from "${前缀}框架Three/世界/渲染编排";
-import { 图元合批 } from "${前缀}框架Three/界面/图元合批";
-import { 创建文字图集 } from "${前缀}框架Three/界面/文字图集";
+import { 创建渲染编排 } from "${前缀}框架/世界/渲染编排";
+import { 图元合批 } from "${前缀}框架/界面/图元合批";
+import { 创建文字图集 } from "${前缀}框架/界面/文字图集";
 
 const 字体 = '"Segoe UI", "Microsoft YaHei", sans-serif';
 const 字号 = 13;

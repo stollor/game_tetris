@@ -6,8 +6,8 @@ import { dirname, join, relative, resolve } from "node:path";
  * 视觉单一来源规则（Phase 7D 出口）。
  *
  * 目的：Three 版是 Phaser 版的架构替换，视觉资产/逻辑必须单一来源：
- * 1) `代码/three版/**` 不得出现独立的主题色/背景基色/方块色数值表——颜色只能来自
- *    `代码/配置/`、`代码/框架配置/`、`组件/霓虹街机/`（调色板/文字样式/配方）等共享来源；
+ * 1) `代码/应用/**` 不得出现独立的主题色/背景基色/方块色数值表——颜色只能来自
+ *    `代码/视觉/外观/`、`代码/框架配置/`、`组件/霓虹街机/`（调色板/文字样式/配方）等共享来源；
  * 2) 页面布局不得在 Three 页面里自造硬编码布局表，必须来自共享配方/共享配置的布局函数；
  * 3) Three 包不得引入 Phaser 运行时（含经共享配方间接 import 到 `phaser` 的情况）。
  *
@@ -41,11 +41,11 @@ const three文件 = (await 收集ts(join(项目, "代码/three版"))).sort();
  * 7D 收紧后只剩两张「非游戏视觉」的工装页/调试 UI 白名单；游戏页面必须零字面量。
  */
 const 颜色白名单: Record<string, { 上限: number; 原因: string }> = {
-  "代码/three版/资源/验收页.ts": {
+  "代码/应用/资源/验收页.ts": {
     上限: 13,
     原因: "资源验收工具页（不是游戏页面）：状态标识用色仅服务验收截图与统计，7D 登记保留",
   },
-  "代码/three版/启动.ts": {
+  "代码/应用/启动.ts": {
     上限: 3,
     原因: "资源加载失败时 DOM 可见错误条的 CSS 调试色（不属于游戏视觉，正常运行时不可见）；清屏色已改读 代码/配置/游戏外观.颜色.底色",
   },
@@ -87,11 +87,11 @@ test("Three 页面不得自造硬编码布局表（白名单外零容忍）", as
   expect(违规).toEqual([]);
 });
 
-/** 解析 import 目标：相对路径、框架Three/*、GM预览协议；返回绝对路径（去扩展名）。 */
+/** 解析 import 目标：相对路径、框架/*、GM预览协议；返回绝对路径（去扩展名）。 */
 function 解析导入(来源文件: string, 规格: string): string | null {
   if (规格.startsWith(".")) return resolve(dirname(来源文件), 规格);
   if (规格 === "GM预览协议") return resolve(项目, "GM预览协议");
-  if (规格.startsWith("框架Three/")) return resolve(项目, 规格);
+  if (规格.startsWith("框架/")) return resolve(项目, 规格);
   return null;
 }
 

@@ -1,14 +1,9 @@
-import {
-  type 图形对象,
-  type 文字项,
-  type 矩形,
-  解析颜色数值,
-} from "../../框架Three/界面/绘制/协议";
+import { type 图形对象, type 文字项, type 矩形, 解析颜色数值 } from "../../框架/界面/绘制/协议";
 import { 绘制玻璃按钮底板, 绘制玻璃面板基底 } from "../../组件/绘制/玻璃绘制";
+import type { 游戏设置 } from "../设置/游戏设置";
 import type { 游戏文案 } from "../语言/类型";
-import type { 游戏设置 } from "../配置/再消一行设置";
-import { 游戏外观 } from "../配置/游戏外观";
-import { 暂停外观 } from "../配置/界面主题";
+import { 游戏外观 } from "./外观/游戏外观";
+import { 暂停外观 } from "./外观/界面主题";
 
 /** 原点、尺寸、控件位置取自 Phaser 的 界面对局设置菜单.布局。 */
 export function 计算对局设置布局(宽: number, 高: number) {

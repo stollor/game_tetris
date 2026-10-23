@@ -9,7 +9,7 @@
     "ignoreUnknown": true,
     "includes": [
       "框架/**",
-      "!框架Three",
+      "!框架",
       "代码/**",
       "组件/**",
       "运行/**",

@@ -1,6 +1,6 @@
 import type { 对局纪录 } from "../../代码/存档/对局纪录";
 import type { 游戏模式 } from "../../代码/玩法/再消一行";
-import type { 图形对象, 文字项 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象, 文字项 } from "../../框架/界面/绘制/协议";
 import { 绘制霓虹按钮, 绘制霓虹按钮图标, type 霓虹按钮状态 } from "./按钮配方";
 import { 读取霓虹文字样式 } from "./文字样式";
 

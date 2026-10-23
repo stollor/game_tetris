@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { 新对局编号 } from "../代码/场景/对局/对局编号";
+import { 新对局编号 } from "../代码/玩法/对局编号";
 
 const 编号格式 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 

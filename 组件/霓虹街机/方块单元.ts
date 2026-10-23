@@ -1,12 +1,12 @@
-import { 亮色, 暗色 } from "../../框架Three/界面/颜色工具";
-import { 获取游戏设置 } from "../../代码/配置/再消一行设置";
 import {
   type 方块外观名称,
   type 方块外观方案,
   解析方块外观,
   读取当前方块外观,
-} from "../../代码/配置/方块外观";
-import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
+} from "../../代码/视觉/外观/方块外观";
+import { 获取游戏设置 } from "../../代码/设置/游戏设置";
+import type { 图形对象 } from "../../框架/界面/绘制/协议";
+import { 亮色, 暗色 } from "../../框架/界面/颜色工具";
 import { 绘制地点纹样 } from "./旅行纹样";
 
 export interface 方块单元外观 {
@@ -213,4 +213,3 @@ export function 绘制方块单元预制体(绘图: 图形对象, x: number, y: 
 export function 绘制方块辉光(绘图: 图形对象, x: number, y: number, 外观: 方块单元外观): void {
   绘制方块单元辉光(绘图, x, y, { ...外观, 方案: 解析方块单元方案(外观) });
 }
-

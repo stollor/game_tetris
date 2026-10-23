@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象 } from "../../框架/界面/绘制/协议";
 
 export type 旅行图标名称 = "关闭" | "方块币" | "风景" | "设置" | "成就" | "商店" | "排行";
 
@@ -76,4 +76,3 @@ export function 绘制旅行图标(绘图: 图形对象, 名称: 旅行图标名
     绘图.lineStyle(1.6, 0xffe7a8, 0.9).lineBetween(5, 27, 27, 27);
   }
 }
-

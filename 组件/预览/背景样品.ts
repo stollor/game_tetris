@@ -1,8 +1,8 @@
 import { 生成金币条文字项, 绘制金币条, 计算金币条 } from "../../代码/界面/金币条配方";
+import { 背景主题配置 } from "../../代码/视觉/外观/背景主题";
 import { 绘制背景动态, 绘制背景静底 } from "../../代码/视觉/背景配方";
-import type { 背景主题 } from "../../代码/配置/再消一行设置";
-import { 背景主题配置 } from "../../代码/配置/背景主题";
-import type { 界面资源样品 } from "../../框架Three/开发/界面资源协议";
+import type { 背景主题 } from "../../代码/设置/游戏设置";
+import type { 界面资源样品 } from "../../框架/开发/界面资源协议";
 
 const 背景 = Object.keys(背景主题配置) as 背景主题[];
 export const 背景样品: readonly 界面资源样品[] = [

@@ -1,4 +1,4 @@
-import type { 界面资源样品 } from "../../框架Three/开发/界面资源协议";
+import type { 界面资源样品 } from "../../框架/开发/界面资源协议";
 import { 绘制旅行图标 } from "../霓虹街机/图标";
 import { 设置预览界面样式, 读取霓虹调色板, 霓虹界面主题 } from "../霓虹街机/调色板";
 export const 图标样品: readonly 界面资源样品[] = (

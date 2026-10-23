@@ -1,6 +1,6 @@
-import type { 图形对象, 文字项 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象, 文字项 } from "../../框架/界面/绘制/协议";
 import { 绘制旅行图标 } from "../../组件/霓虹街机/图标";
-import { 游戏外观 } from "../配置/游戏外观";
+import { 游戏外观 } from "./外观/游戏外观";
 import type { 霓虹结算布局 } from "./结算配方";
 
 const 钳制 = (值: number) => Math.max(0, Math.min(1, 值));

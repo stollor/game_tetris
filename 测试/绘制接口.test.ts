@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { type 图形对象, 混合模式, 解析颜色数值 } from "../框架Three/界面/绘制/协议";
-import type { Three图形 } from "../框架Three/界面/绘制/图形";
+import { type 图形对象, 混合模式, 解析颜色数值 } from "../框架/界面/绘制/协议";
+import type { Three图形 } from "../框架/界面/绘制/图形";
 
 type 检查Three可直接传入 = Three图形 extends 图形对象 ? true : false;
 const 检查Three: 检查Three可直接传入 = true;

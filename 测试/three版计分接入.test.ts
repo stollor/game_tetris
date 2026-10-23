@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { 生成对局结果 } from "../代码/three版/对局/结算数据";
+import { 生成对局结果 } from "../代码/应用/对局/结算数据";
 import {
   切换暂停,
   创建新局,

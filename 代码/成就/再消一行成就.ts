@@ -1,4 +1,4 @@
-import { 成就系统 } from "../../框架Three/进度/成就";
+import { 成就系统 } from "../../框架/进度/成就";
 import type { 再消一行状态 } from "../玩法/再消一行";
 
 export const 成就定义 = [

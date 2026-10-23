@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 创建资源层, 读取默认散图 } from "../代码/three版/资源/index";
+import { 创建资源层, 读取默认散图 } from "../代码/应用/资源/index";
 
 /**
  * 资源层规则测试：清单 → 帧查询 / 散图键 / 统计 / 销毁，
@@ -126,6 +126,58 @@ test("加载项目图集与默认验收散图：帧查询、纹理统计、请�
   expect(登记.every((项) => 项.释放次数 === 1)).toBe(true);
   资源.销毁();
   expect(登记.every((项) => 项.释放次数 === 1)).toBe(true);
+});
+
+test("空构建资源不请求清单、不加载纹理或登记资源", async () => {
+  const 请求: string[] = [];
+  const 资源 = await 创建资源层({
+    资源文件: [],
+    散图: [],
+    取JSON: async (地址) => {
+      请求.push(地址);
+      throw Error("不应请求");
+    },
+    加载纹理: async (地址) => {
+      请求.push(地址);
+      throw Error("不应加载");
+    },
+    登记纹理: () => {
+      throw Error("不应登记");
+    },
+  });
+  expect(请求).toEqual([]);
+  expect(资源.读取图集名列表()).toEqual([]);
+  expect(资源.读取统计()).toEqual({ 图集数: 0, 页数: 0, 帧数: 0, 纹理字节: 0, 散图数: 0 });
+  资源.销毁();
+});
+
+test("空计划仍加载显式散图，缺失的显式图集仍报错", async () => {
+  const 请求: string[] = [];
+  const 纹理 = new Texture();
+  纹理.image = { width: 2, height: 2 };
+  const 资源 = await 创建资源层({
+    资源文件: [],
+    散图: [{ 键: "样本", 来源: "资源", 路径: "样本.png" }],
+    加载纹理: async (地址) => {
+      请求.push(地址);
+      return 纹理;
+    },
+    登记纹理: () => () => 纹理.dispose(),
+  });
+  expect(请求).toEqual(["./资源/样本.png"]);
+  expect(资源.读取统计().散图数).toBe(1);
+  资源.销毁();
+  await expect(
+    创建资源层({
+      资源文件: [],
+      图集地址: "./必需图集/",
+      散图: [],
+      取JSON: async () => {
+        throw Error("HTTP 404");
+      },
+      登记纹理: () => () => undefined,
+    }),
+  ).rejects.toThrow("读取项目图集清单失败");
 });
 
 test("清单加载失败给出期望路径与图集生成命令", async () => {

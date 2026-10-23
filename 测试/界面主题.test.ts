@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test";
-import { 创建游戏主题 } from "../代码/three版/主题/游戏主题";
+import { 创建游戏主题 } from "../代码/应用/主题/游戏主题";
 import { 旅行主题表 } from "../代码/框架配置/旅行主题";
 import { 再消一行主题 } from "../代码/框架配置/界面主题";
-import { 默认设置 } from "../代码/配置/再消一行设置";
-import { 夜空鎏金, 暖纸古典, 青蓝未来 } from "../框架Three/样式/主题";
-import { 获取游戏主题 } from "../框架Three/样式/样式";
-import { 计算颜色对比度 } from "../框架Three/界面/颜色工具";
+import { 默认设置 } from "../代码/设置/游戏设置";
+import { 夜空鎏金 } from "../框架/样式/夜空鎏金";
+import { 暖纸古典 } from "../框架/样式/暖纸古典";
+import { 获取游戏主题 } from "../框架/样式/样式";
+import { 青蓝未来 } from "../框架/样式/青蓝未来";
+import { 计算颜色对比度 } from "../框架/界面/颜色工具";
 
 test("三套项目主题同步框架控件，保留通用主题，并保持正文与按钮可读", () => {
   for (const 原主题 of [夜空鎏金, 暖纸古典, 青蓝未来]) {

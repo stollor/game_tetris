@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { 计算对局布局 } from "../代码/视觉/对局布局";
-import { 计算重排视口 } from "../框架Three/界面/正交相机";
+import { 计算重排视口 } from "../框架/界面/正交相机";
 
 test("Three响应视口与共享三态布局一起生效", () => {
   for (const 视口 of [

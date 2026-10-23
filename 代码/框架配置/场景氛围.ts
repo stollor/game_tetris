@@ -1,4 +1,4 @@
-import type { 音效条目, 音效谱 } from "../../框架Three/音频/音效目录";
+import type { 音效条目, 音效谱 } from "../../框架/音频/音效目录";
 import type { 地点名称 } from "./旅行地点";
 
 export type 氛围主题 = 地点名称 | "晨光海岸" | "云海山岚" | "极光原野" | "霓虹天际";

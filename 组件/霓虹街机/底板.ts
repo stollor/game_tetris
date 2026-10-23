@@ -1,5 +1,5 @@
 import { 查找地点 } from "../../代码/框架配置/旅行地点";
-import type { 图形对象 } from "../../框架Three/界面/绘制/协议";
+import type { 图形对象 } from "../../框架/界面/绘制/协议";
 import { type 玻璃面板选项, 绘制玻璃面板基底 } from "../绘制/玻璃绘制";
 import { 绘制地点纹样 } from "./旅行纹样";
 import { 读取霓虹调色板 } from "./调色板";
@@ -55,4 +55,3 @@ export function 绘制霓虹玻璃(
     图形.lineBetween(角x, 角y, 角x + 角长 * 横, 角y);
   }
 }
-

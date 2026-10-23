@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun ./运行/运行游戏命令.ts ./运行/Three开发服务器.ts",
-    "build": "bun ./运行/运行游戏命令.ts ./运行/构建Three版.ts",
+    "dev": "bun ./运行/运行游戏命令.ts ./运行/开发服务器.ts",
+    "build": "bun ./运行/运行游戏命令.ts ./运行/构建游戏.ts",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "test": "bun ./运行/运行游戏命令.ts test",
+    "test": "bun ./运行/运行游戏命令.ts test ./测试",
     "test:browser": "bun ./运行/运行游戏命令.ts ./测试/浏览器/three版验收.ts",
-    "build:验收": "bun ./运行/运行游戏命令.ts ./运行/构建Three版.ts --验收"
+    "build:验收": "bun ./运行/运行游戏命令.ts ./运行/构建资源验收.ts"
   },
   "dependencies": {
     "three": "^0.186.1"
