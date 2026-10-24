@@ -302,7 +302,7 @@ async function 验收一个DPR(浏览器实例: Browser, DPR: number) {
       await 页.waitForTimeout(180);
       const 文字 = (await 读取界面()).文字 ?? [];
       const 当前 = Number(文字.find((项) => 项.startsWith("滚动:"))?.slice(3) ?? 0);
-      if (当前 > 0 && 当前 === 上次) return 当前;
+      if (当前 === 上次) return 当前;
       上次 = 当前;
     }
     throw new Error(`设置页未能滚动到可复现位置，最后滚动=${上次}`);

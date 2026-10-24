@@ -34,7 +34,9 @@ async function 等文字(文字: string) {
   await 页.waitForFunction((v) => window.__three版__?.读取界面()?.文字?.includes(v), 文字);
   await 页.waitForFunction(
     () =>
-      !window.__three版__?.读取界面().文字?.some((项) => 项 === "过渡:移出" || 项 === "过渡:移入"),
+      !window.__three版__
+        ?.读取界面()
+        .文字?.some((项) => 项 === "过渡:移出" || 项 === "过渡:移入" || 项 === "过渡:流转"),
   );
 }
 async function 滚动(纵向: number, 横向 = 0, x = 200, y = 450) {
@@ -110,20 +112,25 @@ try {
   assert.equal(await 页.evaluate(() => window.__three版__?.读取设置().语言), "English");
   await 点击("语言下拉框");
   await 点击("语言:简体中文");
-  await 滚动(480);
+  await 点击("页签:外观");
+  await 点击("页签:自定义");
+  await 滚动(2000);
   await 截图("09-设置中部");
-  await 滚动(480);
   await 截图("10-设置外观");
-  // 外观横排在设置面板内，横滚与竖滚分别消费自己的方向。
+  // 外观横排在自定义页内，横滚与竖滚分别消费自己的方向。
   const 原方块 = await 页.evaluate(() => window.__three版__?.读取设置().方块外观);
-  await 滚动(0, 220, 200, 630);
-  await 页.mouse.click(80, 620);
+  const 方块钮 = (await 界面())?.按钮.find((x) => x.名称.startsWith("外观:方块:"));
+  assert.ok(方块钮, "自定义页有方块卡");
+  const 点x = 方块钮.左 + Math.min(24, 方块钮.宽 / 2);
+  const 点y = 方块钮.上 + 方块钮.高 / 2;
+  await 滚动(0, 220, 点x + 70, 点y);
+  await 页.mouse.click(点x, 点y);
   const 横滚方块 = await 页.evaluate(() => window.__three版__?.读取设置().方块外观);
   assert.notEqual(横滚方块, 原方块, "横滚后卡片命中使用新索引");
   await 截图("11-设置横排滚动");
   await 滚动(-10000);
   await 滚动(10000);
-  await 页.mouse.click(80, 620);
+  await 页.mouse.click(点x, 点y);
   assert.equal(
     await 页.evaluate(() => window.__three版__?.读取设置().方块外观),
     横滚方块,
@@ -132,6 +139,7 @@ try {
   await 滚动(600);
   await 截图("12-设置底端");
   await 滚动(-10000);
+  await 点击("页签:常规");
   await 截图("13-设置返回顶端");
   await 点击("语言下拉框");
   await 点击("语言:English");

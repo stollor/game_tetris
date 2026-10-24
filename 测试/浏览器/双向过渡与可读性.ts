@@ -17,7 +17,9 @@ const 界面 = () => 页.evaluate(() => window.__three版__?.读取界面());
 async function 稳定() {
   await 页.waitForFunction(
     () =>
-      !window.__three版__?.读取界面().文字?.some((项) => 项 === "过渡:移出" || 项 === "过渡:移入"),
+      !window.__three版__
+        ?.读取界面()
+        .文字?.some((项) => 项 === "过渡:移出" || 项 === "过渡:移入" || 项 === "过渡:流转"),
   );
 }
 async function 等待页面(名称: string) {
@@ -48,9 +50,14 @@ async function 点击(名称: string) {
   assert.ok(项, 名称);
   await 页.mouse.click(项.左 + 项.宽 / 2, 项.上 + 项.高 / 2);
 }
-async function 转场(执行: () => Promise<void>, 标记: string, 完成按钮: string) {
+async function 转场(
+  执行: () => Promise<void>,
+  标记: string,
+  完成按钮: string,
+  阶段列表: readonly string[] = ["移出", "移入"],
+) {
   await 执行();
-  for (const 阶段 of ["移出", "移入"]) {
+  for (const 阶段 of 阶段列表) {
     await 页.waitForFunction((阶段) => {
       const 文 = window.__three版__?.读取界面().文字 ?? [];
       const 秒 = Number(文.find((项) => 项.startsWith("退场:"))?.slice(3));
@@ -69,11 +76,11 @@ async function 转场(执行: () => Promise<void>, 标记: string, 完成按钮:
 try {
   await 页.goto(地址);
   await 页.waitForFunction(() => window.__three版__);
-  await 转场(() => 页.mouse.click(300, 450), "01-菜单进入纯享", "纯享:返回");
-  await 转场(() => 点击("纯享:返回"), "02-纯享返回菜单", "开始游戏");
-  await 转场(() => 点击("开始游戏"), "03-菜单进入模式", "返回");
+  await 转场(() => 页.mouse.click(300, 450), "01-菜单进入纯享", "纯享:返回", ["流转"]);
+  await 转场(() => 点击("纯享:返回"), "02-纯享返回菜单", "开始游戏", ["流转"]);
+  await 转场(() => 点击("开始游戏"), "03-菜单进入模式", "返回", ["流转"]);
   assert.ok((await 界面())?.按钮.some((项) => 项.名称 === "排行榜:极限"));
-  await 转场(() => 点击("返回"), "04-模式返回菜单", "开始游戏");
+  await 转场(() => 点击("返回"), "04-模式返回菜单", "开始游戏", ["流转"]);
   await 点击("商店");
   await 等待页面("商店");
   await 截图("05-中文商店");

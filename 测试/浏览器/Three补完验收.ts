@@ -93,17 +93,22 @@ try {
   assert.ok(((await 设置())?.音乐音量 ?? 0) > 30, "滑块连续拖动");
   await 页.mouse.click(音量.左, 音量Y);
   assert.equal((await 设置())?.音乐音量, 0);
-  await 页.mouse.move(200, 650);
-  await 页.mouse.wheel(0, 450);
-  await 页.waitForTimeout(220);
-  const 滚动文字 = (await 文字()).find((项) => 项.startsWith("滚动:"));
-  assert.ok(Number(滚动文字?.slice("滚动:".length) ?? 0) > 0, "设置列表纵向滚动");
-  // 滚动后快照坐标与真实命中一致：语言下拉框已随内容上移，点它仍能打开菜单。
-  await 点("语言下拉框");
-  assert.ok((await 文字()).includes("语言菜单:true"), "滚动后语言下拉框命中和坐标一致");
-  await 页.keyboard.press("Escape");
-  assert.ok(!(await 文字()).includes("语言菜单:true"), "Esc 关闭滚动后的语言菜单");
-  await 记录("设置纵向滚动与滑块");
+  await 点("页签:外观");
+  await 点("页签:自定义");
+  const 外观钮 = (await 界面())?.按钮 ?? [];
+  assert.ok(
+    外观钮.some((项) => 项.名称.startsWith("外观:样式:")),
+    "自定义页有样式卡",
+  );
+  assert.ok(
+    外观钮.some((项) => 项.名称.startsWith("外观:背景:")),
+    "自定义页有背景卡",
+  );
+  assert.ok(
+    外观钮.some((项) => 项.名称.startsWith("外观:方块:")),
+    "自定义页有方块卡",
+  );
+  await 记录("设置页签与外观");
   await 点("返回主菜单");
 
   await 点("商店");
