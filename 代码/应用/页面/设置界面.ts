@@ -1,6 +1,6 @@
 import { 探测Tap能力 } from "../../../框架/平台/TapTap/宿主探测";
-import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../../框架/界面/控件/滚动容器";
-import type { 绘制环境 } from "../../../框架/界面/控件/类型";
+import { 列表 } from "../../../框架/界面/控件/列表";
+import type { 控件接口, 绘制环境 } from "../../../框架/界面/控件/类型";
 import type { 图形对象, 文字项, 矩形 } from "../../../框架/界面/绘制/协议";
 import type { 画笔 } from "../../../框架/界面/绘制/画笔";
 import { 命中热区, 滑块热区, 页面绘制层, type 页面背景信息 } from "../../../框架/界面/页面基类";
@@ -133,14 +133,15 @@ function 查找已购(已购: readonly string[], 部位: string): string[] {
 }
 
 export class 设置界面 extends 页面基类 {
-  private 滚动: 滚动容器 | null = null;
+  private 滚动: 列表 | null = null;
   private 滚动位置 = 0;
   private 外观 = 读取设置外观(this.上下文.服务.设置.读取());
   private 面板矩形: 矩形 = { 左: 16, 上: 12, 宽: 358, 高: 820 };
   private 内容宽 = 330;
   private 分组布局: 已布局分组[] = [];
   private 内容高 = 0;
-  private readonly 外观列表 = new Map<string, 滚动容器>();
+  private 列表项: ({ 类型: "标题"; 分组: 已布局分组 } | { 类型: "行"; 布局: 已布局行 })[] = [];
+  private readonly 外观列表 = new Map<string, 列表>();
   private readonly 外观位置 = new Map<string, number>();
   private 语言菜单: 矩形 | null = null;
   private 云同步中 = false;
@@ -161,7 +162,18 @@ export class 设置界面 extends 页面基类 {
       this.上次滚动 = 位置;
       滚动变化 = true;
     }
+    const 可视标题 = new Set(
+      (this.滚动?.读取可视项() ?? []).flatMap((i) => {
+        const 项 = this.列表项[i];
+        return 项?.类型 === "行" && 项.布局.行.类型 === "外观" ? [项.布局.行.标题] : [];
+      }),
+    );
     for (const [标题, 列表] of this.外观列表) {
+      if (this.滚动?.读取渲染模式() === "虚拟" && !可视标题.has(标题)) {
+        this.外观位置.set(标题, 列表.读取滚动位置());
+        this.外观列表.delete(标题);
+        continue;
+      }
       const 横 = 列表.读取滚动位置();
       if (this.上次外观滚动.get(标题) !== 横) {
         this.上次外观滚动.set(标题, 横);
@@ -189,6 +201,10 @@ export class 设置界面 extends 页面基类 {
     const 面板宽 = Math.min(740, this.逻辑宽 - 32);
     this.内容宽 = 面板宽 - 28;
     this.分组布局 = this.布局分组(设置, 英文);
+    this.列表项 = this.分组布局.flatMap((分组) => [
+      { 类型: "标题" as const, 分组 },
+      ...分组.行.map((布局) => ({ 类型: "行" as const, 布局 })),
+    ]);
     const 面板高 = Math.min(
       this.逻辑高 - 24,
       Math.max(460, this.内容高 + 面板上标题高 + 页脚高 + 26),
@@ -201,14 +217,23 @@ export class 设置界面 extends 页面基类 {
     };
     this.滚动?.清空();
     const 内容左 = this.面板矩形.左 + 14;
-    this.滚动 = new 滚动容器类({
+    this.滚动 = new 列表({
       矩形: {
         左: 内容左,
         上: this.面板矩形.上 + 面板上标题高,
         宽: this.内容宽,
         高: Math.max(100, 面板高 - 166),
       },
-      内容高: this.内容高 + 12,
+      项布局: this.列表项.map((项, i) => ({
+        起点: 项.类型 === "标题" ? 项.分组.标题布局.上 : 项.布局.上,
+        长度:
+          (项.类型 === "标题" ? 分组标题高 + 分组标题间距 : 项.布局.高) +
+          (i === this.列表项.length - 1 ? 12 : 0),
+      })),
+      创建项: (序号) => {
+        const 项 = this.列表项[序号];
+        return 项?.类型 === "行" ? this.填充行(项.布局) : [];
+      },
       显示滚动条: false,
       惯性: true,
     });
@@ -217,7 +242,7 @@ export class 设置界面 extends 页面基类 {
     this.滚动位置 = this.滚动.读取滚动位置();
     this.上次滚动 = this.滚动.读取滚动位置();
     this.上次外观滚动.clear();
-    this.填充交互(设置, 英文);
+    this.滚动.读取可视项();
     for (const [标题, 列表] of this.外观列表) this.上次外观滚动.set(标题, 列表.读取滚动位置());
     this.创建页脚(英文);
     if (this.语言菜单) this.创建语言菜单(英文);
@@ -243,20 +268,16 @@ export class 设置界面 extends 页面基类 {
     return 结果;
   }
 
-  private 填充交互(设置: 游戏设置, 英文: boolean): void {
-    if (!this.滚动) return;
-    for (const 分组 of this.分组布局) for (const 行布局 of 分组.行) this.填充行(设置, 英文, 行布局);
-  }
-
-  private 填充行(_设置: 游戏设置, _英文: boolean, 行布局: 已布局行): void {
+  private 填充行(行布局: 已布局行): readonly 控件接口[] {
     const 滚动 = this.滚动;
-    if (!滚动) return;
+    if (!滚动) return [];
+    const 控件: 控件接口[] = [];
     const 行 = 行布局.行;
     if (行.类型 === "选项") {
       const 区 = this.选项按钮区(行布局);
       行.选项.forEach((选项, i) => {
         const 矩形 = this.选项按钮矩形(区, i, 行.选项.length);
-        滚动.添加(
+        控件.push(
           new 命中热区({
             矩形,
             点击: () => {
@@ -266,11 +287,11 @@ export class 设置界面 extends 页面基类 {
           }),
         );
       });
-      return;
+      return 控件;
     }
     if (行.类型 === "音量") {
       const 矩形 = this.滑块矩形(行布局);
-      滚动.添加(
+      控件.push(
         new 滑块热区({
           矩形,
           值: 行.值,
@@ -282,11 +303,11 @@ export class 设置界面 extends 页面基类 {
           },
         }),
       );
-      return;
+      return 控件;
     }
     if (行.类型 === "语言") {
       const 矩形 = this.语言下拉矩形(行布局);
-      滚动.添加(
+      控件.push(
         new 命中热区({
           矩形,
           点击: () => {
@@ -301,33 +322,30 @@ export class 设置界面 extends 页面基类 {
           },
         }),
       );
-      return;
+      return 控件;
     }
     const 列表矩形 = this.外观列表矩形(行布局);
-    const 内容宽 = Math.max(列表矩形.宽, 行.卡片.length * (卡片宽 + 卡片间距) - 卡片间距);
-    const 横向 = new 滚动容器类({
+    const 横向 = new 列表({
       矩形: 列表矩形,
-      内容高: 列表矩形.高,
-      内容宽,
+      项布局: 行.卡片.map((_, i) => ({ 起点: i * (卡片宽 + 卡片间距), 长度: 卡片宽 })),
+      创建项: (i) => [
+        new 命中热区({
+          矩形: { 左: i * (卡片宽 + 卡片间距), 上: 0, 宽: 卡片宽, 高: 100 },
+          点击: () => {
+            this.滚动位置 = 滚动.读取滚动位置();
+            const 卡 = 行.卡片[i];
+            if (卡) this.选择外观卡(卡);
+          },
+        }),
+      ],
       方向: "水平",
       显示滚动条: false,
       惯性: true,
     });
-    for (const [i, 卡] of 行.卡片.entries()) {
-      const 卡布局 = this.外观卡布局(i);
-      横向.添加(
-        new 命中热区({
-          矩形: { 左: 卡布局.中心X - 卡片宽 / 2, 上: 0, 宽: 卡片宽, 高: 100 },
-          点击: () => {
-            this.滚动位置 = 滚动.读取滚动位置();
-            this.选择外观卡(卡);
-          },
-        }),
-      );
-    }
     横向.设置滚动位置(this.外观位置.get(行.标题) ?? 0);
     this.外观列表.set(行.标题, 横向);
-    滚动.添加(横向);
+    控件.push(横向);
+    return 控件;
   }
 
   private 创建语言菜单(英文: boolean): void {
@@ -442,16 +460,22 @@ export class 设置界面 extends 页面基类 {
     画笔.压入裁剪(可视);
     图形.save();
     图形.translateCanvas(可视.左, 可视.上 - 偏移);
-    for (const 分组 of this.分组布局) {
-      this.文字(画笔, 生成分组标题文字项(分组.标题布局, 分组.标题, 外观.强调色));
-      绘制覆盖页分隔线(
-        图形,
-        分组.标题布局.左,
-        分组.标题布局.分隔线Y,
-        分组.标题布局.宽,
-        外观.强调色,
-      );
-      for (const 行布局 of 分组.行) this.绘制行(图形, 画笔, 设置, 行布局, 英文);
+    for (const i of this.滚动.读取可视项()) {
+      const 项 = this.列表项[i];
+      if (!项) continue;
+      if (项.类型 === "行") {
+        this.绘制行(图形, 画笔, 设置, 项.布局, 英文);
+      } else {
+        const 分组 = 项.分组;
+        this.文字(画笔, 生成分组标题文字项(分组.标题布局, 分组.标题, 外观.强调色));
+        绘制覆盖页分隔线(
+          图形,
+          分组.标题布局.左,
+          分组.标题布局.分隔线Y,
+          分组.标题布局.宽,
+          外观.强调色,
+        );
+      }
     }
     图形.restore();
     画笔.弹出裁剪();
@@ -585,7 +609,10 @@ export class 设置界面 extends 页面基类 {
     图形.translateCanvas(列表矩形.左 - 横移, 列表矩形.上);
     const 原偏移 = this.内容偏移;
     this.内容偏移 = { x: 原偏移.x + 列表矩形.左 - 横移, y: 原偏移.y + 列表矩形.上 };
-    for (const [i, 卡] of 行.卡片.entries()) this.绘制外观卡(图形, 画笔, 卡, this.外观卡布局(i));
+    for (const i of this.外观列表.get(行.标题)?.读取可视项() ?? []) {
+      const 卡 = 行.卡片[i];
+      if (卡) this.绘制外观卡(图形, 画笔, 卡, this.外观卡布局(i));
+    }
     this.内容偏移 = 原偏移;
     图形.restore();
     画笔.弹出裁剪();
@@ -615,6 +642,8 @@ export class 设置界面 extends 页面基类 {
   }
 
   private 绘制背景缩略(图形: 图形对象, 矩形: 矩形, 背景值: string): void {
+    const 画笔 = this.上下文.资源.画笔;
+    画笔.压入裁剪({ ...矩形, 左: 矩形.左 + this.内容偏移.x, 上: 矩形.上 + this.内容偏移.y });
     图形.save();
     图形.translateCanvas(矩形.左, 矩形.上);
     绘制背景(图形, {
@@ -625,6 +654,7 @@ export class 设置界面 extends 页面基类 {
       时间秒: 0,
     });
     图形.restore();
+    画笔.弹出裁剪();
   }
 
   private 是否选中外观卡(卡: 外观卡源): boolean {
@@ -824,14 +854,20 @@ export class 设置界面 extends 页面基类 {
       {
         标题: 中英("常规", "General"),
         行: [
-          {
-            类型: "选项",
-            标题: 中英("触屏功能提示", "Touch labels"),
-            选项: [
-              单选(中英("开", "On"), 设置.显示触屏提示, () => 更新({ 显示触屏提示: true })),
-              单选(中英("关", "Off"), !设置.显示触屏提示, () => 更新({ 显示触屏提示: false })),
-            ],
-          },
+          ...(this.上下文.资源.逻辑宽 > this.上下文.资源.逻辑高
+            ? [
+                {
+                  类型: "选项" as const,
+                  标题: 中英("键盘操作说明", "Keyboard guide"),
+                  选项: [
+                    单选(中英("开", "On"), 设置.显示按键说明, () => 更新({ 显示按键说明: true })),
+                    单选(中英("关", "Off"), !设置.显示按键说明, () =>
+                      更新({ 显示按键说明: false }),
+                    ),
+                  ],
+                },
+              ]
+            : []),
           {
             类型: "选项",
             标题: 中英("动态背景", "Background motion"),

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { 成就定义 } from "../代码/成就/再消一行成就";
 import { 校验界面资源目录 } from "../框架/开发/界面资源协议";
 import { 项目界面资源 } from "../组件/资源目录";
 import { 界面主题目录, 界面资源样品 } from "../组件/预览/界面资源";
@@ -16,23 +17,24 @@ test("看板目录登记游戏真实的套件、配色、组件、按钮和图�
     "成就",
     "商店",
     "排行",
+    ...成就定义.map((项) => 项.名称),
   ]);
   expect(项目界面资源.every((项) => 项.源码.startsWith("组件/"))).toBe(true);
 });
 
 test("独立Three目录按实际职责分层，主题与配色分别登记", () => {
   校验界面资源目录(界面资源样品);
-  expect(界面资源样品).toHaveLength(28);
+  expect(界面资源样品).toHaveLength(30);
   expect(界面资源样品.every((项) => typeof 项.绘制 === "function")).toBe(true);
   for (const [分类, 数量] of [
     ["按钮", 4],
-    ["图标", 5],
+    ["图标", 6],
     ["组件", 5],
     ["样式", 2],
     ["配色", 1],
     ["套件", 2],
     ["布局", 1],
-    ["应用", 4],
+    ["应用", 5],
     ["特效", 4],
   ] as const)
     expect(界面资源样品.filter((项) => 项.分类 === 分类)).toHaveLength(数量);
@@ -56,10 +58,10 @@ test("独立Three目录按实际职责分层，主题与配色分别登记", () 
 });
 test("图标每个用途一组且无重复，按钮按结构家族保留变体与自然交互", () => {
   const 图标 = 界面资源样品.filter((项) => 项.分类 === "图标");
-  expect(图标.map((项) => 项.名称)).toEqual(["导航", "系统", "成长", "收藏", "交易"]);
+  expect(图标.map((项) => 项.名称)).toEqual(["导航", "系统", "成长", "收藏", "交易", "成就徽章"]);
   const 帧 = 图标.flatMap((项) => 项.资产?.帧 ?? []).map((项) => 项.名称);
-  expect(帧).toHaveLength(7);
-  expect(new Set(帧).size).toBe(7);
+  expect(帧).toHaveLength(19);
+  expect(new Set(帧).size).toBe(19);
   const 按钮 = 界面资源样品.filter((项) => 项.分类 === "按钮");
   expect(按钮.map((项) => 项.编号)).toEqual([
     "button-menu",

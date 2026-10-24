@@ -16,7 +16,7 @@ export interface 矩形布局 {
 export interface 成就页布局 {
   列表: 矩形布局;
   行高: number;
-  /** 行底板宽（Phaser 行容器里 0..宽-12 的底板）。 */
+  /** 行底板宽；由框架列表在视口横轴居中。 */
   行宽: number;
   行板高: number;
   /** 说明文字的换行宽。 */

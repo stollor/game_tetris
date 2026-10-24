@@ -27,21 +27,14 @@ function 填底行(状态: ReturnType<typeof 创建新局>, 空列: readonly num
   for (let 列 = 0; 列 < 底行.length; 列++) 底行[列] = 空列.includes(列) ? null : "J";
 }
 
-/** 硬降到最底需要下落的行数：最低格落到可见最底行（19）。 */
-function 读取下落距离(状态: ReturnType<typeof 创建新局>): number {
-  const 最低格 = Math.max(...读取格子(状态.当前方块).map(([, 行]) => 行));
-  return 19 - 最低格;
-}
-
 describe("Three 版计分接入", () => {
   test("单行消除记 100 分并产生消行事件与落块事件", () => {
     const 状态 = 创建新局(() => 0.5, ["I", "O"], "马拉松");
     填底行(状态, [3, 4, 5, 6]);
-    const 硬降分 = 读取下落距离(状态) * 2;
     硬降(状态, () => 0.5);
     expect(状态.消行数).toBe(1);
-    // 空棋盘消 1 行同时是完美清场：100 + 1000，再加硬降分。
-    expect(状态.分数).toBe(100 + 1000 + 硬降分);
+    // 空棋盘消 1 行同时是完美清场：100 + 1000，不含下落距离分。
+    expect(状态.分数).toBe(1100);
     expect(状态.落块事件?.行数).toBe(1);
     expect(状态.落块事件?.T旋).toBe("无");
     expect(状态.落块事件?.全清).toBe(true);
@@ -55,10 +48,9 @@ describe("Three 版计分接入", () => {
       行.fill("J");
       行[4] = null;
     }
-    const 硬降分 = 读取下落距离(状态) * 2;
     硬降(状态, () => 0.5);
     expect(状态.消行数).toBe(4);
-    expect(状态.分数).toBe(800 + 1000 + 硬降分);
+    expect(状态.分数).toBe(1800);
     expect(状态.落块事件?.全清).toBe(true);
     expect(状态.棋盘.every((行) => 行.every((格) => 格 === null))).toBe(true);
     if (!状态.落块事件) throw new Error("缺少落块事件");
@@ -69,18 +61,16 @@ describe("Three 版计分接入", () => {
     const 状态 = 创建新局(() => 0.5, ["I", "O", "T"], "马拉松");
     填底行(状态, [0, 1, 2, 3]);
     for (let 次 = 0; 次 < 3; 次++) 移动方块(状态, -1, 0, () => 0.5);
-    const 首距离 = 读取下落距离(状态) * 2;
     硬降(状态, () => 0.5);
     expect(状态.消行数).toBe(1);
-    expect(状态.分数).toBe(100 + 1000 + 首距离);
+    expect(状态.分数).toBe(1100);
     expect(状态.连击).toBe(1);
     填底行(状态, [4, 5]);
-    const 次距离 = 读取下落距离(状态) * 2;
     硬降(状态, () => 0.5);
     expect(状态.消行数).toBe(2);
     expect(状态.落块事件?.连击).toBe(2);
-    // 第二次基础分 100 × 连击倍率 1.2 + 硬降分；O 还压着上层一行，所以不是完美清场。
-    expect(状态.分数).toBe(100 + 1000 + 首距离 + Math.floor(100 * 1.2) + 次距离);
+    // 第二次基础分 100 × 连击倍率 1.2，不含下落分；O 还压着上层一行，所以不是完美清场。
+    expect(状态.分数).toBe(1100 + Math.floor(100 * 1.2));
   });
 
   test("连续四行触发背靠背标记与 1.5 倍加成", () => {
@@ -115,18 +105,16 @@ describe("Three 版计分接入", () => {
     expect(状态.最后旋转).toBe(true);
   });
 
-  test("软降/硬降的分数在锁定后计入，暂存换块会重置暂存状态", () => {
+  test("软降不加分，暂存换块会重置暂存状态", () => {
     const 状态 = 创建新局(() => 0.5, ["T", "I", "O"], "马拉松");
     expect(软降一步(状态, () => 0.5)).toBe(true);
-    expect(状态.软降分).toBe(1);
+    expect(状态.分数).toBe(0);
     expect(暂存换块(状态, () => 0.5)).toBe(true);
     expect(状态.暂存方块).toBe("T");
     expect(状态.本块已暂存).toBe(true);
     expect(暂存换块(状态, () => 0.5)).toBe(false);
-    const 前 = 状态.软降分;
     硬降(状态, () => 0.5);
-    expect(状态.软降分).toBe(0);
-    expect(状态.分数).toBeGreaterThanOrEqual(前);
+    expect(状态.分数).toBe(0);
   });
 
   test("暂停冻结有效用时与极限剩余时间，恢复后继续累计", () => {

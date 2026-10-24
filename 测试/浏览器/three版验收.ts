@@ -125,6 +125,10 @@ try {
   const 等待回到对局 = () =>
     等待状态((状态) => 状态.页面 === "对局" && 状态.场景栈.at(-1) === "对局", "回到对局");
   const 查找按钮 = async (名称: string): Promise<界面按钮快照> => {
+    await 页.waitForFunction(
+      (名) => window.__three版__?.读取界面().按钮.some((项) => 项.名称 === 名),
+      名称,
+    );
     const 界面 = await 读取界面();
     const 按钮 = 界面.按钮.find((项) => 项.名称 === 名称);
     if (!按钮) {

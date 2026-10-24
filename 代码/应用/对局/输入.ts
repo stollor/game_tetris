@@ -1,9 +1,9 @@
 /**
  * 对局输入状态机：只把「按住/松开」换算成规则动作，不碰 代码/玩法 与渲染。
- * DAS/ARR、长按暂存、双击硬降都复刻 Phaser 版的节奏值，方便两版对照。
+ * DAS/ARR、双击硬降都复刻 Phaser 版的节奏值，方便两版对照。
  */
 
-export type 虚拟键 = "左" | "右" | "左转" | "右转" | "旋转" | "半转" | "下" | "硬降" | "暂存";
+export type 虚拟键 = "左" | "右" | "左转" | "右转" | "半转" | "下" | "硬降" | "暂存";
 
 export type 输入动作 =
   | { 类型: "移动"; 方向: -1 | 1 }
@@ -16,8 +16,6 @@ export type 输入动作 =
 /** 首次横移延迟、之后每格的重复间隔。 */
 export const 横移初始延迟毫秒 = 133;
 export const 横移重复间隔毫秒 = 33;
-/** 按住旋转键超过此毫秒触发一次暂存（与 Phaser 版一致）。 */
-export const 长按暂存毫秒 = 450;
 /** 触屏下键两次按下的最大间隔；第二次按直接硬降。 */
 export const 双击硬降毫秒 = 280;
 /** 只有短按抬起才计入双击；长按软降抬起后不触发双击。 */
@@ -35,8 +33,6 @@ export class 输入状态 {
   private 左下次横移 = 横移初始延迟毫秒;
   private 右按住毫秒 = 0;
   private 右下次横移 = 横移初始延迟毫秒;
-  private 旋转按住毫秒 = 0;
-  private 长按已触发 = false;
   private 下按下时刻 = 0;
   private 上次下抬起 = Number.NEGATIVE_INFINITY;
 
@@ -63,10 +59,6 @@ export class 输入状态 {
         return [{ 类型: "旋转", 方向: 1 }];
       case "半转":
         return [{ 类型: "半转" }];
-      case "旋转":
-        this.旋转按住毫秒 = 0;
-        this.长按已触发 = false;
-        return [{ 类型: "旋转", 方向: 1 }];
       case "下": {
         const 现在 = this.现在();
         this.下按下时刻 = 现在;
@@ -84,7 +76,7 @@ export class 输入状态 {
     }
   }
 
-  /** 松开：清理长按/双击计时。 */
+  /** 松开：清理双击计时。 */
   松开(键: 虚拟键): void {
     this.按住.delete(键);
     if (键 === "左") {
@@ -95,17 +87,13 @@ export class 输入状态 {
       this.右按住毫秒 = 0;
       this.右下次横移 = 横移初始延迟毫秒;
     }
-    if (键 === "旋转") {
-      this.旋转按住毫秒 = 0;
-      this.长按已触发 = false;
-    }
     if (键 === "下") {
       const 经过 = this.现在() - this.下按下时刻;
       this.上次下抬起 = 经过 <= 短按抬起毫秒 ? this.现在() : Number.NEGATIVE_INFINITY;
     }
   }
 
-  /** 每个固定步长推进：DAS/ARR 重复与长按暂存。 */
+  /** 每个固定步长推进：DAS/ARR 重复。 */
   更新(经过毫秒: number): 输入动作[] {
     const 动作: 输入动作[] = [];
     if (this.按住.has("左")) {
@@ -120,13 +108,6 @@ export class 输入状态 {
       while (this.右按住毫秒 >= this.右下次横移) {
         动作.push({ 类型: "移动", 方向: 1 });
         this.右下次横移 += 横移重复间隔毫秒;
-      }
-    }
-    if (this.按住.has("旋转") && !this.长按已触发) {
-      this.旋转按住毫秒 += 经过毫秒;
-      if (this.旋转按住毫秒 >= 长按暂存毫秒) {
-        this.长按已触发 = true;
-        动作.push({ 类型: "暂存" });
       }
     }
     return 动作;
@@ -148,8 +129,6 @@ export class 输入状态 {
     this.左下次横移 = 横移初始延迟毫秒;
     this.右按住毫秒 = 0;
     this.右下次横移 = 横移初始延迟毫秒;
-    this.旋转按住毫秒 = 0;
-    this.长按已触发 = false;
     this.上次下抬起 = Number.NEGATIVE_INFINITY;
   }
 }

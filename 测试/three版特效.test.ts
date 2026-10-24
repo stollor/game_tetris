@@ -72,7 +72,7 @@ test("金币计数等待250ms、飞币依序出现并结束，省电只有淡入
   expect(省电.闪光透明度).toBe(0);
 });
 
-test("对局设置在目标三种模拟视口内，滑块和九个按钮共用布局", () => {
+test("对局设置在目标三种模拟视口内，滑块与适用的设置按钮共用布局", () => {
   for (const [宽, 高] of [
     [390, 844],
     [430, 860],
@@ -80,7 +80,8 @@ test("对局设置在目标三种模拟视口内，滑块和九个按钮共用�
   ]) {
     if (宽 === undefined || 高 === undefined) continue;
     const 定位 = 计算对局设置布局(宽, 高);
-    expect(定位.按钮).toHaveLength(9);
+    expect(定位.按钮).toHaveLength(宽 > 高 ? 6 : 4);
+    expect(定位.按钮.some((项) => 项.名称.startsWith("上键:"))).toBe(false);
     for (const 矩 of [定位.面板, 定位.滑块, ...定位.按钮.map((项) => 项.矩形)]) {
       expect(矩.左).toBeGreaterThanOrEqual(0);
       expect(矩.上).toBeGreaterThanOrEqual(0);

@@ -17,6 +17,8 @@ declare global {
       设置暂停(暂停: boolean): void;
       结束当前对局(): void;
       准备结算(完赛?: boolean): void;
+      准备倒计时: (剩余毫秒: number) => void;
+      准备贴墙旋转: () => void;
     };
   }
 }

@@ -20,6 +20,10 @@ const 状态 = () => 页.evaluate(() => window.__three版__?.读取状态());
 const 设置 = () => 页.evaluate(() => window.__three版__?.读取设置());
 const 文字 = async () => (await 界面())?.文字 ?? [];
 async function 查找(名称: string): Promise<界面按钮快照> {
+  await 页.waitForFunction(
+    (名) => window.__three版__?.读取界面().按钮.some((项) => 项.名称 === 名),
+    名称,
+  );
   const 项 = (await 界面())?.按钮.find((项) => 项.名称 === 名称 && 项.可用 !== false);
   assert.ok(项, `缺少可用按钮 ${名称}：${JSON.stringify(await 界面())}`);
   return 项;
@@ -56,6 +60,9 @@ try {
   await 页.waitForFunction(() => !!window.__three版__);
   await 页.evaluate(() => window.__three版__?.更新设置({ 背景动态: false, 省电模式: "关" }));
   await 页.mouse.click(200, 350);
+  await 页.waitForFunction(() =>
+    window.__three版__?.读取界面().按钮.some((项) => 项.名称 === "纯享:返回"),
+  );
   assert.ok((await 文字()).includes("状态:纯享"));
   const 原风景 = (await 文字()).find((项) => 项.startsWith("纯享:"));
   await 滑动(300, 400, 80, 400);
@@ -142,6 +149,9 @@ try {
   await 滑动(320, 720, 80, 720);
   await 记录("商店地点目录横向滚动");
   await 点("商店:纯享");
+  await 页.waitForFunction(() =>
+    window.__three版__?.读取界面().按钮.some((项) => 项.名称 === "商店:返回"),
+  );
   await 滑动(300, 350, 80, 350);
   await 页.keyboard.press("Escape");
   await 查找("返回主菜单");
@@ -170,8 +180,12 @@ try {
   await 点("网格:关");
   assert.equal((await 设置())?.显示网格, false);
   await 点("网格:开");
-  await 点("上键:左转");
-  assert.equal((await 设置())?.手机上键旋转, "左转");
+  assert.ok(
+    !(await 界面())?.按钮.some((项) => 项.名称.startsWith("上键:")),
+    "对局设置不再有上键按钮",
+  );
+  const 设置快照 = await 设置();
+  assert.ok(设置快照 && !("手机上键旋转" in 设置快照), "设置快照不再含手机上键旋转");
   await 记录("对局内设置真实操作");
   await 点("返回暂停菜单");
   await 点("继续");

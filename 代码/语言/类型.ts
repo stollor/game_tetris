@@ -29,6 +29,8 @@ export interface 再消一行文案 {
   暂停: string;
   继续: string;
   挑战完成: string;
+  挑战成功: string;
+  挑战失败: string;
   本局结算: string;
   游戏结束: string;
   已暂停: string;

@@ -143,11 +143,40 @@ export function 绘制棋盘外框(绘图: 图形对象, 参数: 棋盘外框参
         圆角 + 层 * 3,
       );
   }
+  // 两侧导轨和角部扣件给棋盘一个独立装置轮廓，不以持续全页重画制造流光。
+  绘图
+    .lineStyle(1, 边框色, 0.25)
+    .lineBetween(左 - 13, 上 + 20, 左 - 13, 上 + 高 - 20)
+    .lineBetween(左 + 宽 + 13, 上 + 20, 左 + 宽 + 13, 上 + 高 - 20);
   绘图
     .fillStyle(背景色, 0.99)
     .fillRoundedRect(左 - 10, 上 - 10, 宽 + 20, 高 + 20, 圆角)
     .lineStyle(1.2, 边框色, 0.95)
     .strokeRoundedRect(左 - 10, 上 - 10, 宽 + 20, 高 + 20, 圆角);
+  绘图.lineStyle(2.2, 边框色, 0.78);
+  for (const [x, 方向] of [
+    [左 - 8, 1],
+    [左 + 宽 + 8, -1],
+  ]) {
+    for (const [y, 纵向] of [
+      [上 - 8, 1],
+      [上 + 高 + 8, -1],
+    ]) {
+      绘图
+        .beginPath()
+        .moveTo(x, y + 纵向 * 14)
+        .lineTo(x, y + 纵向 * 5)
+        .lineTo(x + 方向 * 5, y)
+        .lineTo(x + 方向 * 18, y)
+        .strokePath();
+    }
+  }
+  const 中 = 左 + 宽 / 2;
+  绘图
+    .lineStyle(1.5, 边框色, 0.5)
+    .lineBetween(中 - 22, 上 - 14, 中 - 8, 上 - 14)
+    .lineBetween(中 + 8, 上 - 14, 中 + 22, 上 - 14);
+  绘图.fillStyle(边框色, 0.7).fillTriangle(中 - 4, 上 - 18, 中 + 4, 上 - 18, 中, 上 - 13);
 }
 
 export interface 棋盘网格参数 {
@@ -162,11 +191,21 @@ export interface 棋盘网格参数 {
 /** 内部网格 + 中央竖向柔光（取自预制体 布局 的原绘制）。 */
 export function 绘制棋盘网格(绘图: 图形对象, 参数: 棋盘网格参数): void {
   const { 宽, 高, 格子, 列数, 行数, 网格色 } = 参数;
-  绘图.lineStyle(1, 网格色, 0.5);
+  绘图.lineStyle(1, 网格色, 0.32);
   for (let 列 = 1; 列 < 列数; 列 += 1) 绘图.lineBetween(列 * 格子, 0, 列 * 格子, 高);
-  for (let 行 = 1; 行 < 行数; 行 += 1) 绘图.lineBetween(0, 行 * 格子, 宽, 行 * 格子);
-  // 中央竖向柔光，增加玻璃纵深
-  绘图.fillStyle(0xffffff, 0.022).fillRect(宽 * 0.3, 0, 宽 * 0.4, 高);
+  for (let 行 = 1; 行 < 行数; 行 += 1) {
+    绘图.lineStyle(1, 网格色, 行 % 5 === 0 ? 0.46 : 0.28).lineBetween(0, 行 * 格子, 宽, 行 * 格子);
+  }
+  // 两侧透明渐变消除光柱的硬边，顶部留一点生成区光线。
+  绘图
+    .fillGradientStyle(0xffffff, 0xffffff, 0xffffff, 0xffffff, 0, 0.025, 0, 0.025)
+    .fillRect(0, 0, 宽 / 2, 高);
+  绘图
+    .fillGradientStyle(0xffffff, 0xffffff, 0xffffff, 0xffffff, 0.025, 0, 0.025, 0)
+    .fillRect(宽 / 2, 0, 宽 / 2, 高);
+  绘图
+    .fillGradientStyle(网格色, 网格色, 网格色, 网格色, 0.1, 0.1, 0, 0)
+    .fillRect(0, 0, 宽, 格子 * 3);
 }
 
 /* ------------------------------------------------------------------ */

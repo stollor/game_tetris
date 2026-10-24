@@ -196,7 +196,7 @@ describe("再消一行 MVP 规则", () => {
     }
     expect(硬降(状态, () => 0)).toBeGreaterThan(0);
     expect(状态.消行数).toBe(1);
-    expect(状态.分数).toBe(1140);
+    expect(状态.分数).toBe(1100);
     expect(状态.棋盘[21]?.every((格子) => 格子 === null)).toBe(true);
   });
 

@@ -1,4 +1,4 @@
-import type { 图形对象 } from "../../框架/界面/绘制/协议";
+import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
 import { 绘制霓虹玻璃 } from "./底板";
 import { 读取霓虹调色板 } from "./调色板";
 export interface 霓虹侧栏几何 {
@@ -43,4 +43,25 @@ export function 绘制霓虹侧栏(图形: 图形对象, 几何: 霓虹侧栏几
     .fillRect(线X + 线宽 * 0.35, 线Y, 线宽 * 0.3, 1)
     .fillGradientStyle(调色板.分组线, 调色板.分组线, 调色板.分组线, 调色板.分组线, 0.32, 0, 0.32, 0)
     .fillRect(线X + 线宽 * 0.65, 线Y, 线宽 * 0.35, 1);
+}
+
+/** 连续管壁、双侧导轨与端口套箍；槽位是管内定位，不再各有一块玻璃卡。 */
+export function 绘制传输管道(图: 图形对象, 区域: 矩形): void {
+  const 色 = 读取霓虹调色板();
+  const { 左: x, 上: y, 宽: w, 高: h } = 区域;
+  图.fillStyle(色.棋盘底, 0.94).fillRoundedRect(x + 3, y, w - 6, h, 9);
+  图.fillStyle(色.次级面板底, 0.65).fillRect(x + 8, y + 7, w - 16, h - 14);
+  for (const 边 of [x + 3, x + w - 7]) {
+    图.fillStyle(色.面板底, 1).fillRect(边 - 2, y + 7, 8, h - 14);
+    图.fillStyle(色.强调, 0.45).fillRect(边, y + 10, 2, h - 20);
+    图.fillStyle(色.强调, 0.12).fillRect(边 + 2, y + 10, 2, h - 20);
+  }
+  for (const 端 of [y, y + h - 10]) {
+    图.fillStyle(色.面板底, 1).fillRoundedRect(x, 端, w, 10, 3);
+    图.lineStyle(1.2, 色.强调, 0.65).strokeRoundedRect(x, 端, w, 10, 3);
+    图
+      .fillStyle(色.强调, 0.6)
+      .fillRect(x + 8, 端 + 3, 7, 3)
+      .fillRect(x + w - 15, 端 + 3, 7, 3);
+  }
 }

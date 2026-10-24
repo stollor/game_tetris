@@ -58,8 +58,6 @@ export interface 再消一行状态 {
   锁定毫秒: number;
   锁定重置: number;
   最后旋转: boolean;
-  软降分: number;
-  硬降分: number;
   目标达成: boolean;
   内部重力: number;
   有效用时: number;
@@ -308,8 +306,6 @@ export function 创建新局(
     锁定毫秒: 0,
     锁定重置: 0,
     最后旋转: false,
-    软降分: 0,
-    硬降分: 0,
     目标达成: false,
     内部重力: 0,
     有效用时: 0,
@@ -453,7 +449,7 @@ export function 旋转方块(
       y = 行2 - p.中心行2;
     return 半转
       ? { 列2: p.中心列2 - x, 行2: p.中心行2 - y }
-      : { 列2: p.中心列2 - y, 行2: p.中心行2 + x };
+      : { 列2: p.中心列2 - 方向 * y, 行2: p.中心行2 + 方向 * x };
   });
   // 180° 只做原地旋转，不做踢墙平移，避免连按 ↑ 半转时借垂直踢墙上漂。
   const kicks = 半转
@@ -487,10 +483,7 @@ export function 锁定方块(s: 再消一行状态, rand: () => number = Math.ra
   const cells = 读取格子(s.当前方块);
   const 原分数 = s.分数;
   if (cells.every(([, y]) => y < 0)) {
-    // Lock Out：本次不消行，但已累积的软降/硬降分仍计入最终成绩。
-    s.分数 += s.软降分 + s.硬降分;
-    s.软降分 = 0;
-    s.硬降分 = 0;
+    // Lock Out：本次不消行，不加分。
     结束(s);
     return;
   }
@@ -549,11 +542,7 @@ export function 锁定方块(s: 再消一行状态, rand: () => number = Math.ra
   const base = filled === 1 ? 100 : filled === 2 ? 300 : filled === 3 ? 500 : filled >= 4 ? 800 : 0;
   const spin =
     filled === 0
-      ? tSpin
-        ? fullSpin
-          ? 400
-          : 100
-        : 0
+      ? 0
       : tSpin
         ? fullSpin
           ? filled === 1
@@ -571,11 +560,7 @@ export function 锁定方块(s: 再消一行状态, rand: () => number = Math.ra
     [1, 1.2, 1.4, 1.6, 1.8, 2.1, 2.3, 2.5, 2.7, 3][Math.max(0, Math.min(9, s.连击 - 1))] ?? 1;
   const eligible = (filled >= 4 && !tSpin) || (filled > 0 && tSpin);
   const b2bMult = eligible && s.背靠背 ? 1.5 : 1;
-  s.分数 +=
-    Math.floor(spin * oldLevel * combo * b2bMult) +
-    s.软降分 +
-    s.硬降分 +
-    (pc ? 1000 * oldLevel : 0);
+  s.分数 += Math.floor(spin * oldLevel * combo * b2bMult) + (pc ? 1000 * oldLevel : 0);
   s.落块事件 = {
     序号: (s.落块事件?.序号 ?? 0) + 1,
     格子: cells,
@@ -587,8 +572,6 @@ export function 锁定方块(s: 再消一行状态, rand: () => number = Math.ra
     连续高难: b2bMult > 1,
     得分: s.分数 - 原分数,
   };
-  s.软降分 = 0;
-  s.硬降分 = 0;
   if (eligible) s.背靠背 = true;
   else if (filled > 0) s.背靠背 = false;
   s.消行数 += filled;
@@ -622,17 +605,13 @@ export function 固定方块(s: 再消一行状态, rand: () => number = Math.ra
 }
 export function 软降一步(s: 再消一行状态, rand: () => number = Math.random): boolean {
   const moved = 移动方块(s, 0, 1, rand);
-  if (moved) {
-    s.软降分++;
-    s.最后旋转 = false;
-  }
+  if (moved) s.最后旋转 = false;
   return moved;
 }
 export function 硬降(s: 再消一行状态, rand: () => number = Math.random): number {
   if (s.阶段 !== "进行中") return 0;
   let n = 0;
   while (移动方块(s, 0, 1, rand)) n++;
-  s.硬降分 += 2 * n;
   锁定方块(s, rand);
   return n;
 }
@@ -659,10 +638,7 @@ export function 更新时钟(
     s.内部重力 -= 1;
     if (软降) {
       const moved = 移动方块(s, 0, 1, rand);
-      if (moved) {
-        s.软降分++;
-        s.最后旋转 = false;
-      }
+      if (moved) s.最后旋转 = false;
     } else if (!移动方块(s, 0, 1, rand)) break;
   }
   if (落地(s)) {
