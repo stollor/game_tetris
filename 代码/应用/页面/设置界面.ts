@@ -1170,6 +1170,7 @@ export class 设置界面 extends 页面基类 {
 
   读取界面() {
     const 原 = super.读取界面();
+    if (原.文字?.includes("页面开合:播放中")) return 原;
     if (this.语言菜单)
       return {
         ...原,

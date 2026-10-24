@@ -17,6 +17,7 @@ import { 页面宿主 } from "../../框架/运行时/页面宿主";
 import { 挂载调试桥 } from "../../测试/接入/测试桥";
 import { 启动平台能力 } from "../平台/启动平台";
 import { 是省电模式, 画质参数, 计算像素比上限 } from "../性能/画质";
+import { 是开合页面, 页面开合, 页面开合命中层 } from "../界面/页面开合";
 import { 游戏外观 } from "../视觉/外观/游戏外观";
 import { 绘制背景动态, 绘制背景静底, 读取背景动态亮度 } from "../视觉/背景配方";
 import { 主题转界面配色, 读取背景外观 } from "./主题";
@@ -220,12 +221,45 @@ const 资源: 页面资源 = {
   },
 };
 
+const 开合 = new 页面开合();
+const 恢复页面命中 = (): void => {
+  const 当前 = 宿主.读取当前();
+  命中.设置活动层(当前.覆盖 ?? 当前.页面);
+};
+const 播放打开 = (页: 页面编号): void => {
+  if (!是开合页面(页)) return;
+  开合.播放(页, "打开", 恢复页面命中);
+  命中.设置活动层(页面开合命中层);
+};
 const 导航: 导航服务 = {
-  进入: (页, 参数 = {}) => 宿主.进入(页, 参数),
-  替换: (页, 参数 = {}) => 宿主.替换(页, 参数),
-  返回: () => 宿主.返回(),
-  打开覆盖: (页, 参数 = {}) => 宿主.打开覆盖(页, 参数),
-  关闭覆盖: () => 宿主.关闭覆盖(),
+  进入: (页, 参数 = {}) => {
+    if (开合.读取播放中()) return;
+    宿主.进入(页, 参数);
+    播放打开(页);
+  },
+  替换: (页, 参数 = {}) => {
+    if (开合.读取播放中()) return;
+    宿主.替换(页, 参数);
+    播放打开(页);
+  },
+  返回: () => {
+    if (开合.读取播放中()) return;
+    const 当前 = 宿主.读取当前();
+    if (当前.覆盖 === null && 是开合页面(当前.页面)) {
+      开合.播放(当前.页面, "关闭", () => {
+        宿主.返回();
+        恢复页面命中();
+      });
+      命中.设置活动层(页面开合命中层);
+      渲染.请求重绘();
+    } else 宿主.返回();
+  },
+  打开覆盖: (页, 参数 = {}) => {
+    if (!开合.读取播放中()) 宿主.打开覆盖(页, 参数);
+  },
+  关闭覆盖: () => {
+    if (!开合.读取播放中()) 宿主.关闭覆盖();
+  },
   读取当前: () => {
     const 当前 = 宿主.读取当前();
     return { 页面: 当前.页面 as 页面编号, 覆盖: 当前.覆盖 as 覆盖页编号 | null };
@@ -405,6 +439,11 @@ const 处理移动 = (): void => {
   if (指针按下) 标脏活动页();
 };
 const 处理滚轮 = (): void => 标脏活动页();
+const 隔离开合按键 = (事件: KeyboardEvent): void => {
+  if (!开合.读取播放中()) return;
+  事件.preventDefault();
+  事件.stopImmediatePropagation();
+};
 const 处理按键 = (): void => 标脏活动页();
 const 画布 = 渲染.画布;
 画布.addEventListener("pointerdown", 处理按下);
@@ -412,6 +451,7 @@ const 画布 = 渲染.画布;
 画布.addEventListener("pointercancel", 处理抬起);
 画布.addEventListener("pointermove", 处理移动);
 画布.addEventListener("wheel", 处理滚轮, { passive: true });
+window.addEventListener("keydown", 隔离开合按键, true);
 window.addEventListener("keydown", 处理按键);
 
 // —— 循环与渲染 ——
@@ -430,7 +470,8 @@ const 重画旧式页 = (名称: string): void => {
  * 是否有页面要求连续帧（包括结算入场和待机循环）：有则保持 rAF 调度，
  * 否则静态页降到 100ms 空闲心跳（与 Phaser 基线 loop.sleep + 100ms 空闲步同口径）。
  */
-const 读取需要连续帧 = (): boolean => 宿主.读取顶页面()?.读取需要连续帧?.() === true;
+const 读取需要连续帧 = (): boolean =>
+  开合.读取播放中() || 宿主.读取顶页面()?.读取需要连续帧?.() === true;
 /**
  * 空闲降频判据：短动画靠交互窗口保帧，长动画靠重绘请求速率区分——
  * 逐帧动画每 250ms 约 40 次请求，低频背景只有 2–3 次；两者数量级差是本判据的依据。
@@ -471,6 +512,7 @@ const 循环 = 创建游戏循环({
   空闲心跳毫秒: 画质参数.three空闲心跳毫秒,
   更新: (固定步长秒) => {
     const 开始 = import.meta.env.GM_TEST === "1" ? performance.now() : 0;
+    if (开合.更新(固定步长秒)) 渲染.请求重绘();
     栈.更新(固定步长秒);
     性能观测?.记录耗时("逻辑", performance.now() - 开始);
     // 动态背景到点才重画；满帧页按 100ms 到点节奏，空闲拍改在 渲染 里每拍强制一次。
@@ -501,6 +543,12 @@ const 循环 = 创建游戏循环({
     // 场景栈从栈底到栈顶逐页渲染：缓存按页名绑定本帧深度，页内只重建脏子层。
     栈.逐层渲染((场景, 深度, 名称) => {
       缓存.进入页面(名称, 深度);
+      for (let 子层 = 0; 子层 < 每页子层数; 子层++) {
+        合批.设置层变换(
+          深度 * 每页子层数 + 子层,
+          开合.读取变换(名称, 子层, 资源.逻辑宽, 资源.逻辑高),
+        );
+      }
       const 种类 = 页面种类.get(名称) ?? "旧式";
       // 旧式页（结算）没有子层脏判定，按旧行为整页重置后再画。
       if (种类 === "旧式") 重画旧式页(名称);
@@ -593,6 +641,7 @@ if (import.meta.env.GM_TEST === "1" && 性能观测) {
       window.removeEventListener("focus", 同步活动);
       window.removeEventListener("gamemaker:实况观测", 同步活动);
       window.removeEventListener("resize", 调整页面尺寸);
+      window.removeEventListener("keydown", 隔离开合按键, true);
       window.removeEventListener("keydown", 处理按键);
       画布.removeEventListener("pointerdown", 处理按下);
       画布.removeEventListener("pointerup", 处理抬起);

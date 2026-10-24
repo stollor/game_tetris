@@ -1,5 +1,15 @@
 import type { 指针事件 } from "../../../框架/运行时/输入路由";
 import { 准备消行样本, 准备贴墙旋转样本 } from "../../../测试/接入/验收样本";
+import {
+  准备起始时刻,
+  对局入场时长,
+  棋盘展开时长,
+  绘制入场幕面,
+  绘制凝聚横线,
+  绘制开局节拍,
+  计算对局入场姿态,
+  计算展开幕缝,
+} from "../../../组件/霓虹街机/入场演出";
 import type { 对局纪录 } from "../../存档/对局纪录";
 import type { 对局奖励输入 } from "../../存档/旅行收藏";
 import { 记录分析事件 } from "../../平台/分析";
@@ -78,6 +88,7 @@ import { type 虚拟键, type 输入动作, 输入状态 } from "./输入";
  */
 
 export interface 对局快照 {
+  入场秒: number | null;
   阶段: 游戏阶段;
   模式: 游戏模式;
   /** UTC 日期 YYYY-MM-DD：每日挑战种子/纪录键的日期。 */
@@ -180,6 +191,8 @@ export class 对局页面 implements 页面实例 {
   private 启动时刻 = performance.now();
   /** 背景动画时间轴（秒）：随更新步长累计，不另造时钟。 */
   private 背景时间秒 = 0;
+  private 入场秒: number | null = null;
+  private 展开入场 = false;
   /** 当前对局整页布局（与 Phaser 同一份共享布局）。 */
   private 布局数据?: 对局布局数据;
   private 最后落块序号 = 0;
@@ -268,7 +281,7 @@ export class 对局页面 implements 页面实例 {
         },
         读取特效: () => structuredClone(this.特效),
         硬降: () => {
-          if (this.状态.阶段 !== "进行中") return;
+          if (this.状态.阶段 !== "进行中" || this.入场秒 !== null) return;
           this.执行硬降();
         },
         设置暂停: (暂停) => {
@@ -320,14 +333,15 @@ export class 对局页面 implements 页面实例 {
     this.每日日期 = this.上下文.服务.当日日期();
     this.文案 = this.上下文.服务.语言.读取();
     this.设置 = this.上下文.服务.设置.读取();
-    this.开始新局();
+    this.开始新局(this.上下文.参数.入场演出 ? 0 : 准备起始时刻);
     this.绑定监听();
     this.注册命中();
     this.已进入 = true;
-    this.播放音效("开始");
+    if (!this.上下文.参数.入场演出) this.播放音效("准备");
   }
 
   退出(): void {
+    this.入场秒 = null;
     this.释放监听();
     this.计分.重置(this.状态.分数);
     this.侧栏转场 = null;
@@ -378,6 +392,26 @@ export class 对局页面 implements 页面实例 {
   更新(固定步长秒: number): void {
     if (!this.已进入) return;
     const 秒 = Math.max(0, 固定步长秒);
+    if (this.入场秒 !== null && this.状态.阶段 === "进行中") {
+      const 前秒 = this.入场秒;
+      const 上拍 = 计算对局入场姿态(前秒).节拍;
+      this.入场秒 += 秒;
+      const 姿态 = 计算对局入场姿态(this.入场秒);
+      if (姿态.节拍 !== 上拍) {
+        if (姿态.节拍 === "Ready") this.播放音效("准备");
+        if (姿态.节拍 === "Go") this.播放音效("开始");
+      }
+      if (this.入场秒 >= 对局入场时长) {
+        this.入场秒 = null;
+        this.输入.清空();
+        this.上下文.服务.音频.播放音乐("再消一行.对局");
+        this.上下文.资源.设置玩法进行中(true);
+      }
+      if (this.展开入场 && 前秒 < 棋盘展开时长)
+        this.标记子层([对局绘制层.静态内容, 对局绘制层.动态内容]);
+      this.标记子层([对局绘制层.覆盖]);
+      return;
+    }
     if (this.状态.阶段 !== "暂停" && this.计分.更新(秒))
       this.标记子层([对局绘制层.动态内容, 对局绘制层.特效]);
     const 计时帧 = Math.floor(
@@ -497,6 +531,7 @@ export class 对局页面 implements 页面实例 {
         按下操作键: this.收集按下操作键(),
         侧栏转场: this.侧栏转场,
         省电: this.设置.省电模式 === "开",
+        入场秒: this.展开入场 ? this.入场秒 : null,
         计分: this.计分.读取(),
       };
       return 内容输入;
@@ -534,6 +569,22 @@ export class 对局页面 implements 页面实例 {
       绘制侧栏转场(环境, 读取内容输入());
     });
     按需(对局绘制层.覆盖, () => {
+      if (this.入场秒 !== null) {
+        if (this.展开入场) {
+          const 姿态 = 计算对局入场姿态(this.入场秒);
+          绘制入场幕面(
+            资源.画笔,
+            资源.逻辑宽,
+            资源.逻辑高,
+            this.模式,
+            计算展开幕缝(姿态.展开进度, 资源.逻辑高),
+            1 - 姿态.展开进度,
+          );
+          if (this.入场秒 === 0)
+            绘制凝聚横线(资源.画笔, 资源.逻辑宽, 资源.逻辑高, this.模式, 姿态.线脉冲);
+        }
+        绘制开局节拍(资源.画笔, 资源.逻辑宽, 资源.逻辑高, this.模式, this.入场秒);
+      }
       // 对局内设置打开时隐藏暂停面板（Phaser 同行为），避免两层覆盖互相透字。
       if (this.状态.阶段 === "暂停" && !this.对局设置打开) 绘制对局覆盖(环境, 读取内容输入());
       if (this.对局设置打开) {
@@ -555,6 +606,7 @@ export class 对局页面 implements 页面实例 {
     return {
       阶段: this.状态.阶段,
       模式: this.模式,
+      入场秒: this.入场秒,
       日期: this.每日日期,
       分数: this.状态.分数,
       消行数: this.状态.消行数,
@@ -635,7 +687,7 @@ export class 对局页面 implements 页面实例 {
       };
     }
     const 对局定位 = this.读取布局();
-    const 进行中 = this.状态.阶段 === "进行中";
+    const 进行中 = this.状态.阶段 === "进行中" && this.入场秒 === null;
     const 暂停中 = this.状态.阶段 === "暂停";
     const 按钮: 界面按钮快照[] = [];
     const 暂存矩形 = 对局定位.侧栏?.暂存 ?? 计算对局附属布局(对局定位).暂存;
@@ -680,6 +732,7 @@ export class 对局页面 implements 页面实例 {
     return {
       按钮,
       文字: [
+        `入场:${this.入场秒 === null ? "完成" : 计算对局入场姿态(this.入场秒).节拍}`,
         模式名称(this.模式, this.文案),
         读取对局计时文案(this.模式, this.状态, this.每日日期),
         String(this.状态.分数),
@@ -693,7 +746,18 @@ export class 对局页面 implements 页面实例 {
   /* 内部：开局与重置                                                 */
   /* ---------------------------------------------------------------- */
 
-  private 开始新局(): void {
+  读取需要连续帧(): boolean {
+    return this.入场秒 !== null && this.状态.阶段 === "进行中";
+  }
+
+  private 重新开始(): void {
+    this.开始新局(准备起始时刻);
+    this.播放音效("准备");
+  }
+
+  private 开始新局(入场秒: number | null = null): void {
+    this.入场秒 = 入场秒;
+    this.展开入场 = 入场秒 === 0;
     this.随机源 = 创建模式随机源(this.模式, this.每日日期);
     this.状态 = 创建新局(this.随机源, this.测试序列, this.模式);
     this.测试序列 = [];
@@ -722,8 +786,9 @@ export class 对局页面 implements 页面实例 {
     this.记录("操作", `开始对局 · ${this.模式}`);
     记录分析事件("mode_start", { 模式: this.模式 });
     this.上下文.服务.音频.设置暂停(false);
-    this.上下文.服务.音频.播放音乐("再消一行.对局");
-    this.上下文.资源.设置玩法进行中(true);
+    if (入场秒 === null) this.上下文.服务.音频.播放音乐("再消一行.对局");
+    else this.上下文.服务.音频.停止音乐();
+    this.上下文.资源.设置玩法进行中(入场秒 === null);
     this.上次阶段 = this.状态.阶段;
     this.上次震动中 = false;
     this.上次提示活跃 = false;
@@ -806,8 +871,9 @@ export class 对局页面 implements 页面实例 {
       if (this.状态.阶段 !== "结束") this.设置暂停(this.状态.阶段 !== "暂停");
       return true;
     }
+    if (this.入场秒 !== null) return true;
     if (代码 === "KeyR") {
-      if (this.状态.阶段 !== "结束") this.开始新局();
+      if (this.状态.阶段 !== "结束") this.重新开始();
       return true;
     }
     const 键 = this.键盘键(代码);
@@ -824,6 +890,7 @@ export class 对局页面 implements 页面实例 {
 
   /** 触屏按钮：按下开始按住态，抬起/取消释放。 */
   private 触屏按钮(键: 虚拟键, 事件: 指针事件): void {
+    if (this.入场秒 !== null) return;
     if (事件.类型 === "按下") {
       for (const 动作 of this.输入.按下(键)) this.执行输入动作(动作);
     } else if (事件.类型 === "抬起" || 事件.类型 === "取消") {
@@ -833,7 +900,7 @@ export class 对局页面 implements 页面实例 {
   }
 
   private 执行输入动作(动作: 输入动作): void {
-    if (this.状态.阶段 !== "进行中") return;
+    if (this.状态.阶段 !== "进行中" || this.入场秒 !== null) return;
     switch (动作.类型) {
       case "移动":
         if (移动方块(this.状态, 动作.方向, 0, this.随机源)) this.播放音效("移动");
@@ -919,7 +986,7 @@ export class 对局页面 implements 页面实例 {
     this.输入.清空();
     this.播放音效(暂停 ? "暂停" : "继续");
     this.记录("暂停", 暂停 ? "暂停" : "继续");
-    this.上下文.资源.设置玩法进行中(!暂停);
+    this.上下文.资源.设置玩法进行中(!暂停 && this.入场秒 === null);
     this.标记全部();
   }
 
@@ -1129,7 +1196,7 @@ export class 对局页面 implements 页面实例 {
         名称: "对局.暂存",
         ...暂存矩形,
         深度: 7,
-        禁用: () => this.状态.阶段 !== "进行中" || this.状态.本块已暂存,
+        禁用: () => this.入场秒 !== null || this.状态.阶段 !== "进行中" || this.状态.本块已暂存,
         回调: (事件) => {
           事件.停止冒泡();
           if (事件.类型 === "抬起") this.执行输入动作({ 类型: "暂存" });
@@ -1146,7 +1213,9 @@ export class 对局页面 implements 页面实例 {
           高: 键.高,
           深度: 5,
           禁用: () =>
-            this.状态.阶段 !== "进行中" || (键.名称 === "暂存操作" && this.状态.本块已暂存),
+            this.入场秒 !== null ||
+            this.状态.阶段 !== "进行中" ||
+            (键.名称 === "暂存操作" && this.状态.本块已暂存),
           回调: (事件) => this.触屏按钮(操作键虚拟键(键), 事件),
         }),
       );
@@ -1191,7 +1260,7 @@ export class 对局页面 implements 页面实例 {
           回调: (事件) => {
             if (事件.类型 !== "抬起") return;
             if (项.名称 === "继续") this.设置暂停(false);
-            else if (项.名称 === "重开") this.开始新局();
+            else if (项.名称 === "重开") this.重新开始();
             else if (项.名称 === "设置") {
               this.对局设置打开 = true;
               this.标记子层([对局绘制层.覆盖]);

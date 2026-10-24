@@ -304,6 +304,7 @@ try {
       `开始 ${模式}`,
     );
     assert.equal(开局.模式, 模式, `模式不符：${JSON.stringify(开局)}`);
+    await 页.waitForFunction(() => window.__three版__?.读取界面().文字?.includes("入场:完成"));
     // 真实键盘落 3 块：方向键移动 + 空格硬降。
     for (let 块 = 0; 块 < 3; 块++) {
       await 页.keyboard.press("ArrowLeft");
@@ -352,6 +353,7 @@ try {
     await 截图(`03-结算-${模式}`);
     await 点击按钮("重新开始");
     await 等待回到对局();
+    await 页.waitForFunction(() => window.__three版__?.读取界面().文字?.includes("入场:完成"));
     await 记录步骤(`${模式}：结束 → 结算 → 重新开始`);
     // 再结束一次，从结算返回主菜单，准备下一个模式。
     await 测试桥.结束当前对局();

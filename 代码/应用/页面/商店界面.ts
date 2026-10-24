@@ -381,6 +381,7 @@ export class 商店界面 extends 页面基类 {
 
   读取界面() {
     const 原 = super.读取界面();
+    if (原.文字?.includes("页面开合:播放中")) return 原;
     const 可视 = this.目录矩形();
     const 偏移 = this.目录?.读取滚动位置() ?? 0;
     const 卡宽 = this.商店布局.目录卡宽;
