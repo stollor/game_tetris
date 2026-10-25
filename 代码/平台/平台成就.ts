@@ -22,6 +22,8 @@ const 等待中 = new Map<
   string,
   { resolve: (ok: true) => void; reject: (错误: unknown) => void; 本地编号: string }
 >();
+/** 本地编号 → 在途同步；强制重复调用也复用同一 Promise。 */
+const 在途同步 = new Map<string, Promise<成就同步结果>>();
 
 let 已挂监听的管理器: Tap成就管理器 | undefined;
 
@@ -144,37 +146,22 @@ export function 成就同步文案(状态: 状态项, 英文 = false): string {
   return "待同步到 TapTap";
 }
 
-function 平台转本地(平台编号: string): string | undefined {
-  for (const [本地, 平台] of Object.entries(平台成就映射)) {
-    if (平台 === 平台编号) return 本地;
-  }
-  return undefined;
-}
-
 function 确保监听(m: Tap成就管理器): void {
   if (已挂监听的管理器 === m) return;
   已挂监听的管理器 = m;
-  const 成功 = (代码或成就?: unknown, 成就?: { achievementId?: string }) => {
-    let 平台编号 = "";
-    if (成就 && typeof 成就 === "object" && 成就.achievementId)
-      平台编号 = String(成就.achievementId);
-    else if (代码或成就 && typeof 代码或成就 === "object" && 代码或成就 !== null) {
-      const a = 代码或成就 as { achievementId?: string };
-      if (a.achievementId) 平台编号 = String(a.achievementId);
-    }
-    const 待 = (平台编号 ? 等待中.get(平台编号) : undefined) ?? 等待中.values().next().value;
-    const 本地 = 待?.本地编号 ?? (平台编号 ? 平台转本地(平台编号) : undefined);
-    if (平台编号) 等待中.get(平台编号)?.resolve(true);
-    if (平台编号) 等待中.delete(平台编号);
-    else {
-      // 无 id 时结束最早的等待
-      const 首 = 等待中.keys().next().value;
-      if (首) {
-        等待中.get(首)?.resolve(true);
-        等待中.delete(首);
-      }
-    }
-    if (本地) 置状态(本地, { 状态: "已同步", 原因: "已同步到 TapTap", 时间: Date.now() });
+  const 读取平台编号 = (值: unknown): string => {
+    if (!值 || typeof 值 !== "object") return "";
+    const 编号 = (值 as { achievementId?: unknown }).achievementId;
+    return typeof 编号 === "string" ? 编号 : "";
+  };
+  const 成功 = (代码或成就?: unknown, 成就?: unknown) => {
+    // 官方签名 (code, achievement)；兼容单对象 achievementId。无 ID 一律忽略，不能取最早等待项。
+    const 平台编号 = 读取平台编号(成就) || 读取平台编号(代码或成就);
+    if (!平台编号) return;
+    const 待 = 等待中.get(平台编号);
+    if (!待) return; // 无对应在途请求：不把已知映射写成成功
+    等待中.delete(平台编号);
+    待.resolve(true);
   };
   const 失败 = (id或错误?: unknown, 代码?: unknown, 消息?: unknown) => {
     let 平台编号 = "";
@@ -198,21 +185,12 @@ function 确保监听(m: Tap成就管理器): void {
     else if (typeof 代码 === "string" && !msg) msg = 代码;
 
     const 解释 = 解释成就失败(code, msg);
-    const 已解锁 = 解释 === "平台侧已解锁";
     const 待 = 平台编号 ? 等待中.get(平台编号) : undefined;
-    const 本地 = 待?.本地编号 ?? (平台编号 ? 平台转本地(平台编号) : undefined);
-    if (平台编号 && 待) {
-      if (已解锁) 待.resolve(true);
-      else 待.reject(Object.assign(new Error(解释), { 代码: code }));
-      等待中.delete(平台编号);
-    }
-    if (本地) {
-      置状态(本地, {
-        状态: 已解锁 ? "已同步" : "失败",
-        原因: 已解锁 ? "已同步到 TapTap（平台侧已解锁）" : 解释,
-        时间: Date.now(),
-      });
-    }
+    // 全局失败只回填明确 ID 对应的在途请求；无等待不置状态。
+    if (!待) return;
+    等待中.delete(平台编号);
+    if (解释 === "平台侧已解锁") 待.resolve(true);
+    else 待.reject(Object.assign(new Error(解释), { 代码: code }));
   };
 
   try {
@@ -238,7 +216,18 @@ function 取成就管理器(): Tap成就管理器 | undefined {
   return 管理器;
 }
 
-export async function 解锁平台成就(本地编号: string, 强制 = false): Promise<成就同步结果> {
+/** 同一本地成就在途请求合并（含强制重复调用）；结束后清理。 */
+export function 解锁平台成就(本地编号: string, 强制 = false): Promise<成就同步结果> {
+  const 在途 = 在途同步.get(本地编号);
+  if (在途) return 在途;
+  const 任务 = 执行解锁平台成就(本地编号, 强制).finally(() => {
+    if (在途同步.get(本地编号) === 任务) 在途同步.delete(本地编号);
+  });
+  在途同步.set(本地编号, 任务);
+  return 任务;
+}
+
+async function 执行解锁平台成就(本地编号: string, 强制: boolean): Promise<成就同步结果> {
   const 平台编号 = 平台成就映射[本地编号] ?? "";
   if (!平台编号) {
     return { 本地编号, 平台编号: "", 完成: false, 原因: "未配置平台成就 ID" };
@@ -260,15 +249,18 @@ export async function 解锁平台成就(本地编号: string, 强制 = false): 
   try {
     await new Promise<void>((resolve, reject) => {
       let 已结束 = false;
+      let 超时: ReturnType<typeof setTimeout> | undefined;
       const 成功 = () => {
         if (已结束) return;
         已结束 = true;
+        if (超时 !== undefined) clearTimeout(超时);
         等待中.delete(平台编号);
         resolve();
       };
       const 失败 = (错误: unknown) => {
         if (已结束) return;
         已结束 = true;
+        if (超时 !== undefined) clearTimeout(超时);
         等待中.delete(平台编号);
         reject(错误 ?? new Error("unlock failed"));
       };
@@ -277,6 +269,10 @@ export async function 解锁平台成就(本地编号: string, 强制 = false): 
         resolve: () => 成功(),
         reject: 失败,
       });
+      // 先建超时再调用 unlock：同步成功/失败都会清掉，不残留计时器。
+      超时 = setTimeout(() => {
+        失败(new Error("平台无响应，请稍后在成就页重试或检查成就是否已发布"));
+      }, 8000);
       try {
         // 官方文档结果走 registerListener；部分宿主仍支持 option.callback，两者都接。
         m.unlockAchievement!({
@@ -298,13 +294,7 @@ export async function 解锁平台成就(本地编号: string, 强制 = false): 
         });
       } catch (同步错误) {
         失败(同步错误);
-        return;
       }
-      // 真机以监听/回调为准；超时标失败，避免假成功。
-      setTimeout(() => {
-        if (已结束) return;
-        失败(new Error("平台无响应，请稍后在成就页重试或检查成就是否已发布"));
-      }, 8000);
     });
     置状态(本地编号, { 状态: "已同步", 原因: "已同步到 TapTap", 时间: Date.now() });
     return { 本地编号, 平台编号, 完成: true, 原因: "已同步到 TapTap" };
@@ -351,12 +341,13 @@ export async function 同步平台成就并回报(本地编号列表: readonly s
   return 结果;
 }
 
-/** 成就页打开时：对本地已解锁但未标记已同步的项补同步。 */
+/** 成就页打开/启动时：对本地已解锁但未标记已同步的项补同步。 */
 export async function 补同步已解锁成就(本地已解锁编号: readonly string[]): Promise<成就同步结果[]> {
-  const 待 = 本地已解锁编号.filter((编号) => {
+  // 无成就能力直接跳过，不写失败状态；之后在真机进入成就页仍会重试。
+  if (!探测Tap能力().有成就) return [];
+  const 待 = [...new Set(本地已解锁编号)].filter((编号) => {
     if (!平台成就映射[编号]) return false;
-    const s = 读取成就同步状态(编号).状态;
-    return s === "待同步" || s === "失败";
+    return 读取成就同步状态(编号).状态 !== "已同步";
   });
   return 同步平台成就并回报(待);
 }

@@ -20,6 +20,11 @@ async function 准备(页: Page, 地址: string, 对局 = false) {
   if (对局) {
     await 点击(页, "开始游戏");
     await 点击(页, "开始:马拉松");
+    await 页.waitForFunction(
+      () =>
+        window.__three版__?.读取状态().入场秒 === null &&
+        window.__three版__?.读取状态().阶段 === "进行中",
+    );
   }
 }
 async function 验收(页: Page) {
@@ -50,6 +55,32 @@ export const 性能场景库 = [
         await 页.waitForTimeout(1000 / 频率);
       }
     },
+  },
+  {
+    名称: "商店基准",
+    分组: "基础场景",
+    准备: async (页: Page, 地址: string) => {
+      await 准备(页, 地址);
+      await 点击(页, "商店");
+      await 页.waitForFunction(
+        () =>
+          window.__three版__?.读取状态().页面 === "商店" &&
+          !window.__three版__?.读取界面().文字?.includes("页面开合:播放中"),
+      );
+    },
+    验收,
+    证据,
+  },
+  {
+    名称: "暂停基准",
+    分组: "基础场景",
+    准备: async (页: Page, 地址: string) => {
+      await 准备(页, 地址, true);
+      await 点击(页, "暂停");
+      await 页.waitForFunction(() => window.__three版__?.读取状态().阶段 === "暂停");
+    },
+    验收,
+    证据,
   },
   {
     名称: "纹理升压释放",

@@ -160,7 +160,8 @@ try {
     await 页.waitForFunction(() => (window.__three版__?.读取统计().对局统计.落块数 ?? 0) >= 1);
     await 截图(`${模式}-07-可玩`);
     记录.push({ 模式, 总耗时毫秒: 用时, 输入门禁: true });
-    await 点击("离开");
+    await 点击("暂停");
+    await 点击("返回主菜单");
     console.log(`${模式}：2.4秒入场、音符和输入门禁通过`);
   }
   if (!process.argv.includes("--仅模式")) {
@@ -215,11 +216,13 @@ try {
     await 截图("结算重开-短Ready");
     await 等待节拍("完成");
     // 展开中退出后再次选择模式，旧入场不能继续推动新页面。
-    await 点击("离开");
+    await 点击("暂停");
+    await 点击("返回主菜单");
     await 入模式页();
     await 点击("开始:冲刺");
     await 等待节拍("展开");
-    await 点击("离开");
+    await 点击("暂停");
+    await 点击("返回主菜单");
     await 入模式页();
     await 点击("开始:每日挑战");
     await 等待节拍("完成");

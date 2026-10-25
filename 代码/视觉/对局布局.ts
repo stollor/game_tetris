@@ -48,7 +48,6 @@ export interface 对局布局数据 {
   棋盘: { 左: number; 上: number; 宽: number; 高: number; 列: number; 行: number };
   棋盘中心X: number;
   信息栏: { 中心X: number; 中心Y: number; 宽: number; 高: number; 列宽: number };
-  离开按钮: { 中心X: number; 中心Y: number; 宽: number; 高: number };
   暂停按钮: { 中心X: number; 中心Y: number; 宽: number; 高: number };
   标题: { 中心X: number; 中心Y: number; 字号: number };
   模式文字: { 中心X: number; 上: number; 字号: number; 可见: boolean };
@@ -298,8 +297,7 @@ export function 计算对局布局(视口宽: number, 视口高: number, 选项:
       高: 信息栏高度,
       列宽: (宽 - 24) / 3,
     },
-    离开按钮: { 中心X: 43, 中心Y: 38, 宽: 48, 高: 38 },
-    暂停按钮: { 中心X: 宽 - 43, 中心Y: 38, 宽: 48, 高: 38 },
+    暂停按钮: { 中心X: 43, 中心Y: 38, 宽: 48, 高: 38 },
     标题: { 中心X: 宽 / 2, 中心Y: 38, 字号: 紧凑 ? 20 : 23 },
     模式文字: {
       中心X: 棋盘中心X,
@@ -462,7 +460,7 @@ export interface 对局按钮视觉 {
   字号: number;
 }
 
-/** 顶栏角钮（离开 / 继续 / 暂停）：Phaser 创建霓虹按钮 次要变体 + 采用传入配色。 */
+/** 顶栏角钮（继续 / 暂停）：Phaser 创建霓虹按钮 次要变体 + 采用传入配色。 */
 export function 读取角钮视觉(可用 = true): 对局按钮视觉 {
   const 色 = 读取对局界面色();
   const 底色 = 可用 ? 色.按钮次要.面板 : 色.按钮禁用.面板;

@@ -322,6 +322,12 @@ export class 主界面 extends 页面基类 {
     秒: number;
   } | null = null;
 
+  /** 素材截图直接打开模式列表，不经过按钮按下动画。 */
+  打开模式选择(): void {
+    if (this.状态 === "模式选择" || this.过渡 || this.启动) return;
+    this.开始切换("模式选择");
+  }
+
   private 开始切换(目标: "菜单" | "模式选择" | "纯享"): void {
     if (this.过渡 || this.启动 || this.状态 === 目标) return;
     const 出发 = this.状态;

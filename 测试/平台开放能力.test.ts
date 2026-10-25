@@ -29,6 +29,63 @@ function 假存储(初始: Record<string, string> = {}): Storage {
   };
 }
 
+type 测试成就监听 = {
+  onAchievementSuccess?: (代码?: number, 成就?: { achievementId?: string }) => void;
+  onAchievementFailure?: (编号?: string, 代码?: number, 消息?: string) => void;
+};
+
+type 测试解锁请求 = {
+  achievementId: string;
+  callback?: {
+    onAchievementSuccess?: () => void;
+    onAchievementFailure?: (错误: unknown) => void;
+  };
+};
+
+type 测试成就管理器 = {
+  registerListener?(监听: 测试成就监听): void;
+  unlockAchievement?(选项: 测试解锁请求): void;
+};
+
+function 创建测试成就管理器(): {
+  管理器: 测试成就管理器;
+  请求: 测试解锁请求[];
+  读取监听: () => 测试成就监听 | undefined;
+} {
+  let 监听: 测试成就监听 | undefined;
+  const 请求: 测试解锁请求[] = [];
+  const 管理器: 测试成就管理器 = {
+    registerListener(值) {
+      监听 = 值;
+    },
+    unlockAchievement(选项) {
+      请求.push(选项);
+    },
+  };
+  return { 管理器, 请求, 读取监听: () => 监听 };
+}
+
+function 设置测试宿主(管理器: 测试成就管理器): void {
+  (globalThis as { window?: { tap?: unknown } }).window = {
+    tap: { createAchievementManager: () => 管理器 },
+  };
+}
+
+function 替换全局以便测试(): { 窗口: unknown; 存储: unknown } {
+  const g = globalThis as { window?: unknown; localStorage?: unknown };
+  const 原 = { 窗口: g.window, 存储: g.localStorage };
+  g.localStorage = 假存储();
+  return 原;
+}
+
+function 还原全局(原: { 窗口: unknown; 存储: unknown }): void {
+  const g = globalThis as { window?: unknown; localStorage?: unknown };
+  if (原.窗口 === undefined) delete g.window;
+  else g.window = 原.窗口;
+  if (原.存储 === undefined) delete g.localStorage;
+  else g.localStorage = 原.存储;
+}
+
 afterEach(() => 清空分析缓冲());
 
 test("ClientID 已写入公开配置", () => {
@@ -398,4 +455,119 @@ test("排行榜错误文案：500001 友好中文，不暴露裸码", async () =
   expect(失败.原因).toContain("白名单");
   expect(失败.原因).not.toMatch(/500001/);
   delete (globalThis as { window?: unknown }).window;
+});
+
+test("成就全局成功按 achievementId 归属并发请求", async () => {
+  const 原 = 替换全局以便测试();
+  const { 管理器, 请求, 读取监听 } = 创建测试成就管理器();
+  设置测试宿主(管理器);
+  try {
+    const { 解锁平台成就, 读取成就同步状态 } = await import("../代码/平台/平台成就");
+    const 四行 = 解锁平台成就("four-lines", true);
+    const 旋转 = 解锁平台成就("spin", true);
+    expect(请求.map((项) => 项.achievementId)).toEqual(["TETRIS", "SPIN"]);
+    // 官方 registerListener 成功签名 (code, achievement)；乱序回调必须各归各的请求。
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "SPIN" });
+    expect(await 旋转).toMatchObject({ 本地编号: "spin", 完成: true });
+    expect(读取成就同步状态("four-lines").状态).toBe("同步中");
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "TETRIS" });
+    expect(await 四行).toMatchObject({ 本地编号: "four-lines", 完成: true });
+    expect(读取成就同步状态("four-lines").状态).toBe("已同步");
+    expect(读取成就同步状态("spin").状态).toBe("已同步");
+  } finally {
+    还原全局(原);
+  }
+});
+
+test("成就全局成功无 ID 或未知 ID 不误标首个等待", async () => {
+  const 原 = 替换全局以便测试();
+  const { 管理器, 请求, 读取监听 } = 创建测试成就管理器();
+  设置测试宿主(管理器);
+  try {
+    const { 解锁平台成就, 读取成就同步状态 } = await import("../代码/平台/平台成就");
+    const 连击 = 解锁平台成就("combo", true);
+    const 接力 = 解锁平台成就("b2b", true);
+    expect(请求.map((项) => 项.achievementId)).toEqual(["COMBO", "B2B"]);
+    读取监听()?.onAchievementSuccess?.(0);
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "NOT_A_REAL_ACHIEVEMENT" });
+    expect(读取成就同步状态("combo").状态).toBe("同步中");
+    expect(读取成就同步状态("b2b").状态).toBe("同步中");
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "B2B" });
+    expect(await 接力).toMatchObject({ 本地编号: "b2b", 完成: true });
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "COMBO" });
+    expect(await 连击).toMatchObject({ 本地编号: "combo", 完成: true });
+    // 已知 ID 但没有对应在途请求：成功/失败都不能改写状态。
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "SPRINT" });
+    expect(读取成就同步状态("sprint").状态).toBe("待同步");
+    读取监听()?.onAchievementFailure?.("ULTRA", 500, "not login");
+    expect(读取成就同步状态("ultra").状态).toBe("待同步");
+  } finally {
+    还原全局(原);
+  }
+});
+
+test("同一成就并发解锁只调用一次平台接口", async () => {
+  const 原 = 替换全局以便测试();
+  const { 管理器, 请求, 读取监听 } = 创建测试成就管理器();
+  设置测试宿主(管理器);
+  try {
+    const { 解锁平台成就 } = await import("../代码/平台/平台成就");
+    const 首次 = 解锁平台成就("perfect", true);
+    const 强制重复 = 解锁平台成就("perfect", true);
+    expect(请求).toHaveLength(1);
+    expect(强制重复).toBe(首次);
+    读取监听()?.onAchievementSuccess?.(0, { achievementId: "PERFECT" });
+    expect(await 首次).toMatchObject({ 本地编号: "perfect", 完成: true });
+    expect(await 强制重复).toMatchObject({ 本地编号: "perfect", 完成: true });
+    expect(请求).toHaveLength(1);
+  } finally {
+    还原全局(原);
+  }
+});
+
+test("失败后补同步成功，已同步项不再重复请求", async () => {
+  const 原 = 替换全局以便测试();
+  const 请求: 测试解锁请求[] = [];
+  let 成功 = false;
+  const 管理器: 测试成就管理器 = {
+    registerListener() {},
+    unlockAchievement(选项) {
+      请求.push(选项);
+      if (成功) 选项.callback?.onAchievementSuccess?.();
+      else 选项.callback?.onAchievementFailure?.(new Error("not login"));
+    },
+  };
+  设置测试宿主(管理器);
+  try {
+    const { 解锁平台成就, 补同步已解锁成就, 读取成就同步状态 } = await import(
+      "../代码/平台/平台成就"
+    );
+    expect(await 解锁平台成就("hold", true)).toMatchObject({ 本地编号: "hold", 完成: false });
+    expect(读取成就同步状态("hold").状态).toBe("失败");
+    成功 = true;
+    const 补同步 = await 补同步已解锁成就(["hold"]);
+    expect(补同步).toHaveLength(1);
+    expect(补同步[0]).toMatchObject({ 本地编号: "hold", 完成: true });
+    expect(读取成就同步状态("hold").状态).toBe("已同步");
+    expect(await 补同步已解锁成就(["hold"])).toHaveLength(0);
+    expect(请求).toHaveLength(2);
+  } finally {
+    还原全局(原);
+  }
+});
+
+test("无成就能力时补同步直接跳过且不写状态", async () => {
+  const 原 = 替换全局以便测试();
+  (globalThis as { window?: { tap?: unknown } }).window = { tap: {} };
+  try {
+    const { 补同步已解锁成就, 读取成就同步状态 } = await import("../代码/平台/平台成就");
+    expect(await 补同步已解锁成就(["lines"])).toEqual([]);
+    expect(读取成就同步状态("lines").状态).toBe("无能力");
+    const 存储 = (globalThis as { localStorage?: Storage }).localStorage;
+    if (!存储) throw new Error("测试存储未注入");
+    const 记录 = JSON.parse(存储.getItem("旅行版:成就同步") ?? "{}") as Record<string, unknown>;
+    expect(记录.lines).toBeUndefined();
+  } finally {
+    还原全局(原);
+  }
 });

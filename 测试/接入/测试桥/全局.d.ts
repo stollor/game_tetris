@@ -17,6 +17,16 @@ declare global {
       设置暂停(暂停: boolean): void;
       结束当前对局(): void;
       准备结算(完赛?: boolean): void;
+      进入素材场景(场景: string, 宽?: number, 高?: number, 皮肤?: string): void;
+      开始素材演示(参数: {
+        模式: string;
+        皮肤: string;
+        目标: "成功" | "失败";
+        秒数: number;
+        宽: number;
+        高: number;
+      }): void;
+      读取素材演示(): { 场景: string; 结束: boolean; 完赛: boolean; 消行数: number };
       准备倒计时: (剩余毫秒: number) => void;
       准备贴墙旋转: () => void;
     };
