@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 创建资源层, 读取默认散图 } from "../代码/应用/资源/index";
+import { 创建资源层, 读取默认散图 } from "../代码/应用/资源/资源加载";
 
 /**
  * 资源层规则测试：清单 → 帧查询 / 散图键 / 统计 / 销毁，

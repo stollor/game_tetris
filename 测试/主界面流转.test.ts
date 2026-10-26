@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { 生成主界面流转块 } from "../代码/界面/主界面流转";
+import { 生成主界面流转块 } from "../代码/视效/过渡/主界面流转";
+import { 计算主界面布局 } from "../代码/页面/布局/主界面布局";
 import { 规划界面流转 } from "../框架/界面/流转";
 import type { 文字样式 } from "../框架/界面/绘制/协议";
-import { 计算主界面布局 } from "../组件/霓虹街机/主界面布局";
 
 function 测量(文案: string, 样式: 文字样式): { 宽: number; 高: number } {
   return { 宽: Array.from(文案).length * 样式.字号, 高: 样式.字号 };

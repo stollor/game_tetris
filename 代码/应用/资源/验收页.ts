@@ -9,9 +9,9 @@ import { 创建画笔 } from "../../../框架/界面/绘制/画笔";
 import type { 图层缓存统计 } from "../../../框架/缓存/图层缓存";
 import { 创建图层缓存 } from "../../../框架/缓存/图层缓存";
 import { 图层作用域 } from "../../../框架/运行时/图层";
-import { 默认字体栈 } from "../界面/文字配置";
-import type { 资源层实例 } from "./index";
-import { 创建资源层, 读取默认散图 } from "./index";
+import { 默认字体栈 } from "../../主题/文字/文字配置";
+import type { 资源层实例 } from "./资源加载";
+import { 创建资源层, 读取默认散图 } from "./资源加载";
 
 /**
  * 资源验收页：只做验收、不接游戏导航。用 Three 真实渲染（正交相机 + 图元合批 + 文字图集）

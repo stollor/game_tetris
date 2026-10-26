@@ -27,7 +27,7 @@ test("现行入口与职责归位，构建工具和独立预览不进入业务�
       ).toBe(false);
       if (/^three(?:\/|$)/.test(项.path))
         expect(
-          文件.replaceAll("\\", "/").endsWith("代码/应用/资源/index.ts"),
+          文件.replaceAll("\\", "/").endsWith("代码/应用/资源/资源加载.ts"),
           "Three只从明确的资源适配边界接入：" + 文件,
         ).toBe(true);
       if (

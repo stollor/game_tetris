@@ -4,11 +4,11 @@ export const 棋盘宽度 = 10;
 export const 可见高度 = 20;
 export const 隐藏高度 = 2;
 export type 方块类型 = "I" | "O" | "T" | "S" | "Z" | "J" | "L";
-export type 游戏模式 = "马拉松" | "冲刺" | "极限" | "每日挑战";
+export type 游戏模式 = "马拉松" | "冲刺" | "极限" | "每日挑战" | "练习";
 export type 游戏阶段 = "进行中" | "暂停" | "结束";
-/** 每日挑战继承马拉松结算规则，包括结束后的显式重开等待。 */
+/** 每日挑战与练习继承马拉松结算规则，包括结束后的显式重开等待。 */
 export function 是否使用马拉松结算重开锁(模式: 游戏模式): boolean {
-  return 模式 === "马拉松" || 模式 === "每日挑战";
+  return 模式 === "马拉松" || 模式 === "每日挑战" || 模式 === "练习";
 }
 export interface 方块格子 {
   列2: number;
@@ -575,9 +575,11 @@ export function 锁定方块(s: 再消一行状态, rand: () => number = Math.ra
   if (eligible) s.背靠背 = true;
   else if (filled > 0) s.背靠背 = false;
   s.消行数 += filled;
-  s.等级 = 1 + Math.floor(s.消行数 / 10);
+  // 练习停在 1 级，下落速度不随消行加快。
+  if (s.模式 === "练习") s.等级 = 1;
+  else s.等级 = 1 + Math.floor(s.消行数 / 10);
   if (s.模式 === "冲刺" && s.等级 > 模式配置.冲刺等级上限) s.等级 = 模式配置.冲刺等级上限;
-  if (s.消行数 >= 模式配置.马拉松目标行数) s.目标达成 = true;
+  if (s.模式 !== "练习" && s.消行数 >= 模式配置.马拉松目标行数) s.目标达成 = true;
   if (s.模式 === "冲刺" && s.消行数 >= 模式配置.冲刺目标行数) {
     s.完赛 = true;
     结束(s);

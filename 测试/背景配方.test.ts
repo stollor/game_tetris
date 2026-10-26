@@ -1,15 +1,15 @@
 import { expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { 背景主题选项, 背景主题配置 } from "../代码/主题/外观/背景主题";
 import { 查找地点 } from "../代码/框架配置/旅行地点";
-import { 背景主题选项, 背景主题配置 } from "../代码/视觉/外观/背景主题";
 import {
   绘制背景,
   绘制背景动态,
   绘制背景静底,
   读取背景动态亮度,
   读取背景外观配色,
-} from "../代码/视觉/背景配方";
+} from "../代码/视效/背景/背景绘制";
 import type { 背景主题 } from "../代码/设置/游戏设置";
 import type { 图形对象 } from "../框架/界面/绘制/协议";
 
@@ -243,11 +243,8 @@ test("背景外观配色取自共享配置", () => {
 });
 
 test("纯配方模块只允许框架绘制协议类型，不依赖引擎运行时", () => {
-  const 目录 = join(import.meta.dir, "../代码/视觉");
-  const 文件 = [
-    "背景配方.ts",
-    ...readdirSync(join(目录, "背景配方")).map((名) => `背景配方/${名}`),
-  ];
+  const 目录 = join(import.meta.dir, "../代码/视效/背景");
+  const 文件 = readdirSync(目录).filter((名) => 名.endsWith(".ts"));
   for (const 名 of 文件) {
     const 内容 = readFileSync(join(目录, 名), "utf8");
     const 依赖行 = 内容.match(/^\s*import[^;]*from\s+"[^"]+";/gm) ?? [];

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { 是开合页面, 计算页面开合变换, 页面开合, 页面开合参数 } from "../代码/界面/页面开合";
+import { 是开合页面, 计算页面开合变换, 页面开合, 页面开合参数 } from "../代码/视效/过渡/页面开合";
 
 describe("三页开合", () => {
   test("仅作用于设置、成就、商店", () => {

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { 计算商店布局, 计算商店方块陈列, 计算商店界面示意 } from "../代码/视觉/商店布局";
-import { 计算下拉展开区域 } from "../组件/霓虹街机/页面配方";
+import { 计算商店布局, 计算商店方块陈列, 计算商店界面示意 } from "../代码/页面/布局/商店布局";
+import { 计算下拉展开区域 } from "../组件/基础/页面配方";
 
 test("手机商店坞区、目录与陈列尺寸稳定", () => {
   const 页面 = 计算商店布局(390, 844);
@@ -10,6 +10,14 @@ test("手机商店坞区、目录与陈列尺寸稳定", () => {
   expect(页面.目录).toEqual({ 左: 16, 上: 676, 宽: 358, 高: 100 });
   expect(页面.目录卡宽).toBe(96);
   expect(计算商店方块陈列(390, 844, 页面.坞高).列).toBe(2);
+  expect(页面.副题Y - 页面.标题Y).toBe(40);
+  expect(页面.底板.左).toBe(0);
+  expect(页面.底板.宽).toBe(390);
+  expect(页面.底板.上).toBe(页面.纯享.上 + 页面.纯享.高);
+  expect(页面.部位卡[0]?.上).toBeGreaterThanOrEqual(页面.底板.上);
+  expect(页面.底板.上 + 页面.底板.高).toBe(844);
+  expect(页面.目录.上).toBeGreaterThanOrEqual(页面.底板.上);
+  expect(页面.目录.上 + 页面.目录.高).toBeLessThanOrEqual(844);
 });
 
 test("三档商店的部位、购买、目录与退出按钮均在屏幕内", () => {
@@ -27,6 +35,10 @@ test("三档商店的部位、购买、目录与退出按钮均在屏幕内", ()
       expect(区.上 + 区.高).toBeLessThanOrEqual(高);
     }
     expect(计算商店界面示意(宽, 高, 页.坞高).宽).toBeLessThanOrEqual(宽);
+    expect(页.底板.左).toBe(0);
+    expect(页.底板.宽).toBe(宽);
+    expect(页.底板.上 + 页.底板.高).toBe(高);
+    expect(页.目录.上).toBeGreaterThanOrEqual(页.底板.上);
   }
 });
 

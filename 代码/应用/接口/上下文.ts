@@ -108,7 +108,7 @@ export interface 对局测试控制 {
   设置序列(序列: readonly string[]): void;
   准备单行消除(): void;
   准备四行消除(继续连击?: boolean, 保留堆叠?: boolean): void;
-  读取特效(): import("../视觉/特效").特效状态;
+  读取特效(): import("../../视效/特效/对局特效").特效状态;
   硬降(): void;
   设置暂停(暂停: boolean): void;
   结束当前对局(): void;

@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
+import { 方块外观方案表 } from "../代码/主题/外观/方块外观";
+import { 背景主题配置 } from "../代码/主题/外观/背景主题";
+import { 旅行主题表 } from "../代码/主题/配色/旅行配色";
 import { 旅行收藏, 旅行日期 } from "../代码/存档/旅行收藏";
-import { 旅行主题表 } from "../代码/框架配置/旅行主题";
 import { 地点皮肤表 } from "../代码/框架配置/旅行地点";
 import { 音乐库 } from "../代码/框架配置/音乐";
 import { 音效库 } from "../代码/框架配置/音效";
-import { 方块外观方案表 } from "../代码/视觉/外观/方块外观";
-import { 背景主题配置 } from "../代码/视觉/外观/背景主题";
 import { 外观原价, 外观部位列表 } from "../代码/项目配置/旅行皮肤";
 import { 计算颜色对比度 } from "../框架/界面/颜色工具";
 

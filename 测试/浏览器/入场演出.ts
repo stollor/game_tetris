@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import type {} from "../../代码/应用/启动";
-import { 入场参数, 对局入场时长, 模式退场时长 } from "../../组件/霓虹街机/入场演出";
+import { 入场参数, 对局入场时长, 模式退场时长 } from "../../代码/视效/过渡/入场演出";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
 const 宽 = Number(process.argv.find((项) => 项.startsWith("--宽="))?.split("=")[1] ?? 390);

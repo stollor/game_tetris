@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { 双击硬降毫秒, 横移初始延迟毫秒, 横移重复间隔毫秒, 输入状态 } from "../代码/应用/对局/输入";
+import { 双击硬降毫秒, 横移初始延迟毫秒, 横移重复间隔毫秒, 输入状态 } from "../代码/页面/对局/输入";
 
 describe("Three 版对局输入状态机", () => {
   test("首次横移立即触发，按住后走 DAS 延迟与 ARR 重复", () => {

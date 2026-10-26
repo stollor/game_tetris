@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { type 再消一行状态, 创建新局, 暂存换块, 硬降 } from "../代码/玩法/再消一行";
-import { 获取技巧反馈 } from "../代码/视觉/技巧反馈";
+import { 获取技巧反馈 } from "../代码/界面/技巧反馈";
 
 test("暂存首次消费一个预告，重复操作无效；落块后交换不消费预告", () => {
   const s = 创建新局(() => 0, ["T", "I", "O", "J", "L"]);

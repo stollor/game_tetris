@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { 构建项目 } from "../GM工具/源码/游戏项目/构建/构建项目";
 import { 校验配置 } from "../游戏模块库/配置表/配置协议";
-import { 创建配置构建 } from "../游戏模块库/配置表/配置构建";
 import { 读取服务地址 } from "./服务地址";
 
 /**
@@ -58,16 +57,26 @@ function 解析静态文件(路径: string): { 文件路径: string } | null {
 
 let 静态文件 = new Map<string, Bun.BuildArtifact>();
 let 上次文件 = 静态文件;
-const 确保构建 = 创建配置构建(async () => {
-  校验配置(await Bun.file("配置/配置表.json").json());
-  const 结果 = await 构建项目({
-    entrypoints: ["./index.html", "./index.资源验收.html"],
-    target: "browser",
-  });
-  if (!结果.success) throw new Error(结果.logs.map(String).join("\n"));
-  上次文件 = 静态文件;
-  静态文件 = new Map(结果.outputs.map((文件) => [文件.path.split(/[\\/]/).at(-1) ?? "", 文件]));
-});
+let 构建中: Promise<void> | undefined;
+async function 确保构建(): Promise<void> {
+  if (构建中) return 构建中;
+  // HTML刷新必须读取源码变化，不能只以配置表内容决定是否重建。
+  构建中 = (async () => {
+    校验配置(await Bun.file("配置/配置表.json").json());
+    const 结果 = await 构建项目({
+      entrypoints: ["./index.html", "./index.资源验收.html"],
+      target: "browser",
+    });
+    if (!结果.success) throw new Error(结果.logs.map(String).join("\n"));
+    上次文件 = 静态文件;
+    静态文件 = new Map(结果.outputs.map((文件) => [文件.path.split(/[\\/]/).at(-1) ?? "", 文件]));
+  })();
+  try {
+    await 构建中;
+  } finally {
+    构建中 = undefined;
+  }
+}
 await 确保构建();
 {
   const { 主机名, 端口: 首选端口 } = 读取服务地址(Bun.argv.slice(2));

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { 成就定义 } from "../代码/成就/再消一行成就";
 import type { 三角形状, 四边形状 } from "../框架/界面/图元合批";
 import { Three图形, type 图形合批接口 } from "../框架/界面/绘制/图形";
-import { 成就图标编号列表, 绘制成就图标 } from "../组件/霓虹街机/成就图标";
+import { 成就图标编号列表, 绘制成就图标 } from "../组件/基础/成就图标";
 
 test("全部成就有图标，12种图形不同且在徽章边界内", () => {
   expect([...成就图标编号列表].sort()).toEqual(成就定义.map((x) => x.编号).sort());

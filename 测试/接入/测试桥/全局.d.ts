@@ -1,5 +1,5 @@
-import type { 测试状态 } from "../../../代码/应用/对局/对局页面";
 import type { 界面快照 } from "../../../代码/应用/接口/上下文";
+import type { 测试状态 } from "../../../代码/页面/对局/对局页面";
 
 declare global {
   interface Window {

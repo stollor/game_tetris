@@ -23,13 +23,13 @@ async function 收集(目录: string): Promise<string[]> {
   return 结果;
 }
 
-/** 从 Three 启动与独立预览入口递归导入图，确保项目组件都接入当前运行引擎。 */
+/** 从 Three 启动递归导入图，确保项目组件都接入当前运行引擎。 */
 async function 未接入组件(): Promise<string[]> {
   const 组件 = (await 收集(join(项目, "组件"))).filter(
-    (文件) => !归一(文件).includes("/组件/绘制/") && !归一(文件).includes("/组件/草稿/"),
+    (文件) => !归一(文件).includes("/组件/预览/") && !归一(文件).includes("/组件/草稿/"),
   );
   const 已载 = new Set<string>();
-  const 队列 = [join(项目, "代码/应用/启动.ts"), join(项目, "组件/预览/界面资源.ts")];
+  const 队列 = [join(项目, "代码/应用/启动.ts")];
   while (队列.length > 0) {
     const 文件 = 队列.pop();
     if (!文件 || 已载.has(文件)) continue;
@@ -60,6 +60,6 @@ async function 未接入组件(): Promise<string[]> {
     .sort((前, 后) => 前.localeCompare(后));
 }
 
-test("项目组件由Three启动或独立预览入口接入", async () => {
+test("项目组件由Three启动接入", async () => {
   expect(await 未接入组件()).toEqual([]);
 });
