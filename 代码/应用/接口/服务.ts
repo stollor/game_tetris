@@ -116,6 +116,7 @@ export interface 平台服务 {
 export interface 主题服务 {
   读取(): 游戏主题;
   订阅(回调: (主题: 游戏主题) => void): () => void;
+  销毁?(): void;
 }
 
 export interface 内存快照 {

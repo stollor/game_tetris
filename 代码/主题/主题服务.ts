@@ -47,11 +47,14 @@ export function 创建主题服务(选项: 主题服务选项 = {}): 主题服�
       订阅者.add(回调);
       return () => {
         订阅者.delete(回调);
-        if (订阅者.size === 0 && 解绑设置 && 设置服务) {
-          解绑设置();
-          解绑设置 = null;
-        }
       };
+    },
+    销毁: () => {
+      解绑设置?.();
+      解绑设置 = null;
+      if (!设置服务 && typeof window !== "undefined")
+        window.removeEventListener("gamemaker:settings-change", 刷新);
+      订阅者.clear();
     },
   };
 }

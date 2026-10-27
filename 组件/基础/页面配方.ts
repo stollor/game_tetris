@@ -1,5 +1,6 @@
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
 import { 界面主题, 颜色值 } from "../../代码/主题/配色/主题读取";
+import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import type { 图形对象, 文字项, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 样式选择 } from "../../框架/设置/设置";
 
@@ -25,7 +26,7 @@ export interface 页面语义色 {
   遮罩透明度: number;
 }
 
-export function 读取页面语义色(样式?: 样式选择): 页面语义色 {
+export function 读取页面语义色(样式?: 样式选择 | 地点名称): 页面语义色 {
   const 主题 = 界面主题(样式);
   return {
     背景: 颜色值(主题.页面.背景),

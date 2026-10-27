@@ -1,25 +1,24 @@
-import { 获取游戏主题, 配置游戏主题 } from "../../../框架/样式/样式";
-import { type 样式选择, 获取游戏设置 } from "../../../框架/设置/设置";
+import type { 样式选择 } from "../../../框架/设置/设置";
 import { type 地点名称, 查找地点 } from "../../框架配置/旅行地点";
+import type { 游戏设置 } from "../../设置/游戏设置";
 import { 获取游戏设置 as 获取项目设置 } from "../../设置/游戏设置";
 import { 再消一行主题 } from "./基础配色";
 import { 旅行主题表 } from "./旅行配色";
 
-/** 游戏配方注册到框架后，所有界面共用同一份语义主题。 */
+let 预览读取: (() => 游戏设置) | undefined;
+/** 只在隔离预览窗口设置，正式游戏始终读取玩家设置。 */
+export function 设置预览主题读取(读取?: () => 游戏设置): void {
+  预览读取 = 读取;
+}
 export function 界面主题(样式?: 样式选择 | 地点名称) {
+  if (!样式) {
+    const 设置 = 预览读取?.() ?? 获取项目设置();
+    样式 = 设置.旅行样式 ?? 设置.样式;
+  }
   const 地点 = 查找地点(样式);
   if (地点) return 旅行主题表[地点.名称];
   if (样式 === "夜空鎏金" || 样式 === "暖纸古典" || 样式 === "青蓝未来") return 再消一行主题[样式];
-  return 获取游戏主题(获取游戏设置().样式);
-}
-function 同步旅行主题(): void {
-  配置游戏主题(再消一行主题);
-  const 设置 = 获取项目设置();
-  if (设置.旅行样式) 配置游戏主题({ [设置.样式]: 旅行主题表[设置.旅行样式] });
-}
-if (typeof window !== "undefined") {
-  同步旅行主题();
-  window.addEventListener("gamemaker:settings-change", 同步旅行主题);
+  return 再消一行主题.青蓝未来;
 }
 export function 颜色值(颜色: string): number {
   return Number.parseInt(颜色.replace("#", ""), 16);
