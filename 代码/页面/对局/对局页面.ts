@@ -1,17 +1,15 @@
-import type { 指针事件 } from "../../../框架/运行时/输入路由";
+import { 矩形包含 } from "../../../框架/界面/控件/工具";
+import { 按钮 } from "../../../框架/界面/控件/按钮";
+import { 滑块 } from "../../../框架/界面/控件/滑块";
+import type { 绘制环境 as 控件绘制环境 } from "../../../框架/界面/控件/类型";
+import { type 界面快照, type 界面按钮快照, 页面基类 } from "../../../框架/界面/页面基类";
 import { 准备消行样本, 准备贴墙旋转样本 } from "../../../测试/接入/验收样本";
 import { 读取方块外观方案 } from "../../../组件/对局/方块绘制";
 import type { 对局纪录 } from "../../存档/对局纪录";
 import type { 对局奖励输入 } from "../../存档/旅行收藏";
 import { 记录分析事件 } from "../../平台/分析";
 import { 结算后同步平台 } from "../../平台/结算同步";
-import type {
-  对局测试控制,
-  界面快照,
-  界面按钮快照,
-  页面上下文,
-  页面实例,
-} from "../../应用/接口/上下文";
+import type { 对局测试控制, 页面上下文 } from "../../应用/接口/上下文";
 import type { 对局结果 } from "../../应用/接口/服务";
 import {
   type 再消一行状态,
@@ -170,16 +168,15 @@ const 目标提示秒 = 2.2;
 /** 本页在启动层图层缓存里的页名（启动.ts 的页面工厂按名注册、相机栈按名绑定深度）。 */
 const 对局页名 = "对局";
 
-export class 对局页面 implements 页面实例 {
+export class 对局页面 extends 页面基类<页面上下文> {
   readonly 测试!: 对局测试控制;
-  private readonly 上下文: 页面上下文;
   private 状态: 再消一行状态;
   private 模式: 游戏模式 = "马拉松";
   private 每日日期 = "";
   private 随机源: () => number = Math.random;
   private readonly 输入 = new 输入状态();
   private readonly 特效: 特效状态 = 创建特效状态();
-  private readonly 提示: 提示状态 = { 技巧: null, 成就: null, 目标剩余秒: 0 };
+  private readonly 对局提示: 提示状态 = { 技巧: null, 成就: null, 目标剩余秒: 0 };
   private 设置: 游戏设置;
   private 文案: 游戏文案;
   private readonly 记录列表: 操作记录[] = [];
@@ -187,7 +184,7 @@ export class 对局页面 implements 页面实例 {
   private 记录序号 = 0;
   private 启动时刻 = performance.now();
   /** 背景动画时间轴（秒）：随更新步长累计，不另造时钟。 */
-  private 背景时间秒 = 0;
+  private 场景背景秒 = 0;
   private 入场秒: number | null = null;
   private 展开入场 = false;
   /** 当前对局整页布局（与 Phaser 同一份共享布局）。 */
@@ -212,7 +209,7 @@ export class 对局页面 implements 页面实例 {
   private 本局落块数 = 0;
   private 测试序列: 方块类型[] = [];
   private 撤销绑定: (() => void)[] = [];
-  private 注销命中: (() => void)[] = [];
+  private 落点影滑块: 滑块 | null = null;
   private 已进入 = false;
   private 历史最佳: 对局纪录 | null = null;
   private 刷新纪录 = false;
@@ -220,11 +217,7 @@ export class 对局页面 implements 页面实例 {
   private 金币失败原因 = "";
   private 新成就: string[] = [];
   private 对局设置打开 = false;
-  private 正在调落点影 = false;
-  /**
-   * P3-3：对局页自管 6 个子层的脏判定（静态/动态分层），启动层据此跳过「旧式整页重画」。
-   * 子层含义见 视觉/对局绘制.ts 的 `对局绘制层`。
-   */
+  /** 对局保留七层绘制与失效范围；控件生命周期仍由页面基类接入。 */
   readonly 按子层缓存 = true;
   private 上次阶段: 游戏阶段 = "进行中";
   private 上次震动中 = false;
@@ -249,7 +242,7 @@ export class 对局页面 implements 页面实例 {
   private 最佳纪录文案缓存: string | undefined;
 
   constructor(上下文: 页面上下文) {
-    this.上下文 = 上下文;
+    super(上下文, { 名称: 对局页名, 背景: false });
     this.文案 = 上下文.服务.语言.读取();
     this.设置 = 上下文.服务.设置.读取();
     this.状态 = 创建新局(Math.random, [], "马拉松");
@@ -376,12 +369,13 @@ export class 对局页面 implements 页面实例 {
     this.设置 = this.上下文.服务.设置.读取();
     this.开始新局(this.上下文.参数.跳过入场 ? null : this.上下文.参数.入场演出 ? 0 : 准备起始时刻);
     this.绑定监听();
-    this.注册命中();
+    super.进入();
     this.已进入 = true;
     if (!this.上下文.参数.入场演出) this.播放音效("准备");
   }
 
   退出(): void {
+    super.退出();
     this.入场秒 = null;
     this.素材演示 = null;
     this.释放监听();
@@ -425,15 +419,14 @@ export class 对局页面 implements 页面实例 {
 
   调整尺寸(): void {
     if (!this.已进入) return;
-    for (const 注销 of this.注销命中) 注销();
-    this.注销命中 = [];
-    this.注册命中();
+    super.调整尺寸();
     this.标记全部();
   }
 
   更新(固定步长秒: number): void {
     if (!this.已进入) return;
     const 秒 = Math.max(0, 固定步长秒);
+    super.更新(秒);
     if (this.入场秒 !== null && this.状态.阶段 === "进行中") {
       const 前秒 = this.入场秒;
       const 上拍 = 计算对局入场姿态(前秒).节拍;
@@ -467,7 +460,7 @@ export class 对局页面 implements 页面实例 {
       this.侧栏转场 = 更新侧栏转场(this.侧栏转场, 秒);
       this.标记子层([对局绘制层.动态内容, 对局绘制层.特效]);
     }
-    this.背景时间秒 += 秒;
+    this.场景背景秒 += 秒;
     // 动态背景由启动层背景调度低频标脏（见 刷新背景动态），不再每帧重建整张背景。
     if (this.状态.阶段 !== "暂停") this.更新提示(秒);
     const 特效活跃 = this.状态.阶段 !== "暂停" && 更新特效(this.特效, 秒);
@@ -480,7 +473,9 @@ export class 对局页面 implements 页面实例 {
     if (震动中 || this.上次震动中) this.标记子层([对局绘制层.静态内容, 对局绘制层.动态内容]);
     this.上次震动中 = 震动中;
     if (this.状态.阶段 !== "暂停") {
-      const 提示活跃 = Boolean(this.提示.技巧 || this.提示.成就 || this.提示.目标剩余秒 > 0);
+      const 提示活跃 = Boolean(
+        this.对局提示.技巧 || this.对局提示.成就 || this.对局提示.目标剩余秒 > 0,
+      );
       // 提示按剩余秒渐变：可见期间每帧重建提示层，消失后清掉残留的一帧。
       if (提示活跃 || this.上次提示活跃) this.标记子层([对局绘制层.提示]);
       this.上次提示活跃 = 提示活跃;
@@ -568,19 +563,19 @@ export class 对局页面 implements 页面实例 {
         暂停: this.状态.阶段 === "暂停",
       };
       const 提示: 提示视图 = {
-        技巧: this.提示.技巧
+        技巧: this.对局提示.技巧
           ? {
-              文本: this.提示.技巧.文本,
-              比例: Math.max(0, this.提示.技巧.剩余秒 / this.提示.技巧.时长秒),
+              文本: this.对局提示.技巧.文本,
+              比例: Math.max(0, this.对局提示.技巧.剩余秒 / this.对局提示.技巧.时长秒),
             }
           : null,
-        成就: this.提示.成就
+        成就: this.对局提示.成就
           ? {
-              文本: this.提示.成就.文本,
-              比例: 读取成就提示透明度(this.提示.成就.剩余秒),
+              文本: this.对局提示.成就.文本,
+              比例: 读取成就提示透明度(this.对局提示.成就.剩余秒),
             }
           : null,
-        目标: this.提示.目标剩余秒 > 0 ? this.提示.目标剩余秒 / 目标提示秒 : null,
+        目标: this.对局提示.目标剩余秒 > 0 ? this.对局提示.目标剩余秒 / 目标提示秒 : null,
         暂停: this.状态.阶段 === "暂停",
       };
       内容输入 = {
@@ -612,7 +607,7 @@ export class 对局页面 implements 页面实例 {
       宽: 资源.逻辑宽,
       高: 资源.逻辑高,
       动态: 读取背景动态(this.设置),
-      时间秒: this.背景时间秒,
+      时间秒: this.场景背景秒,
     };
     const 背景环境 = {
       合批: 资源.合批,
@@ -692,7 +687,7 @@ export class 对局页面 implements 页面实例 {
       特效: structuredClone(this.特效),
       侧栏转场: this.侧栏转场 ? structuredClone(this.侧栏转场) : null,
       计分反馈: this.计分.读取(),
-      提示: structuredClone(this.提示),
+      提示: structuredClone(this.对局提示),
       对局设置打开: this.对局设置打开,
     };
   }
@@ -818,10 +813,10 @@ export class 对局页面 implements 页面实例 {
     this.随机源 = 创建模式随机源(this.模式, this.每日日期);
     this.状态 = 创建新局(this.随机源, this.测试序列, this.模式);
     this.测试序列 = [];
-    this.提示.技巧 = null;
+    this.对局提示.技巧 = null;
     this.对局设置打开 = false;
-    this.提示.成就 = null;
-    this.提示.目标剩余秒 = 0;
+    this.对局提示.成就 = null;
+    this.对局提示.目标剩余秒 = 0;
     清空特效(this.特效);
     this.输入.清空();
     this.统计.操作次数 = 0;
@@ -885,25 +880,19 @@ export class 对局页面 implements 页面实例 {
       // 窗口失焦自动暂停，回到页面后由玩家按 P/Esc 或点「继续」恢复。
       if (this.状态.阶段 === "进行中" && !this.素材演示 && !this.预览画面) this.设置暂停(true);
     };
-    const 结束拖动 = () => {
-      this.正在调落点影 = false;
-    };
     window.addEventListener("keydown", 按下);
     window.addEventListener("keyup", 松开);
     window.addEventListener("blur", 失焦);
-    window.addEventListener("pointerup", 结束拖动);
-    window.addEventListener("pointercancel", 结束拖动);
     this.撤销绑定.push(() => {
       window.removeEventListener("keydown", 按下);
       window.removeEventListener("keyup", 松开);
       window.removeEventListener("blur", 失焦);
-      window.removeEventListener("pointerup", 结束拖动);
-      window.removeEventListener("pointercancel", 结束拖动);
     });
     this.撤销绑定.push(
       this.上下文.服务.设置.订阅((设置) => {
         const 适配改变 = 设置.屏幕适配 !== this.设置.屏幕适配;
         this.设置 = 设置;
+        this.落点影滑块?.设置值(this.设置.落点影透明度);
         if (适配改变) this.调整尺寸();
         // 设置项可能改画布尺寸/网格/按键标签等静态内容；启动层另会全量失效，这里保守全标。
         this.标记全部("设置");
@@ -914,8 +903,6 @@ export class 对局页面 implements 页面实例 {
   private 释放监听(): void {
     for (const 撤销 of this.撤销绑定) 撤销();
     this.撤销绑定 = [];
-    for (const 注销 of this.注销命中) 注销();
-    this.注销命中 = [];
   }
 
   /** 键盘按下：返回是否已消费该键（用于 preventDefault）。 */
@@ -946,11 +933,11 @@ export class 对局页面 implements 页面实例 {
   }
 
   /** 触屏按钮：按下开始按住态，抬起/取消释放。 */
-  private 触屏按钮(键: 虚拟键, 事件: 指针事件): void {
+  private 触屏按钮(键: 虚拟键, 按下: boolean): void {
     if (this.入场秒 !== null) return;
-    if (事件.类型 === "按下") {
+    if (按下) {
       for (const 动作 of this.输入.按下(键)) this.执行输入动作(动作);
-    } else if (事件.类型 === "抬起" || 事件.类型 === "取消") {
+    } else {
       this.输入.松开(键);
     }
     this.请求重绘();
@@ -1107,7 +1094,7 @@ export class 对局页面 implements 页面实例 {
         `${落块.得分}`,
       );
       const 反馈 = 获取技巧反馈(落块, this.上下文.服务.语言.是否英文());
-      if (反馈) this.提示.技巧 = { 文本: 反馈, 剩余秒: 技巧时长秒, 时长秒: 技巧时长秒 };
+      if (反馈) this.对局提示.技巧 = { 文本: 反馈, 剩余秒: 技巧时长秒, 时长秒: 技巧时长秒 };
       if (落块.行数 === 0 && this.状态.阶段 === "进行中") this.播放音效("锁定");
       if (落块.全清) this.播放音效("全清");
       else if (落块.T旋 !== "无" || 落块.连续高难) this.播放音效("技巧");
@@ -1115,7 +1102,7 @@ export class 对局页面 implements 页面实例 {
       if (新解锁.length) this.提示成就(新解锁);
       if (this.状态.目标达成 && !this.目标已提示) {
         this.目标已提示 = true;
-        this.提示.目标剩余秒 = 目标提示秒;
+        this.对局提示.目标剩余秒 = 目标提示秒;
         this.记录("操作", "目标达成");
         this.标记子层([对局绘制层.提示]);
       }
@@ -1151,21 +1138,21 @@ export class 对局页面 implements 页面实例 {
     } catch {
       /* 成就金币失败不阻塞对局提示 */
     }
-    this.提示.成就 = { 文本, 剩余秒: 成就时长秒, 时长秒: 成就时长秒 };
+    this.对局提示.成就 = { 文本, 剩余秒: 成就时长秒, 时长秒: 成就时长秒 };
     this.标记子层([对局绘制层.提示]);
   }
 
   private 更新提示(秒: number): void {
-    if (this.提示.技巧) {
-      this.提示.技巧.剩余秒 -= 秒;
-      if (this.提示.技巧.剩余秒 <= 0) this.提示.技巧 = null;
+    if (this.对局提示.技巧) {
+      this.对局提示.技巧.剩余秒 -= 秒;
+      if (this.对局提示.技巧.剩余秒 <= 0) this.对局提示.技巧 = null;
     }
-    if (this.提示.成就) {
-      this.提示.成就.剩余秒 -= 秒;
-      if (this.提示.成就.剩余秒 <= 0) this.提示.成就 = null;
+    if (this.对局提示.成就) {
+      this.对局提示.成就.剩余秒 -= 秒;
+      if (this.对局提示.成就.剩余秒 <= 0) this.对局提示.成就 = null;
     }
-    if (this.提示.目标剩余秒 > 0) {
-      this.提示.目标剩余秒 = Math.max(0, this.提示.目标剩余秒 - 秒);
+    if (this.对局提示.目标剩余秒 > 0) {
+      this.对局提示.目标剩余秒 = Math.max(0, this.对局提示.目标剩余秒 - 秒);
     }
   }
 
@@ -1276,66 +1263,61 @@ export class 对局页面 implements 页面实例 {
   }
 
   /* ---------------------------------------------------------------- */
-  /* 内部：命中注册                                                   */
+  /* 内部：控件构建                                                   */
   /* ---------------------------------------------------------------- */
 
-  private 注册命中(): void {
-    const 命中 = this.上下文.资源.命中;
+  // 对局自管七层绘制，页面基类只接管控件与生命周期。
+  protected 绘制内容(_环境: 控件绘制环境): void {}
+
+  protected 返回(): void {}
+
+  protected 构建(): void {
     const 对局定位 = this.读取布局();
     const 暂存矩形 = 对局定位.侧栏?.暂存 ?? 计算对局附属布局(对局定位).暂存;
-    this.注销命中.push(
-      命中.注册({
-        名称: "对局.暂存",
-        ...暂存矩形,
-        深度: 7,
+    this.添加控件(
+      new 按钮({
+        矩形: 暂存矩形,
+        绘制底板: () => {},
         禁用: () => this.入场秒 !== null || this.状态.阶段 !== "进行中" || this.状态.本块已暂存,
-        回调: (事件) => {
-          事件.停止冒泡();
-          if (事件.类型 === "抬起") this.执行输入动作({ 类型: "暂存" });
-        },
+        点击: () => this.执行输入动作({ 类型: "暂存" }),
       }),
     );
     for (const 键 of 对局定位.操作区.键) {
-      this.注销命中.push(
-        命中.注册({
-          名称: `对局.${键.名称}`,
-          左: 键.中心X - 键.宽 / 2,
-          上: 键.中心Y - 键.高 / 2,
-          宽: 键.宽,
-          高: 键.高,
-          深度: 5,
+      const 虚拟键 = 操作键虚拟键(键);
+      this.添加控件(
+        new 按钮({
+          矩形: { 左: 键.中心X - 键.宽 / 2, 上: 键.中心Y - 键.高 / 2, 宽: 键.宽, 高: 键.高 },
+          绘制底板: () => {},
           禁用: () =>
             this.入场秒 !== null ||
             this.状态.阶段 !== "进行中" ||
             (键.名称 === "暂存操作" && this.状态.本块已暂存),
-          回调: (事件) => this.触屏按钮(操作键虚拟键(键), 事件),
+          按下: () => this.触屏按钮(虚拟键, true),
+          松开: () => this.触屏按钮(虚拟键, false),
+          取消: () => this.触屏按钮(虚拟键, false),
         }),
       );
     }
-    this.注销命中.push(
-      命中.注册({
-        名称: "对局.暂停",
-        左: 对局定位.暂停按钮.中心X - 对局定位.暂停按钮.宽 / 2,
-        上: 对局定位.暂停按钮.中心Y - 对局定位.暂停按钮.高 / 2,
-        宽: 对局定位.暂停按钮.宽,
-        高: 对局定位.暂停按钮.高,
-        深度: 6,
-        禁用: () => this.状态.阶段 === "结束",
-        回调: (事件) => {
-          if (事件.类型 !== "抬起") return;
-          this.设置暂停(this.状态.阶段 !== "暂停");
+    this.添加控件(
+      new 按钮({
+        矩形: {
+          左: 对局定位.暂停按钮.中心X - 对局定位.暂停按钮.宽 / 2,
+          上: 对局定位.暂停按钮.中心Y - 对局定位.暂停按钮.高 / 2,
+          宽: 对局定位.暂停按钮.宽,
+          高: 对局定位.暂停按钮.高,
         },
+        绘制底板: () => {},
+        禁用: () => this.状态.阶段 === "结束",
+        点击: () => this.设置暂停(this.状态.阶段 !== "暂停"),
       }),
     );
-    for (const 项 of 对局定位.暂停面板.按钮) {
-      this.注销命中.push(
-        命中.注册({
-          名称: `对局.暂停菜单.${项.名称}`,
-          ...项.矩形,
-          深度: 20,
+    for (const 项 of 对局定位.暂停面板.按钮)
+      this.添加控件(
+        new 按钮({
+          矩形: 项.矩形,
+          绘制底板: () => {},
           禁用: () => this.状态.阶段 !== "暂停" || this.对局设置打开,
-          回调: (事件) => {
-            if (事件.类型 !== "抬起") return;
+          点击: () => {
             if (项.名称 === "继续") this.设置暂停(false);
             else if (项.名称 === "重开") this.重新开始();
             else if (项.名称 === "设置") {
@@ -1345,41 +1327,24 @@ export class 对局页面 implements 页面实例 {
           },
         }),
       );
-    }
-    const 设置定位 = 计算对局设置布局(this.上下文.资源.逻辑宽, this.上下文.资源.逻辑高);
-    this.注销命中.push(
-      命中.注册({
-        名称: "对局设置.遮罩",
-        左: 0,
-        上: 0,
-        宽: this.上下文.资源.逻辑宽,
-        高: this.上下文.资源.逻辑高,
-        深度: 29,
+    const 设置定位 = 计算对局设置布局(this.逻辑宽, this.逻辑高);
+    this.添加控件(
+      new 按钮({
+        矩形: { 左: 0, 上: 0, 宽: this.逻辑宽, 高: this.逻辑高 },
+        绘制底板: () => {},
         禁用: () => !this.对局设置打开,
-        回调: (事件) => {
-          事件.停止冒泡();
-          if (事件.类型 !== "抬起") return;
-          const 面板 = 设置定位.面板;
-          if (
-            事件.坐标.x < 面板.左 ||
-            事件.坐标.x > 面板.左 + 面板.宽 ||
-            事件.坐标.y < 面板.上 ||
-            事件.坐标.y > 面板.上 + 面板.高
-          )
-            this.关闭对局设置();
+        松开: (事件) => {
+          if (事件 && !矩形包含(设置定位.面板, 事件.坐标)) this.关闭对局设置();
         },
       }),
     );
     for (const 项 of 设置定位.按钮)
-      this.注销命中.push(
-        命中.注册({
-          名称: `对局设置.${项.名称}`,
-          ...项.矩形,
-          深度: 30,
+      this.添加控件(
+        new 按钮({
+          矩形: 项.矩形,
+          绘制底板: () => {},
           禁用: () => !this.对局设置打开,
-          回调: (事件) => {
-            事件.停止冒泡();
-            if (事件.类型 !== "抬起") return;
+          点击: () => {
             if (项.名称 === "关闭对局设置" || 项.名称 === "返回暂停菜单") this.关闭对局设置();
             else if (项.名称.startsWith("网格:"))
               this.上下文.服务.设置.更新({ 显示网格: 项.名称 === "网格:开" });
@@ -1388,38 +1353,21 @@ export class 对局页面 implements 页面实例 {
           },
         }),
       );
-    this.注销命中.push(
-      命中.注册({
-        名称: "对局设置.落点影透明度",
-        ...设置定位.滑块,
-        深度: 30,
+    this.落点影滑块 = this.添加控件(
+      new 滑块({
+        矩形: 设置定位.滑块,
+        值: this.设置.落点影透明度,
+        步进: 5,
+        样式: { 滑块直径: 0 },
+        绘制底板: () => {},
         禁用: () => !this.对局设置打开,
-        回调: (事件) => {
-          事件.停止冒泡();
-          if (事件.类型 === "取消") {
-            this.正在调落点影 = false;
-            return;
-          }
-          if (事件.类型 === "按下") this.正在调落点影 = true;
-          if (!this.正在调落点影) return;
-          if (事件.类型 !== "按下" && 事件.类型 !== "移动" && 事件.类型 !== "抬起") return;
-          const 值 = Math.max(
-            0,
-            Math.min(
-              100,
-              Math.round(((事件.坐标.x - 设置定位.滑块.左) / 设置定位.滑块.宽) * 20) * 5,
-            ),
-          );
-          this.上下文.服务.设置.更新({ 落点影透明度: 值 });
-          if (事件.类型 === "抬起") this.正在调落点影 = false;
-        },
+        变化: (值) => this.上下文.服务.设置.更新({ 落点影透明度: 值 }),
       }),
     );
   }
 
   private 关闭对局设置(): void {
     this.对局设置打开 = false;
-    this.正在调落点影 = false;
     this.标记子层([对局绘制层.覆盖]);
   }
 
@@ -1447,7 +1395,7 @@ export class 对局页面 implements 页面实例 {
   }
 
   /** 只标脏动态内容层：输入移动/旋转这类不动静态几何的变化走这里。 */
-  private 请求重绘(): void {
+  protected 请求重绘(): void {
     this.检查侧栏转场();
     this.标记子层([对局绘制层.动态内容]);
   }
