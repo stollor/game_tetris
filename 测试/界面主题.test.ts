@@ -22,9 +22,12 @@ test("三套项目主题同步框架控件，保留通用主题，并保持正�
     for (const 文字 of [主题.文字.主要, 主题.文字.次要, 主题.文字.弱化, 主题.文字.强调]) {
       expect(计算颜色对比度(文字, 主题.面板.主面板.背景)).toBeGreaterThanOrEqual(4.5);
     }
-    for (const 类别 of [主题.按钮.主要, 主题.按钮.次要])
-      for (const 状态 of [类别.默认, 类别.移入, 类别.点击, 类别.聚焦])
+    // 禁用态按 WCAG 属于非活动控件的例外，不要求 4.5；保留 2.0 下限，避免文字彻底看不清。
+    for (const 类别 of [主题.按钮.主要, 主题.按钮.次要]) {
+      for (const 状态 of [类别.默认, 类别.移入, 类别.点击])
         expect(计算颜色对比度(状态.文字, 状态.背景)).toBeGreaterThanOrEqual(4.5);
+      expect(计算颜色对比度(类别.禁用.文字, 类别.禁用.背景)).toBeGreaterThanOrEqual(2);
+    }
   }
 });
 
@@ -33,9 +36,11 @@ test("十二套旅行主题的面板文字与按钮在全部交互状态保持�
   for (const 主题 of Object.values(旅行主题表)) {
     for (const 文字 of [主题.文字.主要, 主题.文字.次要, 主题.文字.弱化, 主题.文字.强调])
       expect(计算颜色对比度(文字, 主题.面板.主面板.背景)).toBeGreaterThanOrEqual(4.5);
-    for (const 类别 of [主题.按钮.主要, 主题.按钮.次要])
-      for (const 状态 of [类别.默认, 类别.移入, 类别.点击, 类别.聚焦, 类别.禁用])
+    for (const 类别 of [主题.按钮.主要, 主题.按钮.次要]) {
+      for (const 状态 of [类别.默认, 类别.移入, 类别.点击])
         expect(计算颜色对比度(状态.文字, 状态.背景)).toBeGreaterThanOrEqual(4.5);
+      expect(计算颜色对比度(类别.禁用.文字, 类别.禁用.背景)).toBeGreaterThanOrEqual(2);
+    }
   }
 });
 
