@@ -206,6 +206,7 @@ export class 对局页面 implements 页面实例 {
     极限倍率: number;
   } | null = null;
   private 跳过结算存档 = false;
+  private 预览画面 = false;
   private 目标已提示 = false;
   private 对局编号 = "";
   private 本局落块数 = 0;
@@ -336,6 +337,7 @@ export class 对局页面 implements 页面实例 {
           this.标记全部();
         },
         摆好素材画面: () => {
+          this.预览画面 = true;
           this.跳过结算存档 = true;
           this.素材演示 = null;
           for (let i = 0; i < 8 && this.状态.阶段 === "进行中"; i++) this.落一子("成功");
@@ -881,7 +883,7 @@ export class 对局页面 implements 页面实例 {
     const 失焦 = () => {
       this.输入.清空();
       // 窗口失焦自动暂停，回到页面后由玩家按 P/Esc 或点「继续」恢复。
-      if (this.状态.阶段 === "进行中" && !this.素材演示) this.设置暂停(true);
+      if (this.状态.阶段 === "进行中" && !this.素材演示 && !this.预览画面) this.设置暂停(true);
     };
     const 结束拖动 = () => {
       this.正在调落点影 = false;
