@@ -40,19 +40,19 @@ test("每个主题都收纳完整维度，目录里没有脱离主题的零散�
   }
 });
 
-test("默认主题：极光原野背景、青蓝未来配色、默认方块外观", () => {
+test("默认主题：极光原野配色、背景和方块外观", () => {
   const 结果 = 解析游戏主题(默认设置, 默认主题编号);
   const 值 = (槽: string) => 结果.槽位.find((项) => 项.槽位.编号 === 槽)?.资源.值;
   expect(结果.选项).toMatchObject({
-    配色: "青蓝未来",
+    配色: "极光原野",
     背景: "极光原野",
-    方块: "默认",
+    方块: "极光原野",
   });
-  expect(值("界面配色")).toBe("青蓝未来");
-  expect(值("控件外观")).toBe("青蓝未来");
+  expect(值("界面配色")).toBe("极光原野");
+  expect(值("控件外观")).toBe("极光原野");
   expect(值("静态背景")).toBe("极光原野");
   expect(值("动态背景")).toBe("极光原野");
-  expect(值("方块外观")).toBe("默认");
+  expect(值("方块外观")).toBe("极光原野");
   // 视觉特效也归属主题内的特效维度，来源是主题而不是游离默认。
   expect(结果.槽位.find((项) => 项.槽位.编号 === "视觉特效")?.来源).toBe("主题");
 });
@@ -157,6 +157,34 @@ test("真实设置入口仍校验所有权，整套和单项穿戴持久化到�
     assert.equal(获取游戏设置().背景主题,'成都熊猫');
     assert.equal(JSON.parse(localStorage.getItem('再消一行:设置')).旅行音乐,'丽江雪山');
   `,
+    ],
+    { cwd: resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },
+  );
+  expect(new TextDecoder().decode(执行.stderr)).toBe("");
+  expect(执行.exitCode).toBe(0);
+});
+
+test("游戏启动时读取并迁移旧配色和方块设置", () => {
+  const 执行 = Bun.spawnSync(
+    [
+      process.execPath,
+      "-e",
+      `
+      import assert from 'node:assert/strict';
+      const data = new Map([
+        ['gamemaker:settings', JSON.stringify({样式:'青蓝未来', 音效音量:25})],
+        ['再消一行:设置', JSON.stringify({方块外观:'默认', 显示网格:false})],
+      ]);
+      globalThis.localStorage = {getItem:k=>data.get(k)??null, setItem:(k,v)=>data.set(k,String(v)), removeItem:k=>data.delete(k)};
+      const {获取游戏设置}=await import('./代码/设置/游戏设置.ts');
+      const 设置=获取游戏设置();
+      assert.equal(设置.样式,'极光原野');
+      assert.equal(设置.方块外观,'极光原野');
+      assert.equal(设置.音效音量,25);
+      assert.equal(设置.显示网格,false);
+      assert.equal(JSON.parse(data.get('gamemaker:settings')).样式,'极光原野');
+      assert.equal(JSON.parse(data.get('再消一行:设置')).方块外观,'极光原野');
+    `,
     ],
     { cwd: resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },
   );

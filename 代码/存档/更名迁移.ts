@@ -37,6 +37,25 @@ function 迁移设置键(存储: 迁移存储): void {
   存储.removeItem(旧设置键);
 }
 
+function 迁移主题名称(存储: 迁移存储): void {
+  for (const 键 of ["gamemaker:settings", 新设置键]) {
+    const 原文 = 存储.getItem(键);
+    if (原文 === null) continue;
+    const 设置 = 读取载荷(原文);
+    if (!设置) continue;
+    let 已更改 = false;
+    if (设置.样式 === "青蓝未来") {
+      设置.样式 = "极光原野";
+      已更改 = true;
+    }
+    if (设置.方块外观 === "默认") {
+      设置.方块外观 = "极光原野";
+      已更改 = true;
+    }
+    if (已更改) 存储.setItem(键, JSON.stringify(设置));
+  }
+}
+
 function 合并成就进度(旧: unknown, 新: unknown): Record<string, unknown> | null {
   if (!是记录(旧)) return null;
   const 进度 = typeof 旧.进度 === "number" ? 旧.进度 : 0;
@@ -77,6 +96,7 @@ function 迁移收藏存档(存储: 迁移存储): void {
 /** 幂等；新旧数据同时存在时取进度较大者并保留更早的解锁时间。 */
 export function 迁移更名前存档(存储: 迁移存储): void {
   迁移设置键(存储);
+  迁移主题名称(存储);
   迁移成就存档(存储);
   迁移收藏存档(存储);
 }

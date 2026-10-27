@@ -67,13 +67,13 @@
       }
     },
     {
-      "name": "选择青蓝未来样式",
+      "name": "选择极光原野样式",
       "from": "设置界面",
       "action": "settings.style.neon-tide",
       "to": "设置界面",
       "expectStorage": {
         "gamemaker:settings": {
-          "样式": "青蓝未来"
+          "样式": "极光原野"
         }
       }
     },

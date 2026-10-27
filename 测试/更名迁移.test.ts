@@ -104,3 +104,22 @@ test("损坏的成就存档原样保留，不覆盖", () => {
   迁移更名前存档(s);
   expect(s.getItem("neon-pulse:achievements")).toBe("{坏档");
 });
+
+test("旧主题名称迁移到源名称，保留其他设置且重复执行不变", () => {
+  const s = 假存储({
+    "gamemaker:settings": JSON.stringify({ 样式: "青蓝未来", 音效音量: 25 }),
+    "再消一行:设置": JSON.stringify({ 方块外观: "默认", 显示网格: false }),
+  });
+  迁移更名前存档(s);
+  expect(JSON.parse(s.getItem("gamemaker:settings") ?? "{}")).toEqual({
+    样式: "极光原野",
+    音效音量: 25,
+  });
+  expect(JSON.parse(s.getItem("再消一行:设置") ?? "{}")).toEqual({
+    方块外观: "极光原野",
+    显示网格: false,
+  });
+  const 原文 = s.getItem("再消一行:设置");
+  迁移更名前存档(s);
+  expect(s.getItem("再消一行:设置")).toBe(原文);
+});

@@ -72,7 +72,6 @@ const 界面短语: Record<string, string> = {
   // 设置：主题名
   夜空鎏金: "Night Gold",
   暖纸古典: "Warm Paper",
-  青蓝未来: "Blue Future",
   云海山岚: "Cloud Hills",
   极光原野: "Aurora Fields",
   // 商店：分类页签与价格行（数字走子串拼接）

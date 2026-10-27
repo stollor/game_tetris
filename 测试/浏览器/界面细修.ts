@@ -62,7 +62,7 @@ try {
   await 页.waitForFunction(() => !!window.__three版__);
   await 页.bringToFront();
   // 使用隔离存档，三种主题都实际进入对局；更新走与设置页相同的服务。
-  for (const 样式 of ["青蓝未来", "夜空鎏金", "暖纸古典"] as const) {
+  for (const 样式 of ["极光原野", "夜空鎏金", "暖纸古典"] as const) {
     await 页.evaluate(
       (样式) => window.__three版__?.更新设置({ 样式, 背景动态: false, 音效音量: 0, 音乐音量: 0 }),
       样式,

@@ -65,7 +65,7 @@ try {
   await 页.goto(process.argv[2] ?? "http://127.0.0.1:3001");
   await 页.waitForFunction(() => window.__three版__);
   await 页.evaluate(() =>
-    window.__three版__?.更新设置({ 背景动态: false, 省电模式: "关", 样式: "青蓝未来" }),
+    window.__three版__?.更新设置({ 背景动态: false, 省电模式: "关", 样式: "极光原野" }),
   );
   await 开局("马拉松");
   console.log("等待真实有效对局45秒，再完成15次实际落块以满足奖励条件");

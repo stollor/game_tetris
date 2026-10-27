@@ -162,7 +162,7 @@ export function 绘制外观卡预览(
   // 样式卡：主题缩略（网格/边框 + 四格 + 底部强调线）
   绘图.fillStyle(数据.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
   const 古典 = 数据.样式值 === "暖纸古典";
-  const 未来 = 数据.样式值 === "青蓝未来";
+  const 未来 = 数据.样式值 === "极光原野";
   绘图.lineStyle(1, 数据.强调色, 古典 ? 0.55 : 0.22);
   if (未来) {
     for (let gx = x + 6; gx < x + 预览宽; gx += 12) 绘图.lineBetween(gx, y + 3, gx, y + 预览高 - 3);

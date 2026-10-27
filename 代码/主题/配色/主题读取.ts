@@ -17,8 +17,8 @@ export function 界面主题(样式?: 样式选择 | 地点名称) {
   }
   const 地点 = 查找地点(样式);
   if (地点) return 旅行主题表[地点.名称];
-  if (样式 === "夜空鎏金" || 样式 === "暖纸古典" || 样式 === "青蓝未来") return 再消一行主题[样式];
-  return 再消一行主题.青蓝未来;
+  if (样式 === "夜空鎏金" || 样式 === "暖纸古典" || 样式 === "极光原野") return 再消一行主题[样式];
+  return 再消一行主题.极光原野;
 }
 export function 颜色值(颜色: string): number {
   return Number.parseInt(颜色.replace("#", ""), 16);
