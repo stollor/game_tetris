@@ -80,9 +80,14 @@ test("对局设置在目标三种模拟视口内，滑块与适用的设置按�
   ]) {
     if (宽 === undefined || 高 === undefined) continue;
     const 定位 = 计算对局设置布局(宽, 高);
-    expect(定位.按钮).toHaveLength(宽 > 高 ? 6 : 4);
+    expect(定位.按钮.map((项) => 项.名称)).toEqual(["关闭对局设置", "返回暂停菜单"]);
+    expect(定位.开关.网格).toBeDefined();
+    expect(定位.开关.按键说明 != null).toBe(宽 > 高);
     expect(定位.按钮.some((项) => 项.名称.startsWith("上键:"))).toBe(false);
-    for (const 矩 of [定位.面板, 定位.滑块, ...定位.按钮.map((项) => 项.矩形)]) {
+    const 开关矩形 = [定位.开关.网格, 定位.开关.按键说明].filter(
+      (项): 项 is NonNullable<typeof 项> => 项 != null,
+    );
+    for (const 矩 of [定位.面板, 定位.滑块, ...定位.按钮.map((项) => 项.矩形), ...开关矩形]) {
       expect(矩.左).toBeGreaterThanOrEqual(0);
       expect(矩.上).toBeGreaterThanOrEqual(0);
       expect(矩.左 + 矩.宽).toBeLessThanOrEqual(宽);

@@ -9,6 +9,8 @@ import type { 点, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 画笔 } from "../../框架/界面/绘制/画笔";
 import { 混色 } from "../../框架/界面/颜色工具";
 
+export const 控件分类 = "业务" as const;
+
 export interface 对局仪表输入 {
   布局: 对局布局数据;
   模式: 游戏模式;

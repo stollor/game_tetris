@@ -96,6 +96,7 @@ export class 主界面 extends 页面基类 {
   private 英文 = false;
   private 模式卡列表: readonly 模式卡绘制项[] = [];
   private 纯享主题: 背景主题 = "极光原野";
+  /** 只由按钮的按下/松开/取消写入，供配方画按下态，不另做命中。 */
   private 按下中 = new Set<string>();
   private readonly 按钮动效 = new Map<
     string,
