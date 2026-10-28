@@ -4,6 +4,7 @@ import type { 界面资源样品 as 样品, 界面资源绘制环境 } from "../
 import { type 图形对象, 解析颜色数值 } from "../../框架/界面/绘制/协议";
 import type { 旅行图标名称 } from "../基础/图标";
 import { 样品 as 对局页面样品 } from "./对局页面";
+import { 控件规格样品 } from "./控件规格样品";
 import { 页面样品 } from "./页面样品";
 
 export { 主题状态键, 主题组合目录 } from "./主题状态";
@@ -1953,4 +1954,5 @@ export const 界面资源样品: 样品[] = [
   },
   对局页面样品,
   ...页面样品,
+  ...控件规格样品,
 ];

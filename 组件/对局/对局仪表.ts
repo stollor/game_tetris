@@ -4,6 +4,7 @@ import { type 计分反馈视图, 读取滚动数位 } from "../../代码/视效
 import type { 对局布局数据 } from "../../代码/页面/布局/对局布局";
 import { 读取对局文字样式, 读取对局界面色 } from "../../代码/页面/布局/对局布局";
 import { 模式配置 } from "../../代码/项目配置/模式";
+import { 读取仪表规格 } from "../../框架/样式/控件规格";
 import type { 点, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 画笔 } from "../../框架/界面/绘制/画笔";
 import { 混色 } from "../../框架/界面/颜色工具";
@@ -19,9 +20,12 @@ export interface 对局仪表输入 {
   省电: boolean;
 }
 
+/** 仪表舱轮廓：切角读控件规格，底边保留略收的折线以维持装置感。 */
 function 仪表轮廓(矩: 矩形, 主: boolean): 点[] {
+  const 规格 = 读取仪表规格();
+  const c = 主 ? 规格.主切角 : 规格.副切角;
   const { 左: x, 上: y, 宽: w, 高: h } = 矩;
-  const c = 主 ? 13 : 8;
+  // 底边折线相对标准倒角多收 10px，保留原装置造型（非纯倒角矩形）。
   return [
     { x: x + c, y },
     { x: x + w - c, y },
@@ -60,8 +64,13 @@ export function 绘制对局仪表(笔: 画笔, 输入: 对局仪表输入, 部�
         .fillStyle(色.信息分隔暗, 0.95)
         .fillPoints(点集, true)
         .restore();
-      图.fillStyle(主 ? 色.次级面板 : 色.面板, 主 ? 0.98 : 0.88).fillPoints(点集, true);
-      图.lineStyle(主 ? 1.6 : 1, 色.强调, 主 ? 0.65 : 0.3).strokePoints(点集, true);
+      const 规 = 读取仪表规格();
+      图
+        .fillStyle(主 ? 色.次级面板 : 色.面板, 主 ? 规.面透明度 : Math.max(0.5, 规.面透明度 - 0.1))
+        .fillPoints(点集, true);
+      图
+        .lineStyle(主 ? 规.描边宽 : Math.max(1, 规.描边宽 - 0.6), 色.强调, 主 ? 规.描边透明度 : 0.3)
+        .strokePoints(点集, true);
       图
         .lineStyle(1, 色.强调, 0.25)
         .lineBetween(矩.左 + 15, 矩.上 + 5, 矩.左 + 矩.宽 - 15, 矩.上 + 5);

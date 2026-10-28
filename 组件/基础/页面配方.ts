@@ -1,6 +1,7 @@
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
 import { 界面主题, 颜色值 } from "../../代码/主题/配色/主题读取";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
+import { 读取控件规格 } from "../../框架/样式/控件规格";
 import type { 图形对象, 文字项, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 样式选择 } from "../../框架/设置/设置";
 
@@ -206,12 +207,16 @@ export function 绘制列表行(
   矩形: 矩形,
   面板色: number,
   描边色: number,
-  描边透明度 = 0.7,
-  圆角 = 12,
+  描边透明度 = 读取控件规格().列表项.描边透明度,
+  圆角 = 读取控件规格().列表项.圆角,
   进度?: { 比例: number; 轨道色: number; 强调色: number },
 ): void {
-  绘图.fillStyle(面板色, 0.7).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
-  绘图.lineStyle(1, 描边色, 描边透明度).strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  const 规格 = 读取控件规格().列表项;
+  绘图.fillStyle(面板色, 规格.面板透明度).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  if (规格.描边宽 > 0)
+    绘图
+      .lineStyle(规格.描边宽, 描边色, 描边透明度)
+      .strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
   if (!进度) return;
   const 轨道: 矩形 = {
     左: 矩形.左 + 16,

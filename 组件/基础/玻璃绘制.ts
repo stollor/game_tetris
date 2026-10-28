@@ -1,3 +1,4 @@
+import { 读取按钮规格, 读取控件规格 } from "../../框架/样式/控件规格";
 import type { 图形对象 } from "../../框架/界面/绘制/协议";
 
 /**
@@ -11,6 +12,7 @@ import type { 图形对象 } from "../../框架/界面/绘制/协议";
 
 export interface 玻璃面板选项 {
   圆角?: number;
+  描边宽?: number;
   填色?: number;
   透明度?: number;
   边色?: number;
@@ -22,6 +24,7 @@ export interface 玻璃面板选项 {
 
 export interface 玻璃按钮选项 {
   圆角?: number;
+  描边宽?: number;
   填色?: number;
   边框色?: number;
   强调色?: number;
@@ -94,11 +97,13 @@ export function 绘制玻璃面板基底(
   高: number,
   选项: 玻璃面板选项 = {},
 ): void {
-  const 圆角 = Math.max(2, Math.min(选项.圆角 ?? 16, 宽 / 2, 高 / 2));
+  const 规格 = 读取控件规格().面板;
+  const 圆角 = Math.max(0, Math.min(选项.圆角 ?? 规格.圆角, 宽 / 2, 高 / 2));
   const 填色 = 选项.填色 ?? 0x121a2c;
-  const 透明度 = 选项.透明度 ?? 0.92;
+  const 透明度 = 选项.透明度 ?? 规格.面板透明度;
   const 边色 = 选项.边色 ?? 亮色(填色, 0.3);
-  const 边透明度 = 选项.边透明度 ?? 0.5;
+  const 边透明度 = 选项.边透明度 ?? 规格.描边透明度;
+  const 描边宽 = 选项.描边宽 ?? 规格.描边宽;
   if (选项.投影 !== false) 绘制柔影(绘图, x, y, 宽, 高, 圆角, 透明度);
   // 基色
   绘图.fillStyle(填色, 透明度).fillRoundedRect(x, y, 宽, 高, 圆角);
@@ -126,7 +131,7 @@ export function 绘制玻璃面板基底(
   绘图
     .lineStyle(1, 亮色(填色, 0.55), 透明度 * 0.22)
     .strokeRoundedRect(x + 1.5, y + 1.5, 宽 - 3, 高 - 3, Math.max(1, 圆角 - 1.5));
-  绘图.lineStyle(1, 边色, 边透明度).strokeRoundedRect(x, y, 宽, 高, 圆角);
+  if (描边宽 > 0) 绘图.lineStyle(描边宽, 边色, 边透明度).strokeRoundedRect(x, y, 宽, 高, 圆角);
   if (选项.强调色 !== undefined) {
     绘图.lineStyle(1, 选项.强调色, 0.32).strokeRoundedRect(x - 1, y - 1, 宽 + 2, 高 + 2, 圆角 + 2);
     绘图.lineStyle(2, 选项.强调色, 0.12).strokeRoundedRect(x - 3, y - 3, 宽 + 6, 高 + 6, 圆角 + 4);
@@ -142,10 +147,12 @@ export function 绘制玻璃按钮底板(
   高: number,
   选项: 玻璃按钮选项 = {},
 ): void {
-  const 圆角 = Math.max(2, Math.min(选项.圆角 ?? Math.min(12, 高 * 0.28), 宽 / 2, 高 / 2));
+  const 规格 = 读取按钮规格();
+  const 圆角 = Math.max(0, Math.min(选项.圆角 ?? 规格.圆角, 宽 / 2, 高 / 2));
   const 强调色 = 选项.强调色 ?? 0x65e6dc;
   const 填色 = 选项.选中 ? 强调色 : (选项.填色 ?? 0x16213a);
-  const 透明度 = 选项.透明度 ?? 0.94;
+  const 透明度 = 选项.透明度 ?? 规格.面板透明度;
+  const 描边宽 = 选项.描边宽 ?? 规格.描边宽;
   const x = 中心X - 宽 / 2;
   const y = 中心Y - 高 / 2;
   const 悬停 = 选项.悬停 ?? false;
@@ -153,11 +160,15 @@ export function 绘制玻璃按钮底板(
   if (悬停 && !选项.选中) {
     绘图.fillStyle(亮色(填色, 0.12), 0.5).fillRoundedRect(x + 1, y + 1, 宽 - 2, 高 - 2, 圆角 - 1);
   }
-  绘图
-    .lineStyle(
-      1,
-      选项.选中 ? 强调色 : (选项.边框色 ?? 亮色(填色, 0.5)),
-      选项.边透明度 ?? (选项.选中 ? 0.9 : 悬停 ? 0.8 : 0.5),
-    )
-    .strokeRoundedRect(x, y, 宽, 高, 圆角);
+  const 边透明度 =
+    选项.边透明度 ??
+    (选项.选中
+      ? Math.max(规格.描边透明度, 0.9)
+      : 悬停
+        ? Math.max(规格.描边透明度, 0.8)
+        : 规格.描边透明度);
+  if (描边宽 > 0)
+    绘图
+      .lineStyle(描边宽, 选项.选中 ? 强调色 : (选项.边框色 ?? 亮色(填色, 0.5)), 边透明度)
+      .strokeRoundedRect(x, y, 宽, 高, 圆角);
 }
