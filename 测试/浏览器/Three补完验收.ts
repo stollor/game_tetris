@@ -21,7 +21,7 @@ const 设置 = () => 页.evaluate(() => window.__three版__?.读取设置());
 const 文字 = async () => (await 界面())?.文字 ?? [];
 async function 查找(名称: string): Promise<界面按钮快照> {
   await 页.waitForFunction(
-    (名) => window.__three版__?.读取界面().按钮.some((项) => 项.名称 === 名),
+    (名) => window.__three版__?.读取界面().按钮.some((项) => 项.名称 === 名 && 项.可用 !== false),
     名称,
   );
   const 项 = (await 界面())?.按钮.find((项) => 项.名称 === 名称 && 项.可用 !== false);
@@ -95,17 +95,21 @@ try {
   assert.equal((await 设置())?.音乐音量, 0);
   await 点("页签:外观");
   await 点("页签:自定义");
-  const 外观钮 = (await 界面())?.按钮 ?? [];
+  const 首屏钮 = (await 界面())?.按钮 ?? [];
   assert.ok(
-    外观钮.some((项) => 项.名称.startsWith("外观:样式:")),
+    首屏钮.some((项) => 项.名称.startsWith("外观:样式:")),
     "自定义页有样式卡",
   );
   assert.ok(
-    外观钮.some((项) => 项.名称.startsWith("外观:背景:")),
+    首屏钮.some((项) => 项.名称.startsWith("外观:背景:")),
     "自定义页有背景卡",
   );
+  // 方块卡在虚拟列表首屏下方。
+  await 页.mouse.move(200, 420);
+  await 页.mouse.wheel(0, 1800);
+  await 页.waitForTimeout(200);
   assert.ok(
-    外观钮.some((项) => 项.名称.startsWith("外观:方块:")),
+    ((await 界面())?.按钮 ?? []).some((项) => 项.名称.startsWith("外观:方块:")),
     "自定义页有方块卡",
   );
   await 记录("设置页签与外观");
