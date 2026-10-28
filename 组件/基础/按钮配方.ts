@@ -1,5 +1,6 @@
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
 import { 读取霓虹调色板, type 霓虹按钮配色 } from "../../代码/主题/配色/调色板";
+import { 记录资源绘制 } from "../../框架/开发/资源使用";
 import { 读取按钮规格 } from "../../框架/样式/控件规格";
 import { type 图形对象, type 文字样式, type 文字项, 解析颜色数值 } from "../../框架/界面/绘制/协议";
 import { type 旅行图标名称, 绘制旅行图标 } from "./图标";
@@ -125,6 +126,7 @@ export function 绘制霓虹按钮(
     透明度: 面板透明度,
     边透明度: 边框透明度,
   });
+  if (import.meta.env.GM_TEST === "1") 记录资源绘制("组件/基础/按钮配方.ts", "绘制霓虹按钮");
 }
 
 export interface 霓虹按钮图标 {
