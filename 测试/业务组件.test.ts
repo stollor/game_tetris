@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { 读取游戏主题目录 } from "../代码/主题/主题组合";
 import { 解析方块外观 } from "../代码/主题/外观/方块外观";
 import { 设置预览主题读取 } from "../代码/主题/配色/主题读取";
 import type { 方块类型 } from "../代码/玩法/再消一行";
@@ -10,11 +11,15 @@ import { 计算对局布局 } from "../代码/页面/布局/对局布局";
 import { 配置控件规格 } from "../框架/样式/控件规格";
 import type { 图形对象 } from "../框架/界面/绘制/协议";
 import type { 画笔 } from "../框架/界面/绘制/画笔";
-import { 控件分类 as 仪表分类, 绘制对局仪表 } from "../组件/对局/对局仪表";
+import {
+  主题槽位 as 仪表主题槽位,
+  控件分类 as 仪表分类,
+  绘制对局仪表,
+} from "../组件/对局/对局仪表";
 import { 控件分类 as 操作键分类 } from "../组件/对局/操作键配方";
 import { 控件分类 as 方块分类, 绘制居中方块 } from "../组件/对局/方块绘制";
 import { 控件分类 as 暂存槽分类, 绘制暂存槽 } from "../组件/对局/暂存槽";
-import { 控件分类 as 棋盘分类, 绘制棋盘 } from "../组件/对局/棋盘配方";
+import { 主题槽位 as 棋盘主题槽位, 控件分类 as 棋盘分类, 绘制棋盘 } from "../组件/对局/棋盘配方";
 import { 控件分类 as 模式卡分类, 绘制模式卡输入 } from "../组件/模式选择/模式卡配方";
 
 interface 调用 {
@@ -151,6 +156,58 @@ test("HUD 样品可独立改仪表规格，不经过整页对局", () => {
     配置控件规格({});
     设置预览主题读取();
   }
+});
+
+function 仪表样品输入(覆盖: Partial<Parameters<typeof 绘制对局仪表>[1]> = {}) {
+  return {
+    布局: 手机布局,
+    模式: "马拉松" as const,
+    等级: 3,
+    行数: 12,
+    计分: { 显示分数: 12800, 目标分数: 12800, 击中: 0, 流光: [] },
+    剩余毫秒: 0,
+    有效毫秒: 0,
+    省电: true,
+    ...覆盖,
+  };
+}
+
+test("条带 HUD 用圆角条，不走装置舱 fillPoints", () => {
+  设置预览主题读取(() => 默认设置);
+  try {
+    const 记录 = 创建记录画笔();
+    绘制对局仪表(记录.笔, 仪表样品输入({ 表现: "条带" }), "静态");
+    expect(记录.调用.some((项) => 项.方法 === "fillRoundedRect")).toBe(true);
+    expect(记录.调用.some((项) => 项.方法 === "strokeRoundedRect")).toBe(true);
+    expect(记录.调用.some((项) => 项.方法 === "fillPoints")).toBe(false);
+  } finally {
+    设置预览主题读取();
+  }
+});
+
+test("平涂装置不画舱底装饰灯条", () => {
+  设置预览主题读取(() => 默认设置);
+  try {
+    const 灯条 = 创建记录画笔();
+    绘制对局仪表(灯条.笔, 仪表样品输入({ 表现: "装置", 纹样: "灯条" }), "静态");
+    const 平涂 = 创建记录画笔();
+    绘制对局仪表(平涂.笔, 仪表样品输入({ 表现: "装置", 纹样: "平涂" }), "静态");
+    const 装饰灯 = (调用: 调用[]) =>
+      调用.filter((项) => 项.方法 === "fillRect" && 项.参数[3] === 2);
+    expect(装饰灯(灯条.调用).length).toBeGreaterThan(0);
+    expect(装饰灯(平涂.调用)).toEqual([]);
+  } finally {
+    设置预览主题读取();
+  }
+});
+
+test("主题槽位导出与目录声明一致", () => {
+  const 目录 = 读取游戏主题目录();
+  const 声明 = (编号: string) => 目录.组件?.find((项) => 项.编号 === 编号)?.槽位;
+  expect(声明("对局仪表")).toEqual(["界面配色", "仪表纹样", "仪表表现"]);
+  expect([...仪表主题槽位]).toEqual(["界面配色", "仪表纹样", "仪表表现"]);
+  expect(声明("棋盘")).toEqual(["界面配色", "方块外观"]);
+  expect([...棋盘主题槽位]).toEqual(["界面配色", "方块外观"]);
 });
 
 test("暂存槽只消费布局和队列快照", () => {

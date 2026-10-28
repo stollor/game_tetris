@@ -7,6 +7,7 @@ import { 绘制玻璃按钮底板, 绘制玻璃面板基底 } from "../基础/�
 import { 绘制方块单元 } from "./方块单元";
 
 export const 控件分类 = "业务" as const;
+export const 主题槽位 = ["界面配色", "方块外观"] as const;
 
 export function 绘制对局遮光(绘图: 图形对象, 宽: number, 高: number, 竖屏: boolean): void {
   绘图.fillStyle(0x050914, 竖屏 ? 0.22 : 0.16).fillRect(0, 0, 宽, 高);
