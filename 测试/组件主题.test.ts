@@ -33,3 +33,14 @@ test("模式卡未注册主题，切换配色不改变牌面文字色", () => {
   };
   expect(色("极光原野")).toEqual(色("暖纸古典"));
 });
+
+test("注册主题组件引用真实组件绘制入口", async () => {
+  const 目录 = 读取游戏主题目录();
+  for (const 组件 of 目录.组件 ?? []) {
+    expect(组件.源码?.length).toBeGreaterThan(0);
+    for (const 源 of 组件.源码 ?? []) {
+      const 模块 = await import(new URL(`../${源.路径}`, import.meta.url).href);
+      expect(typeof 模块[源.导出 ?? ""]).toBe("function");
+    }
+  }
+});
