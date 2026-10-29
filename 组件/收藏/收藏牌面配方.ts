@@ -101,7 +101,7 @@ export function 绘制收藏按钮底板(
   if (状态.悬停) 绘图.fillStyle(0xfff8d6, 0.06).fillRoundedRect(x + 2, y + 2, 宽 - 4, 高 - 4, 6);
 }
 
-/** 收藏按钮文字项：颜色跟随底色，字号沿用霓虹按钮默认（16px）。 */
+/** 收藏按钮文字项：颜色跟随底色，字号沿用常规按钮默认（16px）。 */
 export function 生成收藏按钮文字项(
   中心X: number,
   中心Y: number,

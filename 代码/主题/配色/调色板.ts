@@ -15,7 +15,7 @@ export function 设置预览界面样式(样式?: 样式选择 | 地点名称): 
   预览界面样式 = 样式;
 }
 
-export interface 霓虹按钮配色 {
+export interface 常规按钮配色 {
   面板: string;
   边框: string;
   文字: string;
@@ -44,9 +44,9 @@ export interface 霓虹调色板 {
   标题: string;
   次要文字: string;
   弱化文字: string;
-  主要按钮: 霓虹按钮配色;
-  次要按钮: 霓虹按钮配色;
-  普通按钮: 霓虹按钮配色;
+  主要按钮: 常规按钮配色;
+  次要按钮: 常规按钮配色;
+  普通按钮: 常规按钮配色;
   按钮面板透明度: number;
   按钮边框透明度: number;
   方块: {

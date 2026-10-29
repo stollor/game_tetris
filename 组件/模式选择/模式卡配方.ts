@@ -5,8 +5,8 @@ import type { 对局纪录 } from "../../代码/存档/对局纪录";
 import type { 游戏模式 } from "../../代码/玩法/再消一行";
 import { type 图形对象, type 文字项, 解析颜色数值 } from "../../框架/界面/绘制/协议";
 import { 绘制像素面板 } from "../基础/像素绘制";
-import type { 霓虹按钮状态 } from "../基础/按钮配方";
-import { 绘制霓虹按钮, 绘制霓虹按钮图标 } from "../基础/按钮配方";
+import type { 常规按钮状态 } from "../基础/按钮配方";
+import { 绘制常规按钮, 绘制常规按钮图标 } from "../基础/按钮配方";
 import { 绘制卡片厚度, 绘制悬浮影, 绘制模式插座, 计算模式插座 } from "./模式装置";
 
 export const 控件分类 = "业务" as const;
@@ -40,7 +40,7 @@ export interface 模式卡数据 {
   有排行?: boolean;
 }
 
-export interface 模式卡绘制状态 extends 霓虹按钮状态 {
+export interface 模式卡绘制状态 extends 常规按钮状态 {
   /** 面板下沉像素。按下但未给出时按 3。 */
   下沉?: number;
   时间秒?: number;
@@ -110,7 +110,7 @@ export function 绘制模式卡底板(
   绘图.save();
   绘图.translateCanvas(0, 下沉);
   绘制卡片厚度(绘图, 布局);
-  绘制霓虹按钮(绘图, 布局.中心X, 布局.中心Y, 布局.宽, 布局.高, {
+  绘制常规按钮(绘图, 布局.中心X, 布局.中心Y, 布局.宽, 布局.高, {
     变体: "次要",
     强调色: 数据.强调色,
     已选: 状态.已选,
@@ -139,13 +139,13 @@ export function 绘制模式卡排行钮(
   const y = 区域.中心Y - 区域.高 / 2 + 下沉;
   if (是像素风格()) {
     绘制像素面板(绘图, x, y, 区域.宽, 区域.高, 像素规范.色.黄);
-    绘制霓虹按钮图标(绘图, { 名称: "排行", 中心X: 区域.中心X, 中心Y: 区域.中心Y + 下沉, 尺寸: 14 });
+    绘制常规按钮图标(绘图, { 名称: "排行", 中心X: 区域.中心X, 中心Y: 区域.中心Y + 下沉, 尺寸: 14 });
     return;
   }
   绘图.fillStyle(0x0b1422, 0.9).fillRoundedRect(x + 1, y + 2, 区域.宽 - 1, 区域.高 - 1, 8);
   绘图.fillStyle(0x172433, 0.96).fillRoundedRect(x, y, 区域.宽, 区域.高, 8);
   绘图.lineStyle(1, 0xffe7a8, 0.9).strokeRoundedRect(x, y, 区域.宽, 区域.高, 8);
-  绘制霓虹按钮图标(绘图, {
+  绘制常规按钮图标(绘图, {
     名称: "排行",
     中心X: 区域.中心X,
     中心Y: 区域.中心Y + 下沉,
