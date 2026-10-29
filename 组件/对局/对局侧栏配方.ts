@@ -1,10 +1,12 @@
 import { 像素规范 } from "../../代码/主题/像素/像素规范";
 import { 是像素风格 } from "../../代码/主题/像素/像素风格";
 import { 对局像素规格 } from "../../代码/主题/像素/对局像素规格";
+import { 是立体风格 } from "../../代码/主题/立体/立体风格";
 import { 读取霓虹调色板 } from "../../代码/主题/配色/调色板";
 import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
 import { 绘制像素面板 } from "../基础/像素绘制";
 import { 绘制霓虹玻璃 } from "../基础/底板";
+import { 绘制金属板 } from "../基础/立体绘制";
 export interface 霓虹侧栏几何 {
   左: number;
   顶: number;
@@ -30,6 +32,11 @@ export function 绘制霓虹侧栏(图形: 图形对象, 几何: 霓虹侧栏几
         宽 - 规.内边 * 2,
         像素规范.描边,
       );
+    return;
+  }
+  if (是立体风格()) {
+    if (!竖屏 && 紧凑) return;
+    绘制金属板(图形, 左, 顶, 宽, 高, { 切: 8 });
     return;
   }
   if (竖屏) {
@@ -81,6 +88,10 @@ export function 绘制传输管道(图: 图形对象, 区域: 矩形): void {
         .fillRect(x + p, 上, p, p)
         .fillRect(x + w - p * 2, 上, p, p);
     }
+    return;
+  }
+  if (是立体风格()) {
+    绘制金属板(图, x, y, w, h, { 切: 8, 凹: true });
     return;
   }
   图.fillStyle(色.棋盘底, 0.94).fillRoundedRect(x + 3, y, w - 6, h, 9);

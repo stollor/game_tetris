@@ -140,12 +140,9 @@ test("旅行主题自带全套维度，应用后设置与配色一致", () => {
 test("读取可选主题不含待分类，已保存选择仍可解析", () => {
   const 目录 = 读取游戏主题目录();
   const 可选 = 读取可选主题(目录).map((项) => 项.编号);
+  expect(可选).toEqual(["砖机液晶", "街机彩砖", "立体晶格", "极光原野"]);
   expect(可选).not.toContain("待分类");
-  expect(可选).toContain("极光原野");
-  expect(可选).toContain("砖机液晶");
-  expect(可选).toContain("街机彩砖");
-  expect(可选).toContain("立体晶格");
-  for (const 地点 of 地点皮肤表) expect(可选).toContain(地点.名称);
+  for (const 地点 of 地点皮肤表) expect(可选).not.toContain(地点.名称);
   const 暖纸 = 解析游戏主题(默认设置, "待分类@配色=暖纸古典");
   expect(暖纸.主题).toBe("待分类");
   expect(暖纸.槽位.find((项) => 项.槽位.编号 === "界面配色")?.资源.值).toBe("暖纸古典");
