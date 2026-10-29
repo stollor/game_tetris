@@ -1,9 +1,13 @@
+import { 像素规范 } from "../../代码/主题/像素/像素规范";
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
+import { 像素图标 } from "../../代码/主题/像素/界面像素规格";
 import { type 方块外观名称, 解析方块外观 } from "../../代码/主题/外观/方块外观";
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import type { 背景主题 } from "../../代码/设置/游戏设置";
 import type { 图形对象, 文字项, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 样式选择 } from "../../框架/设置/设置";
+import { 绘制像素图案, 绘制像素面板 } from "../基础/像素绘制";
 
 /**
  * 外观卡/外观标题牌的引擎无关配方：从 `组件/霓虹街机/外观卡.ts` 的 Phaser 现类抽出的
@@ -98,6 +102,18 @@ export function 绘制外观卡边框(
   数据: 外观卡数据,
   状态: 外观卡状态 = {},
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(
+      绘图,
+      布局.中心X - 布局.宽 / 2,
+      布局.中心Y - 布局.高 / 2,
+      布局.宽,
+      布局.高,
+      数据.面板色,
+      数据.已选 || 状态.悬停 ? 数据.强调色 : 像素规范.色.暗纸,
+    );
+    return;
+  }
   const x = 布局.中心X - 布局.宽 / 2;
   const y = 布局.中心Y - 布局.高 / 2;
   const 边色 = 数据.已选 || 状态.悬停 ? 数据.强调色 : 0x718092;
@@ -131,6 +147,20 @@ export function 绘制外观卡预览(
   const 预览宽 = 矩形.宽;
   const 预览高 = 矩形.高;
   if (数据.类型 === "背景" && 数据.背景值) return false;
+  if (是像素风格() && 数据.类型 !== "方块") {
+    绘图.fillStyle(数据.背景色).fillRect(x, y, 预览宽, 预览高);
+    const 图案 = 数据.类型 === "背景" ? 像素图标.风景 : 像素图标.方块;
+    const 格 = Math.max(1, Math.floor(Math.min(预览宽, 预览高) / (图案.length + 2)));
+    绘制像素图案(
+      绘图,
+      图案,
+      x + (预览宽 - 格 * 图案.length) / 2,
+      y + (预览高 - 格 * 图案.length) / 2,
+      格,
+      数据.强调色,
+    );
+    return true;
+  }
   if (数据.类型 === "背景") {
     // 没有具体风景值时的程序化占位缩略（与 Phaser 现类的同一条后备绘制）。
     绘图
@@ -145,7 +175,9 @@ export function 绘制外观卡预览(
     return true;
   }
   if (数据.类型 === "方块") {
-    绘图.fillStyle(数据.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
+    是像素风格()
+      ? 绘图.fillStyle(数据.背景色).fillRect(x, y, 预览宽, 预览高)
+      : 绘图.fillStyle(数据.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
     const 方案 = 解析方块外观(数据.方块方案);
     const 格 = Math.min(16, (预览宽 - 12) / 4, (预览高 - 6) / 2);
     const 类型列表 = ["I", "T", "L", "O"] as const;
@@ -160,7 +192,9 @@ export function 绘制外观卡预览(
     return true;
   }
   // 样式卡：主题缩略（网格/边框 + 四格 + 底部强调线）
-  绘图.fillStyle(数据.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
+  是像素风格()
+    ? 绘图.fillStyle(数据.背景色).fillRect(x, y, 预览宽, 预览高)
+    : 绘图.fillStyle(数据.背景色).fillRoundedRect(x, y, 预览宽, 预览高, 5);
   const 古典 = 数据.样式值 === "暖纸古典";
   const 未来 = 数据.样式值 === "极光原野";
   绘图.lineStyle(1, 数据.强调色, 古典 ? 0.55 : 0.22);
@@ -214,6 +248,10 @@ export function 绘制外观标题牌底板(
   面板色: number,
   强调色: number,
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 中心X - 宽 / 2, 中心Y - 高 / 2, 宽, 高, 面板色, 强调色);
+    return;
+  }
   const x = 中心X - 宽 / 2;
   const y = 中心Y - 高 / 2;
   绘图

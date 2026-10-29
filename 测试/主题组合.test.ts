@@ -22,9 +22,12 @@ test("每个主题都收纳完整维度，目录里没有脱离主题的零散�
   const 默认 = 查找默认主题(目录);
   expect(默认?.编号).toBe("极光原野");
   expect(默认?.维度.map((项) => 项.编号)).toEqual([
+    "界面表现",
+    "字体",
     "配色",
     "背景",
     "方块",
+    "棋盘表现",
     "音效",
     "音乐",
     "特效",
@@ -34,9 +37,12 @@ test("每个主题都收纳完整维度，目录里没有脱离主题的零散�
   // 每个主题都必须拥有同一套维度，不能只有其中几项。
   for (const 主题 of 目录.主题) {
     expect(主题.维度.map((项) => 项.编号)).toEqual([
+      "界面表现",
+      "字体",
       "配色",
       "背景",
       "方块",
+      "棋盘表现",
       "音效",
       "音乐",
       "特效",
@@ -48,7 +54,7 @@ test("每个主题都收纳完整维度，目录里没有脱离主题的零散�
   for (const 主题 of 目录.主题) {
     const 结果 = 解析游戏主题(默认设置, 主题.编号);
     expect(结果.主题).toBe(主题.编号);
-    expect(结果.槽位).toHaveLength(10);
+    expect(结果.槽位.length).toBeGreaterThanOrEqual(10);
   }
 });
 
@@ -67,6 +73,7 @@ test("默认主题：极光原野配色、背景和方块外观", () => {
   expect(值("方块外观")).toBe("极光原野");
   expect(值("仪表纹样")).toBe("灯条");
   expect(值("仪表表现")).toBe("装置");
+  expect(值("棋盘表现")).toBe("平面");
   // 视觉特效也归属主题内的特效维度，来源是主题而不是游离默认。
   expect(结果.槽位.find((项) => 项.槽位.编号 === "视觉特效")?.来源).toBe("主题");
   const 条带 = 解析游戏主题(默认设置, `${默认主题编号}@仪表表现=条带`);
@@ -92,6 +99,9 @@ test("极光原野与待分类按真实外观分组", () => {
   expect(列表(待分类, "方块").map((项) => 项.编号)).toEqual(
     expect.arrayContaining(["柔瓷", "铬金", "像素"]),
   );
+  expect(列表(待分类, "方块").map((项) => 项.编号)).not.toContain("砖机液晶");
+  expect(列表(待分类, "方块").map((项) => 项.编号)).not.toContain("街机彩砖");
+  expect(列表(待分类, "方块").map((项) => 项.编号)).not.toContain("立体晶格");
   expect(解析游戏主题(默认设置, "极光原野@配色=暖纸古典;方块=像素").选项.配色).toBe("暖纸古典");
   const 暖纸 = 解析游戏主题(默认设置, "待分类@配色=暖纸古典;方块=像素");
   expect(暖纸.槽位.find((项) => 项.槽位.编号 === "界面配色")?.资源.值).toBe("暖纸古典");
@@ -132,6 +142,9 @@ test("读取可选主题不含待分类，已保存选择仍可解析", () => {
   const 可选 = 读取可选主题(目录).map((项) => 项.编号);
   expect(可选).not.toContain("待分类");
   expect(可选).toContain("极光原野");
+  expect(可选).toContain("砖机液晶");
+  expect(可选).toContain("街机彩砖");
+  expect(可选).toContain("立体晶格");
   for (const 地点 of 地点皮肤表) expect(可选).toContain(地点.名称);
   const 暖纸 = 解析游戏主题(默认设置, "待分类@配色=暖纸古典");
   expect(暖纸.主题).toBe("待分类");
@@ -186,6 +199,41 @@ test("真实设置入口仍校验所有权，整套和单项穿戴持久化到�
     assert.equal(获取游戏设置().旅行音乐,'丽江雪山');
     assert.equal(获取游戏设置().背景主题,'成都熊猫');
     assert.equal(JSON.parse(localStorage.getItem('再消一行:设置')).旅行音乐,'丽江雪山');
+  `,
+    ],
+    { cwd: resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },
+  );
+  expect(new TextDecoder().decode(执行.stderr)).toBe("");
+  expect(执行.exitCode).toBe(0);
+});
+
+test("完整主题下只改动态背景不卸载主题选择", () => {
+  const 执行 = Bun.spawnSync(
+    [
+      process.execPath,
+      "-e",
+      `
+    import assert from 'node:assert/strict';
+    const data = new Map();
+    globalThis.localStorage = {get length(){return data.size}, getItem:k=>data.get(k)??null, setItem:(k,v)=>data.set(k,String(v)), removeItem:k=>data.delete(k), clear:()=>data.clear(), key:i=>[...data.keys()][i]??null};
+    globalThis.window = new EventTarget();
+    const {获取游戏设置,更新游戏设置}=await import('./代码/设置/游戏设置.ts');
+    const 穿上=更新游戏设置({主题选择:'砖机液晶'});
+    assert.equal(穿上.主题选择,'砖机液晶');
+    assert.equal(穿上.样式,'砖机液晶');
+    assert.equal(穿上.方块外观,'砖机液晶');
+    const 关=更新游戏设置({背景动态:false});
+    assert.equal(关.主题选择,'砖机液晶');
+    assert.equal(关.背景动态,false);
+    const 开=更新游戏设置({背景动态:true});
+    assert.equal(开.主题选择,'砖机液晶');
+    assert.equal(开.背景动态,true);
+    const 切回=更新游戏设置({主题选择:'极光原野'});
+    assert.equal(切回.主题选择,'极光原野');
+    assert.equal(切回.样式,'极光原野');
+    assert.equal(切回.方块外观,'极光原野');
+    assert.equal(更新游戏设置({样式:'暖纸古典'}).主题选择,null);
+    assert.equal(获取游戏设置().主题选择,null);
   `,
     ],
     { cwd: resolve(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },

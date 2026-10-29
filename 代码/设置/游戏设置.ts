@@ -5,7 +5,7 @@ import {
   配置游戏默认样式,
   默认设置 as 默认通用设置,
 } from "../../框架/设置/设置";
-import { 主题结果转设置, 解析游戏主题 } from "../主题/主题组合";
+import { 主题结果转设置, 应用主题选择, 解析游戏主题 } from "../主题/主题组合";
 import { type 方块外观名称, 解析方块外观 } from "../主题/外观/方块外观";
 import { 基础背景已解锁, 是基础背景, 迁移基础背景 } from "../存档/基础背景解锁";
 import { 旅行收藏 } from "../存档/旅行收藏";
@@ -19,6 +19,7 @@ export type 背景主题 = "晨光海岸" | "云海山岚" | "极光原野" | "�
 export type 省电模式选择 = "自动" | "开" | "关";
 
 export type 游戏设置 = 通用游戏设置 & {
+  主题选择: string | null;
   旋转180: boolean;
   落点影透明度: number;
   显示网格: boolean;
@@ -36,6 +37,7 @@ export type 游戏设置 = 通用游戏设置 & {
 };
 
 interface 再消一行专属设置 {
+  主题选择: string | null;
   背景音乐: boolean;
   音乐音量: number;
   旅行样式: 地点名称 | null;
@@ -55,6 +57,7 @@ interface 再消一行专属设置 {
 }
 
 const 默认专属设置: 再消一行专属设置 = {
+  主题选择: null,
   背景音乐: false,
   音乐音量: 0,
   旅行样式: null,
@@ -106,6 +109,27 @@ function 有效透明度(值: unknown): 值 is number {
   return typeof 值 === "number" && Number.isInteger(值) && 值 >= 0 && 值 <= 100;
 }
 
+function 有效主题选择(值: unknown): 值 is string {
+  if (typeof 值 !== "string" || !值 || 值.length > 1000) return false;
+  try {
+    解析游戏主题(默认设置, 值);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function 主题已拥有(选择: string, 收藏: 旅行收藏, 项目默认?: string | null): boolean {
+  const 地点 = 查找地点(解析游戏主题(默认设置, 选择).主题);
+  return (
+    !地点 ||
+    选择 === 项目默认 ||
+    (["静态背景", "动态背景", "界面样式", "方块外观", "音效套装", "音乐"] as const).every((部位) =>
+      收藏.拥有(地点.名称, 部位),
+    )
+  );
+}
+
 function 读取专属设置(默认专属设置: 再消一行专属设置): 再消一行专属设置 {
   try {
     const 独立设置 = localStorage.getItem(专属设置键);
@@ -123,6 +147,10 @@ function 读取专属设置(默认专属设置: 再消一行专属设置): 再�
     const 方块地点 = 查找地点(方块.名称);
     const 背景地点 = 拥有地点(内容.背景主题, "静态背景");
     return {
+      主题选择:
+        有效主题选择(内容.主题选择) && 主题已拥有(内容.主题选择, 收藏, 默认专属设置.主题选择)
+          ? 内容.主题选择
+          : null,
       背景音乐: 内容.背景音乐 === true,
       音乐音量: 有效透明度(内容.音乐音量) ? 内容.音乐音量 : 0,
       旅行样式:
@@ -173,7 +201,12 @@ export function 获取游戏设置(): 游戏设置 {
 }
 
 export function 更新游戏设置(变化: Partial<游戏设置>): 游戏设置 {
+  if (typeof 变化.主题选择 === "string") {
+    变化 = { ...应用主题选择(获取游戏设置(), 变化.主题选择), ...变化 };
+  }
   const 当前 = 读取当前专属设置();
+  if (typeof 变化.主题选择 === "string" && !有效主题选择(变化.主题选择))
+    throw new Error("无效主题选择");
   const 通用变化: Partial<通用游戏设置> = {};
   if (变化.背景音乐 !== undefined) 通用变化.背景音乐 = 变化.背景音乐;
   if (变化.音乐音量 !== undefined) 通用变化.音乐音量 = 变化.音乐音量;
@@ -183,6 +216,13 @@ export function 更新游戏设置(变化: Partial<游戏设置>): 游戏设置 
   if (变化.样式 !== undefined) 通用变化.样式 = 变化.样式;
 
   const 专属变化: Partial<再消一行专属设置> = {};
+  if (变化.主题选择 !== undefined) 专属变化.主题选择 = 变化.主题选择;
+  else if (
+    ["样式", "旅行样式", "背景主题", "方块外观", "旅行音效", "旅行音乐"].some((键) =>
+      Object.hasOwn(变化, 键),
+    )
+  )
+    专属变化.主题选择 = null;
   if (变化.背景音乐 !== undefined) 专属变化.背景音乐 = 变化.背景音乐;
   if (有效透明度(变化.音乐音量)) {
     专属变化.音乐音量 = 变化.音乐音量;
@@ -190,6 +230,11 @@ export function 更新游戏设置(变化: Partial<游戏设置>): 游戏设置 
     通用变化.背景音乐 = 专属变化.背景音乐;
   }
   const 收藏 = new 旅行收藏(localStorage);
+  if (
+    typeof 专属变化.主题选择 === "string" &&
+    !主题已拥有(专属变化.主题选择, 收藏, 读取项目默认设置().主题选择)
+  )
+    throw new Error("尚未拥有该完整主题");
   for (const [键, 部位] of [
     ["旅行样式", "界面样式"],
     ["旅行音效", "音效套装"],

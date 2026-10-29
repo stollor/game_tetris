@@ -3,3 +3,7 @@ declare module "*.png" {
   const 地址: string;
   export default 地址;
 }
+declare module "*.woff2" {
+  const 地址: string;
+  export default 地址;
+}

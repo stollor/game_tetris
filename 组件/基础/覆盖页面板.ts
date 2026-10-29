@@ -1,4 +1,7 @@
+import { 像素规范 } from "../../代码/主题/像素/像素规范";
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
 import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
+import { 绘制像素面板 } from "./像素绘制";
 
 /**
  * 覆盖页面板/分隔线：复刻 Phaser `Rectangle`（`setStrokeStyle` / 高 1 的填充矩形）的落地像素。
@@ -26,6 +29,10 @@ export function 绘制覆盖页面板(
   描边色: number,
   描边透明度 = 0.75,
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 填充色, 描边色);
+    return;
+  }
   const { 左, 上, 宽, 高 } = 矩形;
   绘图.fillStyle(填充色, 面板填充透明度).fillRect(左, 上, 宽, 高);
   if (读取画布像素比() >= 2) {
@@ -55,6 +62,10 @@ export function 绘制覆盖页分隔线(
   颜色: number,
   透明度 = 0.32,
 ): void {
+  if (是像素风格()) {
+    绘图.fillStyle(颜色).fillRect(Math.round(左), Math.round(上), Math.round(宽), 像素规范.描边);
+    return;
+  }
   if (读取画布像素比() >= 2) {
     绘图.fillStyle(颜色, 透明度).fillRect(左, 上, 宽, 1);
     return;

@@ -1,5 +1,10 @@
+import { 像素规范 } from "../像素/像素规范";
+import { 是像素风格 } from "../像素/像素风格";
+
 export const 游戏字体 = {
-  家族: '"Segoe UI", "Microsoft YaHei", sans-serif',
+  get 家族() {
+    return 是像素风格() ? 像素规范.字体 : '"Segoe UI", "Microsoft YaHei", sans-serif';
+  },
   标题: 30,
   模式卡片标题手机: 17,
   模式卡片标题桌面: 21,

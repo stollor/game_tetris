@@ -25,11 +25,15 @@ test("现行入口与职责归位，构建工具和独立预览不进入业务�
         /GM工具|(?:^|\/)源码\/|组件\/预览\/|^(node:|bun$|playwright$)/.test(项.path),
         文件 + " → " + 项.path,
       ).toBe(false);
-      if (/^three(?:\/|$)/.test(项.path))
+      if (/^three(?:\/|$)/.test(项.path)) {
+        const 路径 = 文件.replaceAll("\\", "/");
         expect(
-          文件.replaceAll("\\", "/").endsWith("代码/应用/资源/资源加载.ts"),
+          路径.endsWith("代码/应用/资源/资源加载.ts") ||
+            路径.endsWith("代码/视效/透视/透视棋盘.ts") ||
+            路径.endsWith("代码/视效/透视/房间装置.ts"),
           "Three只从明确的资源适配边界接入：" + 文件,
         ).toBe(true);
+      }
       if (
         文件.startsWith(join(根, "代码/玩法") + "\\") ||
         文件.startsWith(join(根, "代码/玩法") + "/")

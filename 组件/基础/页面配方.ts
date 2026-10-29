@@ -1,9 +1,12 @@
+import { 像素规范 } from "../../代码/主题/像素/像素规范";
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
 import { 界面主题, 颜色值 } from "../../代码/主题/配色/主题读取";
 import type { 地点名称 } from "../../代码/框架配置/旅行地点";
 import { 读取控件规格 } from "../../框架/样式/控件规格";
 import type { 图形对象, 文字项, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 样式选择 } from "../../框架/设置/设置";
+import { 绘制像素面板 } from "./像素绘制";
 
 /**
  * 设置/列表类页面的引擎无关视觉配方：遮罩、面板、分组标题、滑块、下拉框、列表行等。
@@ -65,6 +68,10 @@ export function 绘制页面面板(
   描边透明度 = 0.75,
   圆角 = 0,
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 填充色, 描边色);
+    return;
+  }
   if (圆角 > 0) {
     绘图.fillStyle(填充色, 0.98).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
     绘图
@@ -102,6 +109,12 @@ export function 绘制分组分隔线(
   强调色: number,
   透明度 = 0.32,
 ): void {
+  if (是像素风格()) {
+    绘图
+      .fillStyle(强调色)
+      .fillRect(Math.round(布局.左), Math.round(布局.分隔线Y), Math.round(布局.宽), 像素规范.描边);
+    return;
+  }
   绘图.fillStyle(强调色, 透明度).fillRect(布局.左, 布局.分隔线Y, 布局.宽, 1);
 }
 
@@ -119,6 +132,15 @@ export function 绘制滑块(
   强调色: number,
   命中高 = 32,
 ): void {
+  if (是像素风格()) {
+    const p = 像素规范.网格;
+    const 左 = 中心X - 宽 / 2;
+    const 头X = 左 + 宽 * Math.max(0, Math.min(1, 比例));
+    绘图.fillStyle(像素规范.色.墨).fillRect(左, 中心Y - p, 宽, p * 2);
+    绘图.fillStyle(强调色).fillRect(左, 中心Y - p, 头X - 左, p * 2);
+    绘制像素面板(绘图, 头X - p * 2, 中心Y - p * 3, p * 4, p * 6, 像素规范.色.纸, 强调色);
+    return;
+  }
   const 左 = 中心X - 宽 / 2;
   const 顶 = 中心Y;
   const 轨道高 = 7;
@@ -155,6 +177,18 @@ export function 绘制下拉框(
   强调色: number,
   圆角 = 8,
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 面板色, 强调色);
+    const p = 像素规范.网格;
+    const x = 矩形.左 + 矩形.宽 - p * 6,
+      y = 矩形.上 + 矩形.高 / 2;
+    绘图
+      .fillStyle(像素规范.色.墨)
+      .fillRect(x, y - p, p * 5, p)
+      .fillRect(x + p, y, p * 3, p)
+      .fillRect(x + p * 2, y + p, p, p);
+    return;
+  }
   绘图.fillStyle(面板色, 0.9).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
   绘图.lineStyle(1, 强调色, 0.6).strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
   const 箭头X = 矩形.左 + 矩形.宽 - 16;
@@ -191,6 +225,15 @@ export function 绘制开关(
   轨道色: number,
   强调色: number,
 ): void {
+  if (是像素风格()) {
+    const p = 像素规范.网格;
+    const x = 布局.中心X - 布局.宽 / 2,
+      y = 布局.中心Y - 布局.高 / 2;
+    绘制像素面板(绘图, x, y, 布局.宽, 布局.高, 开 ? 强调色 : 轨道色);
+    const 宽 = 布局.高 - p * 2;
+    绘图.fillStyle(像素规范.色.墨).fillRect(开 ? x + 布局.宽 - 宽 - p : x + p, y + p, 宽, 宽);
+    return;
+  }
   const 半径 = 布局.高 / 2;
   const x = 布局.中心X - 布局.宽 / 2;
   const y = 布局.中心Y - 半径;
@@ -211,6 +254,23 @@ export function 绘制列表行(
   圆角 = 读取控件规格().列表项.圆角,
   进度?: { 比例: number; 轨道色: number; 强调色: number },
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 面板色, 描边色);
+    if (进度) {
+      const p = 像素规范.网格,
+        宽 = 矩形.宽 - p * 8;
+      绘图.fillStyle(像素规范.色.墨).fillRect(矩形.左 + p * 4, 矩形.上 + 矩形.高 - p * 4, 宽, p);
+      绘图
+        .fillStyle(进度.强调色)
+        .fillRect(
+          矩形.左 + p * 4,
+          矩形.上 + 矩形.高 - p * 4,
+          Math.round((宽 * Math.max(0, Math.min(1, 进度.比例))) / p) * p,
+          p,
+        );
+    }
+    return;
+  }
   const 规格 = 读取控件规格().列表项;
   绘图.fillStyle(面板色, 规格.面板透明度).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
   if (规格.描边宽 > 0)
@@ -239,6 +299,10 @@ export function 绘制页签(
   强调色: number,
   圆角 = 10,
 ): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 选中 ? 强调色 : 面板色);
+    return;
+  }
   绘图
     .fillStyle(面板色, 选中 ? 0.95 : 0.55)
     .fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);

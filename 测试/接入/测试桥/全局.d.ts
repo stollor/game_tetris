@@ -1,4 +1,5 @@
 import type { 界面快照 } from "../../../代码/应用/接口/上下文";
+import type { 特效状态 } from "../../../代码/视效/特效/对局特效";
 import type { 测试状态 } from "../../../代码/页面/对局/对局页面";
 
 declare global {
@@ -13,6 +14,7 @@ declare global {
       设置序列(序列: readonly string[]): void;
       准备单行消除(): void;
       准备四行消除(继续连击?: boolean, 保留堆叠?: boolean): void;
+      读取特效(): 特效状态 | null;
       硬降(): void;
       设置暂停(暂停: boolean): void;
       结束当前对局(): void;

@@ -1,3 +1,5 @@
+import { 像素规范 } from "../../代码/主题/像素/像素规范";
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
 import { 方块外观方案表 } from "../../代码/主题/外观/方块外观";
 import { 游戏模式顺序 } from "../../代码/主题/外观/游戏外观";
 import { 派生霓虹文字样式 } from "../../代码/主题/文字/文字样式";
@@ -6,6 +8,7 @@ import { 读取霓虹调色板 } from "../../代码/主题/配色/调色板";
 import type { 游戏模式 } from "../../代码/玩法/再消一行";
 import { type 图形对象, type 文字项, 混合模式, 解析颜色数值 } from "../../框架/界面/绘制/协议";
 import { 亮色, 暗色 } from "../../框架/界面/颜色工具";
+import { 绘制像素面板 } from "../基础/像素绘制";
 import { 绘制方块单元, 绘制方块单元辉光 } from "../对局/方块单元";
 
 /**
@@ -121,6 +124,14 @@ export function 绘制模式标题饰(绘图: 图形对象, 中心X: number, y: 
   const 格 = 9;
   const 间隙 = 6;
   const 总宽 = 色.length * 格 + (色.length - 1) * 间隙;
+  if (是像素风格()) {
+    游戏模式顺序.forEach((模式, i) => {
+      绘图
+        .fillStyle(像素规范.模式[模式])
+        .fillRect(Math.round(中心X - 总宽 / 2 + i * (格 + 间隙)), Math.round(y), 格, 格);
+    });
+    return;
+  }
   for (let i = 0; i < 色.length; i++) {
     const 浮 = Math.sin(时间秒 * 1.7 + i * 0.7) * 1.6;
     绘制方块单元(绘图, 中心X - 总宽 / 2 + i * (格 + 间隙), y + 浮, {
@@ -159,6 +170,13 @@ function 绘制一格(
   亮度: number,
 ): void {
   if (!宝石方案) return;
+  if (是像素风格()) {
+    绘图.fillStyle(像素规范.色.墨).fillRect(Math.round(x), Math.round(y), 格, 格);
+    绘图
+      .fillStyle(亮度 > 0.5 ? 像素规范.色.墨 : 像素规范.色.暗)
+      .fillRect(Math.round(x + 2), Math.round(y + 2), Math.max(0, 格 - 4), Math.max(0, 格 - 4));
+    return;
+  }
   if (亮度 > 0.08) {
     绘图.save();
     绘图.setBlendMode(混合模式.叠加);
@@ -181,6 +199,7 @@ export function 绘制悬浮影(
   宽: number,
   下沉: number,
 ): void {
+  if (是像素风格()) return;
   const 收 = Math.min(1, Math.max(0, 下沉) / 6);
   绘图
     .fillStyle(0x050912, 0.26 + 收 * 0.1)
@@ -195,6 +214,15 @@ export function 绘制模式图案(
   时间秒: number,
   点亮: readonly number[],
 ): void {
+  if (是像素风格()) {
+    const 规格 = 图案表[模式];
+    const 格 = Math.floor(Math.min((座.宽 - 12) / 规格.列数, (座.高 - 12) / 规格.行数));
+    const x = 座.左 + (座.宽 - 规格.列数 * 格) / 2,
+      y = 座.上 + (座.高 - 规格.行数 * 格) / 2;
+    for (const [i, 位] of 规格.格.entries())
+      绘制一格(绘图, x + 位.列 * 格, y + 位.行 * 格, 格 - 1, 色值, 点亮[i] ?? 0);
+    return;
+  }
   if (模式 === "冲刺") {
     绘制冲刺图案(绘图, 座, 色值, 时间秒, 点亮);
     return;
@@ -276,6 +304,11 @@ export function 绘制模式插座(
   点亮: readonly number[],
 ): 模式插座 {
   const 座 = 计算模式插座(布局);
+  if (是像素风格()) {
+    绘图.fillStyle(像素规范.色.墨).fillRect(座.左, 座.上, 座.宽, 座.高);
+    绘制模式图案(绘图, 座, 模式, 色值, 时间秒, 点亮);
+    return 座;
+  }
   绘图.fillStyle(0x07101c, 0.55).fillRoundedRect(座.左, 座.上, 座.宽, 座.高, 8);
   绘图.lineStyle(1.5, 色值, 0.8).strokeRoundedRect(座.左, 座.上, 座.宽, 座.高, 8);
   绘制模式图案(绘图, 座, 模式, 色值, 时间秒, 点亮);
@@ -284,6 +317,7 @@ export function 绘制模式插座(
 
 /** 卡片厚度：比面板略低、略偏右，面板盖住之后只露出底边和右侧。 */
 export function 绘制卡片厚度(绘图: 图形对象, 布局: 装置区域): void {
+  if (是像素风格()) return;
   const 面 = 解析颜色数值(读取霓虹调色板().次要按钮.面板);
   const x = 布局.中心X - 布局.宽 / 2;
   const y = 布局.中心Y - 布局.高 / 2;
@@ -390,6 +424,10 @@ export function 生成返回按键文字项(区域: 装置区域, 文案: string
 export function 绘制返回传送装置(绘图: 图形对象, 区域: 装置区域, 姿态: 返回装置姿态): void {
   const 几何 = 计算返回装置几何(区域, 姿态.文案);
   const 沉 = 姿态.下沉 * 传送下沉像素;
+  if (是像素风格()) {
+    绘制像素面板(绘图, 几何.左, 几何.面顶 + 沉, 几何.台宽, 几何.面高, 像素规范.色.纸);
+    return;
+  }
   const 面色 = 解析颜色数值(读取霓虹调色板().次要按钮.面板);
   const 圆角 = 11;
   const 点亮 = 姿态.点亮;

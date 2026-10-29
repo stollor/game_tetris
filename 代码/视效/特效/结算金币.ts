@@ -1,6 +1,10 @@
 import type { 图形对象, 文字项 } from "../../../框架/界面/绘制/协议";
+import { 绘制像素图案 } from "../../../组件/基础/像素绘制";
 import { 绘制旅行图标 } from "../../../组件/基础/图标";
 import type { 霓虹结算布局 } from "../../../组件/结算/结算台配方";
+import { 像素规范 } from "../../主题/像素/像素规范";
+import { 是像素风格 } from "../../主题/像素/像素风格";
+import { 对局像素规格 } from "../../主题/像素/对局像素规格";
 import { 游戏外观 } from "../../主题/外观/游戏外观";
 
 const 钳制 = (值: number) => Math.max(0, Math.min(1, 值));
@@ -44,6 +48,23 @@ export function 绘制结算金币闪光(
   透明度: number,
 ): void {
   if (透明度 <= 0) return;
+  if (是像素风格()) {
+    const 规 = 对局像素规格.特效;
+    const p = 像素规范.网格;
+    const 距 = 规.金币闪光起 + (规.金币闪光终 - 规.金币闪光起) * 比例;
+    图形.save().setAlpha(透明度).fillStyle(像素规范.色.黄);
+    for (let i = 0; i < 规.金币射线; i++) {
+      const 角 = (i * Math.PI * 2) / 规.金币射线;
+      图形.fillRect(
+        Math.round((中心X + Math.cos(角) * 距) / p) * p,
+        Math.round((中心Y + Math.sin(角) * 距) / p) * p,
+        p,
+        p,
+      );
+    }
+    图形.restore();
+    return;
+  }
   图形.lineStyle(2 * 比例, 0xfff3bf, 0.95 * 透明度);
   for (let i = 0; i < 8; i++) {
     const 角 = (i * Math.PI) / 4;
@@ -75,6 +96,21 @@ export function 绘制结算金币(
   const 目标Y = 定位.金币行Y;
   const 画币 = (x: number, y: number, 大小: number, 透明度: number) => {
     if (大小 <= 0 || 透明度 <= 0) return;
+    if (是像素风格()) {
+      const 图案 = 对局像素规格.特效.金币图案;
+      const 格 = Math.max(1, Math.floor(大小 / 图案.length));
+      图形.save().setAlpha(透明度 * 总透明度);
+      绘制像素图案(
+        图形,
+        图案,
+        Math.round(x - (图案[0].length * 格) / 2),
+        Math.round(y - (图案.length * 格) / 2),
+        格,
+        像素规范.色.黄,
+      );
+      图形.restore();
+      return;
+    }
     图形
       .save()
       .setAlpha(透明度 * 总透明度)

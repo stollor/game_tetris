@@ -61,11 +61,21 @@ try {
   await 页.goto(地址);
   await 页.waitForFunction(() => !!window.__three版__);
   await 页.bringToFront();
-  // 使用隔离存档，三种主题都实际进入对局；更新走与设置页相同的服务。
-  for (const 样式 of ["极光原野", "夜空鎏金", "暖纸古典"] as const) {
+  // 使用隔离存档，完整主题都实际进入对局；更新走与设置页相同的服务。
+  const 套装 = [
+    { 名: "极光原野", 变化: { 样式: "极光原野" } },
+    { 名: "夜空鎏金", 变化: { 样式: "夜空鎏金" } },
+    { 名: "暖纸古典", 变化: { 样式: "暖纸古典" } },
+    { 名: "砖机液晶", 变化: { 主题选择: "砖机液晶" } },
+    { 名: "街机彩砖", 变化: { 主题选择: "街机彩砖" } },
+    { 名: "立体晶格", 变化: { 主题选择: "立体晶格" } },
+  ] as const;
+  for (const 项 of 套装) {
+    const 样式 = 项.名;
     await 页.evaluate(
-      (样式) => window.__three版__?.更新设置({ 样式, 背景动态: false, 音效音量: 0, 音乐音量: 0 }),
-      样式,
+      (变化) =>
+        window.__three版__?.更新设置({ ...变化, 背景动态: false, 音效音量: 0, 音乐音量: 0 }),
+      项.变化,
     );
     await 点击("开始游戏");
     await 点击("开始:马拉松");
@@ -81,6 +91,21 @@ try {
     await 页.mouse.click(347, 38);
     assert.equal((await 状态())?.阶段, "进行中", "旧右上区域不再暂停或退出");
     await 截图(`${样式}-对局`);
+    const 对局统计 = await 页.evaluate(() => window.__three版__?.读取统计());
+    if (样式 === "立体晶格") {
+      assert.equal(对局统计?.棋盘表现, "透视");
+      assert.equal(对局统计?.仪表表现, "装置");
+      assert.equal(对局统计?.透视棋盘, true);
+    }
+    if (样式 === "极光原野") {
+      assert.equal(对局统计?.棋盘表现, "平面");
+      assert.equal(对局统计?.仪表表现, "装置");
+      assert.equal(对局统计?.透视棋盘, false);
+    }
+    if (样式 === "砖机液晶" || 样式 === "街机彩砖") {
+      assert.equal(对局统计?.棋盘表现, "平面");
+      assert.equal(对局统计?.透视棋盘, false);
+    }
     const 左转 = await 取按钮("左转");
     await 页.mouse.move(左转.左 + 左转.宽 / 2, 左转.上 + 左转.高 / 2);
     await 页.mouse.down();
@@ -130,6 +155,37 @@ try {
     await 等主菜单();
     记录.push({ 样式, 暂停按钮: 暂停, 动态背景按钮: 开, 起始用时: 前?.有效用时, 暂停用时 });
   }
+  await 页.evaluate(() => window.__three版__?.更新设置({ 主题选择: "极光原野" }));
+  assert.equal(await 页.evaluate(() => window.__three版__?.读取统计().主题), "极光原野");
+  await 页.evaluate(
+    () =>
+      new Promise<void>((完成) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => 完成()));
+      }),
+  );
+  await 截图("极光原野-切回");
+  assert.equal(
+    await 页.evaluate(() => window.__three版__?.读取统计().透视棋盘),
+    false,
+    "离开 3D 对局后释放透视场景",
+  );
+  await 点击("开始游戏");
+  await 点击("开始:马拉松");
+  await 页.waitForFunction(
+    () =>
+      window.__three版__?.读取状态().页面 === "对局" &&
+      window.__three版__?.读取界面().文字?.includes("入场:完成"),
+  );
+  const 切回对局 = await 页.evaluate(() => window.__three版__?.读取统计());
+  assert.equal(切回对局?.棋盘表现, "平面");
+  assert.equal(切回对局?.仪表表现, "装置");
+  assert.equal(切回对局?.透视棋盘, false);
+  await 截图("极光原野-切回对局");
+  await 点击("暂停");
+  await 等暂停(true);
+  await 点击("返回主菜单");
+  await 等主菜单();
+  await 点击("返回");
   for (const 方位 of ["下", "左", "右"] as const) {
     await 点击("设置");
     await 等落位();

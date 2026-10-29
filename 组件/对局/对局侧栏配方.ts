@@ -1,5 +1,9 @@
+import { 像素规范 } from "../../代码/主题/像素/像素规范";
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
+import { 对局像素规格 } from "../../代码/主题/像素/对局像素规格";
 import { 读取霓虹调色板 } from "../../代码/主题/配色/调色板";
 import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
+import { 绘制像素面板 } from "../基础/像素绘制";
 import { 绘制霓虹玻璃 } from "../基础/底板";
 export interface 霓虹侧栏几何 {
   左: number;
@@ -14,6 +18,20 @@ export interface 霓虹侧栏几何 {
 export function 绘制霓虹侧栏(图形: 图形对象, 几何: 霓虹侧栏几何): void {
   const 调色板 = 读取霓虹调色板();
   const { 左, 顶, 宽, 高, 竖屏, 紧凑 } = 几何;
+  if (是像素风格()) {
+    if (!竖屏 && 紧凑) return;
+    const 规 = 对局像素规格.侧栏;
+    绘制像素面板(图形, 左, 顶, 宽, 高);
+    图形
+      .fillStyle(像素规范.色.墨)
+      .fillRect(
+        左 + 规.内边,
+        顶 + 高 - (竖屏 ? 规.页脚竖屏 : 规.页脚横屏),
+        宽 - 规.内边 * 2,
+        像素规范.描边,
+      );
+    return;
+  }
   if (竖屏) {
     绘制霓虹玻璃(图形, 左, 顶, 宽, 高, {
       圆角: 14,
@@ -49,6 +67,22 @@ export function 绘制霓虹侧栏(图形: 图形对象, 几何: 霓虹侧栏几
 export function 绘制传输管道(图: 图形对象, 区域: 矩形): void {
   const 色 = 读取霓虹调色板();
   const { 左: x, 上: y, 宽: w, 高: h } = 区域;
+  if (是像素风格()) {
+    const p = 像素规范.描边;
+    const 规 = 对局像素规格.侧栏;
+    绘制像素面板(图, x, y, w, h, 像素规范.色.夜, 像素规范.色.紫);
+    for (let 上 = y + 规.内边; 上 < y + h - 规.内边; 上 += 规.槽距) {
+      图
+        .fillStyle(像素规范.色.纸)
+        .fillRect(x, 上, p, 规.槽长)
+        .fillRect(x + w - p, 上, p, 规.槽长);
+      图
+        .fillStyle(像素规范.色.青)
+        .fillRect(x + p, 上, p, p)
+        .fillRect(x + w - p * 2, 上, p, p);
+    }
+    return;
+  }
   图.fillStyle(色.棋盘底, 0.94).fillRoundedRect(x + 3, y, w - 6, h, 9);
   图.fillStyle(色.次级面板底, 0.65).fillRect(x + 8, y + 7, w - 16, h - 14);
   for (const 边 of [x + 3, x + w - 7]) {

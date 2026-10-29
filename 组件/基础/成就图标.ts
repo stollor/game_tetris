@@ -1,5 +1,8 @@
+import { 是像素风格 } from "../../代码/主题/像素/像素风格";
+import { 像素图标, 像素图标规格, 成就像素图标 } from "../../代码/主题/像素/界面像素规格";
 import type { 成就定义 } from "../../代码/成就/再消一行成就";
 import type { 图形对象 } from "../../框架/界面/绘制/协议";
+import { 绘制像素图案 } from "./像素绘制";
 
 export type 成就图标编号 = (typeof 成就定义)[number]["编号"];
 
@@ -20,6 +23,17 @@ export const 成就图标编号列表: readonly 成就图标编号[] = [
 
 /** 32×32矢量徽章，以形状对应成就含义；颜色由页面的解锁状态提供。 */
 export function 绘制成就图标(绘图: 图形对象, 编号: 成就图标编号, 颜色: number): void {
+  if (是像素风格()) {
+    绘制像素图案(
+      绘图,
+      像素图标[成就像素图标[编号]],
+      像素图标规格.左,
+      像素图标规格.上,
+      像素图标规格.格,
+      颜色,
+    );
+    return;
+  }
   绘图.save();
   绘图.fillStyle(颜色).lineStyle(2, 颜色);
   const 格 = (x: number, y: number) => 绘图.fillRoundedRect(x, y, 6, 6, 1);
