@@ -325,7 +325,7 @@ async function 验收一个DPR(浏览器实例: Browser, DPR: number) {
     await 页.waitForFunction(() => window.__three版__ !== undefined, undefined, {
       timeout: 20000,
     });
-    await 等待状态((状态) => 状态.页面 === "主界面", "主界面");
+    await 等待状态((状态) => 状态.页面 === "菜单", "菜单");
     await 查找按钮("开始游戏");
 
     await 截图("01-首页", "主界面菜单态，真实 Chromium 模拟视口");
@@ -345,7 +345,7 @@ async function 验收一个DPR(浏览器实例: Browser, DPR: number) {
     const 滚动值 = await 滚动设置到底();
     await 截图("02c-全局设置-下半", `滚动到底部，滚动位置=${滚动值}`);
     await 点击按钮("返回主菜单");
-    await 等待页面("主界面");
+    await 等待页面("菜单");
     await 查找按钮("开始游戏");
 
     // —— 成就 ——
@@ -354,7 +354,7 @@ async function 验收一个DPR(浏览器实例: Browser, DPR: number) {
     await 查找按钮("返回主菜单");
     await 截图("03-成就", "成就列表页");
     await 点击按钮("返回主菜单");
-    await 等待页面("主界面");
+    await 等待页面("菜单");
     await 查找按钮("开始游戏");
 
     // —— 商店 ——
@@ -363,7 +363,7 @@ async function 验收一个DPR(浏览器实例: Browser, DPR: number) {
     await 查找按钮("返回主菜单");
     await 截图("04-商店", "商店页");
     await 点击按钮("返回主菜单");
-    await 等待页面("主界面");
+    await 等待页面("菜单");
     await 查找按钮("开始游戏");
 
     // —— 模式选择 ——

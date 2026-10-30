@@ -85,7 +85,7 @@ try {
   ]);
   await 页.screenshot({ path: join(输出, "历史成就补同步.png") });
   await 点击("返回主菜单");
-  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   await 点击("开始游戏");
   await 点击("开始:马拉松");
   await 页.waitForFunction(

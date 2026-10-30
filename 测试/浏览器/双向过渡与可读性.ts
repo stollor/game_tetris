@@ -100,7 +100,7 @@ try {
   await 点击("商店地点:紫禁朱墙");
   await 截图("08-深色地点商店");
   await 点击("返回主菜单");
-  await 等待页面("主界面");
+  await 等待页面("菜单");
   await 点击("成就");
   await 等待页面("成就");
   await 截图("09-中文成就上半");
@@ -118,7 +118,7 @@ try {
   await 截图("10-中文成就下半");
   assert.equal((await 界面())?.文字?.filter((项) => /:未解锁:|:已解锁:/.test(项)).length, 12);
   await 点击("返回主菜单");
-  await 等待页面("主界面");
+  await 等待页面("菜单");
   await 页.evaluate(() => window.__three版__?.更新设置({ 语言: "English" }));
   await 点击("开始游戏");
   await 稳定();
@@ -129,7 +129,7 @@ try {
   await 等待页面("商店");
   await 截图("12-英文商店");
   await 点击("返回主菜单");
-  await 等待页面("主界面");
+  await 等待页面("菜单");
   await 点击("成就");
   await 等待页面("成就");
   await 截图("13-英文成就");

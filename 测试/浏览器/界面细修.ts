@@ -46,7 +46,7 @@ async function 点击(名称: string) {
 const 等落位 = () =>
   页.waitForFunction(() => !window.__three版__?.读取界面().文字?.includes("页面开合:播放中"));
 async function 等主菜单() {
-  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
 }
 async function 截图(名称: string) {
   await 页.screenshot({ path: join(输出, `${名称}.png`) });

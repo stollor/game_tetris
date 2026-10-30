@@ -1,12 +1,11 @@
-import { 像素规范 } from "../../主题/像素/像素规范";
-import { 是像素风格 } from "../../主题/像素/像素风格";
-import { 是立体风格 } from "../../主题/立体/立体风格";
-import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
-import { 绘制像素面板 } from "./像素绘制";
-import { 绘制金属板 } from "./立体绘制";
+import { 是像素风格 } from "../../../主题/像素/像素风格";
+import { 是立体风格 } from "../../../主题/立体/立体风格";
+import type { 图形对象, 矩形 } from "../../../框架/界面/绘制/协议";
+import { 绘制像素面板 } from "./像素面板";
+import { 绘制金属板 } from "./金属板";
 
 /**
- * 覆盖页面板/分隔线：复刻 Phaser `Rectangle`（`setStrokeStyle` / 高 1 的填充矩形）的落地像素。
+ * 覆盖页面板：复刻 Phaser `Rectangle`（`setStrokeStyle` / 高 1 的填充矩形）的落地像素。
  *
  * Phaser 用画布像素绘制，1px 描边/1px 高的矩形在画布像素比为 1 时会被抗锯齿摊到相邻两像素
  * （透明度各半）；画布像素比 ≥2 时 1 逻辑像素正好落在整数设备像素上，是实色两条。
@@ -57,26 +56,4 @@ export function 绘制覆盖页面板(
   绘图.fillRect(左, 上 + 高 - 1, 宽, 1);
   绘图.fillRect(左, 上 + 1, 1, 高 - 2);
   绘图.fillRect(左 + 宽 - 1, 上 + 1, 1, 高 - 2);
-}
-
-/** 覆盖页分组分隔线：`Rectangle(0,0,宽,1)` 的落地。 */
-export function 绘制覆盖页分隔线(
-  绘图: 图形对象,
-  左: number,
-  上: number,
-  宽: number,
-  颜色: number,
-  透明度 = 0.32,
-): void {
-  if (是像素风格()) {
-    绘图.fillStyle(颜色).fillRect(Math.round(左), Math.round(上), Math.round(宽), 像素规范.描边);
-    return;
-  }
-  if (读取画布像素比() >= 2) {
-    绘图.fillStyle(颜色, 透明度).fillRect(左, 上, 宽, 1);
-    return;
-  }
-  绘图.fillStyle(颜色, 透明度 / 2);
-  绘图.fillRect(左, 上 - 1, 宽, 1);
-  绘图.fillRect(左, 上, 宽, 1);
 }

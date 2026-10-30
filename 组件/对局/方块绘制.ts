@@ -1,4 +1,4 @@
-import { type 方块外观名称, type 方块外观方案, 解析方块外观 } from "../../主题/外观/方块外观";
+import { type 方块外观名称, type 方块外观方案, 读取方块外观方案 } from "../../主题/外观/方块外观";
 import { type 方块类型, 预览格子 } from "../../代码/玩法/再消一行";
 import type { 游戏设置 } from "../../代码/设置/游戏设置";
 import { 获取游戏设置 } from "../../代码/设置/游戏设置";
@@ -14,10 +14,6 @@ export const 控件分类 = "业务" as const;
  */
 
 export type { 方块外观名称, 方块外观方案 };
-
-export function 读取方块外观方案(设置: 游戏设置 = 获取游戏设置()): 方块外观方案 {
-  return 解析方块外观(设置.方块外观);
-}
 
 export function 读取方块配色(设置: 游戏设置 = 获取游戏设置()): Record<方块类型, number> {
   return { ...读取方块外观方案(设置).颜色 };

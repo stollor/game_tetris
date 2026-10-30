@@ -18,7 +18,7 @@ export interface 性能控制 {
 }
 
 export function 创建性能控制(渲染: 渲染编排, 设置: 设置服务): 性能控制 {
-  let 页面: 页面编号 = "主界面";
+  let 页面: 页面编号 = "菜单";
   let 对局进行中 = false;
   let 省电 = false;
   let 上限 = 60;

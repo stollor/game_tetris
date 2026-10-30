@@ -256,7 +256,7 @@ try {
   await 页.waitForFunction(() => window.__three版__?.读取统计().透视棋盘 === true);
   await 点击("暂停");
   await 点击("返回主菜单");
-  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   assert.equal(await 页.evaluate(() => window.__three版__?.读取统计().透视棋盘), false);
   assert.deepEqual(错误, []);
   const 结果 = {

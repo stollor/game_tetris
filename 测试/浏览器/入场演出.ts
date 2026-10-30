@@ -93,7 +93,7 @@ async function 截图(名: string) {
   });
 }
 async function 入模式页() {
-  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   if ((await 界面())?.按钮.some((项) => 项.名称 === "开始游戏")) await 点击("开始游戏");
   await 页.waitForFunction(() =>
     window.__three版__?.读取界面().按钮.some((项) => 项.名称 === "开始:马拉松"),

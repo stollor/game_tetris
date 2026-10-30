@@ -49,7 +49,7 @@ try {
   await 页.screenshot({ path: join(输出, "00-菜单.png") });
   for (const 页面 of ["设置", "成就", "商店"] as const) {
     for (const 关闭方式 of ["按钮", "Escape"] as const) {
-      assert.equal(await 当前页(), "主界面");
+      assert.equal(await 当前页(), "菜单");
       const 开始 = Date.now();
       await 点(await 取按钮(页面));
       assert.equal(await 当前页(), 页面);
@@ -90,9 +90,9 @@ try {
       if (关闭方式 === "按钮") {
         await 页.screenshot({ path: join(输出, `${页面}-03-关闭中.png`) });
       }
-      await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+      await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
       const 栈 = await 页.evaluate(() => window.__three版__?.读取状态().场景栈);
-      assert.deepEqual(栈, ["主界面"], "不重复返回或遗留页面");
+      assert.deepEqual(栈, ["菜单"], "不重复返回或遗留页面");
       记录.push({ 页面, 关闭方式, 持续毫秒: 打开毫秒 });
       await 页.waitForTimeout(80);
     }
@@ -109,7 +109,7 @@ try {
     if (值 !== undefined) window.__three版__?.更新设置({ 音效音量: 值 });
   }, 原音量);
   await 点(await 取按钮("返回主菜单"));
-  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   await 页.screenshot({ path: join(输出, "99-返回菜单.png") });
   assert.deepEqual(错误, []);
   await writeFile(

@@ -12,7 +12,7 @@ import type { 点, 矩形 } from "../../框架/界面/绘制/协议";
 import type { 画笔 } from "../../框架/界面/绘制/画笔";
 import { 混色 } from "../../框架/界面/颜色工具";
 import { type 计分反馈视图, 读取滚动数位 } from "../../视效/特效/计分反馈";
-import { 绘制像素面板 } from "../基础/像素绘制";
+import { 绘制像素面板 } from "../基础/面板/像素面板";
 import { 绘制立体仪表 } from "./立体对局绘制";
 
 export const 控件分类 = "业务" as const;

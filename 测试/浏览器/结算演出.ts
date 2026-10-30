@@ -171,7 +171,7 @@ try {
   await 等时间(1000);
   await 截图("08-零分新局也有入场");
   await 点击("返回主菜单");
-  await 页.waitForFunction(() => window.__three版__?.读取状态().场景栈.at(-1) === "主界面");
+  await 页.waitForFunction(() => window.__three版__?.读取状态().场景栈.at(-1) === "菜单");
   await 页.evaluate(() => window.__three版__?.更新设置({ 语言: "English", 省电模式: "开" }));
   await 页.reload();
   await 页.waitForFunction(() => window.__three版__?.读取设置().语言 === "English");

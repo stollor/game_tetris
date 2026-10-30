@@ -1,27 +1,34 @@
 {
   "version": 1,
   "name": "主界面功能流程",
-  "initialState": "开始菜单",
-  "timeoutMs": 5000,
+  "initialState": "菜单",
+  "timeoutMs": 8000,
   "steps": [
     {
-      "name": "打开设置覆盖场景",
-      "from": "开始菜单",
-      "action": "menu.settings",
-      "to": "设置界面"
+      "name": "打开设置页面",
+      "from": "菜单",
+      "action": "设置",
+      "to": "设置",
+      "expectInteractives": { "返回主菜单": true }
     },
     {
-      "name": "关闭设置并恢复主界面",
-      "from": "设置界面",
-      "action": "settings.done",
-      "to": "开始菜单"
+      "name": "关闭设置并回到菜单",
+      "from": "设置",
+      "action": "返回主菜单",
+      "to": "菜单"
     },
     {
-      "name": "请求开始游戏",
-      "from": "开始菜单",
-      "action": "menu.start",
-      "to": "开始菜单",
-      "expectTextChanged": true
+      "name": "进入模式选择",
+      "from": "菜单",
+      "action": "开始游戏",
+      "to": "模式选择",
+      "expectTextIncludes": ["过渡:无"]
+    },
+    {
+      "name": "从模式选择返回菜单",
+      "from": "模式选择",
+      "action": "返回",
+      "to": "菜单"
     }
   ]
 }

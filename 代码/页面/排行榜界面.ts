@@ -1,11 +1,10 @@
 import { 派生覆盖页文字样式 } from "../../主题/文字/覆盖页文字";
 import type { Tap排行榜分数 } from "../../框架/平台/TapTap/宿主类型";
 import { type 滚动容器, 滚动容器 as 滚动容器类 } from "../../框架/界面/控件/滚动容器";
-import type { 绘制环境 } from "../../框架/界面/控件/类型";
 import type { 文字项, 矩形 } from "../../框架/界面/绘制/协议";
-import { 页面绘制层, type 页面背景信息 } from "../../框架/界面/页面基类";
-import { 绘制覆盖页按钮, 读取覆盖页按钮文字样式 } from "../../组件/基础/覆盖页按钮配方";
-import { 读取页面语义色, type 页面语义色 } from "../../组件/基础/页面配方";
+import { 页面绘制层 } from "../../框架/界面/页面基类";
+import { 绘制覆盖页按钮, 读取覆盖页按钮文字样式 } from "../../组件/基础/按钮/覆盖页按钮配方";
+import { 读取页面语义色, type 页面语义色 } from "../../主题/配色/页面语义色";
 import {
   生成返回按键文字项,
   由矩形得到装置区域,
@@ -51,8 +50,8 @@ export class 排行榜界面 extends 页面基类 {
   private 上次滚动 = 0;
 
   constructor(上下文: 页面上下文) {
-    // 整页不透明底走背景静层；标题/页签/榜单/按钮走内容层。
-    super(上下文, { 名称: "排行榜", 独占: true });
+    // 整页不透明底、标题与榜单都画在内容层。
+    super(上下文, { 名称: "排行榜", 独占命中: true });
   }
 
   更新(秒: number): void {
@@ -62,10 +61,6 @@ export class 排行榜界面 extends 页面基类 {
       this.上次滚动 = 位置;
       this.标记失效([页面绘制层.内容], "内容");
     }
-  }
-
-  protected 绘制背景静底(_环境: 绘制环境, 信息: 页面背景信息): void {
-    this.上下文.资源.画笔.图形.fillStyle(this.色.面板, 1).fillRect(0, 0, 信息.宽, 信息.高);
   }
 
   进入(): void {
@@ -148,6 +143,8 @@ export class 排行榜界面 extends 页面基类 {
     if (!this.滚动) return;
     const 英文 = this.上下文.服务.语言.是否英文();
     const 色 = this.色;
+    // 整页不透明底：背景层不再替页面画背景，本页自己铺面板色。
+    图形.fillStyle(色.面板, 1).fillRect(0, 0, this.逻辑宽, this.逻辑高);
     const 页面布局 = 计算排行榜页布局(this.逻辑宽, this.逻辑高);
     画笔.绘制文字(
       生成页面文字项(

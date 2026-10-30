@@ -4,7 +4,7 @@ import { 滑块 } from "../../../框架/界面/控件/滑块";
 import type { 绘制环境 } from "../../../框架/界面/控件/类型";
 import { 面板 } from "../../../框架/界面/控件/面板";
 import { type 界面快照, 页面基类 } from "../../../框架/界面/页面基类";
-import { 读取方块外观方案 } from "../../../组件/对局/方块绘制";
+import { 读取方块外观方案 } from "../../../主题/外观/方块外观";
 import type { 页面上下文, 页面工厂 } from "../../应用/接口/上下文";
 import type { 游戏模式 } from "../../玩法/再消一行";
 import { type 对局布局数据, 计算对局布局 } from "../布局/对局布局";
@@ -49,7 +49,8 @@ export class 暂停菜单页面 extends 页面基类<页面上下文> {
   private 取消设置订阅: (() => void) | null = null;
 
   constructor(上下文: 页面上下文) {
-    super(上下文, { 名称: "暂停菜单", 背景: false, 独占: true });
+    // 浮在对局上的普通页面：不暂停对局更新、不遮同层页面（要看见对局）、独占命中。
+    super(上下文, { 名称: "暂停菜单", 不透明: false, 暂停下层: false, 独占命中: true });
   }
 
   进入(): void {
@@ -218,7 +219,7 @@ export class 暂停菜单页面 extends 页面基类<页面上下文> {
     if (名称 === "继续") 暂停宿主?.设置暂停(false);
     else if (名称 === "重开") 暂停宿主?.重新开始();
     else if (名称 === "设置") this.打开设置();
-    else this.上下文.导航.替换("主界面");
+    else this.上下文.导航.替换("菜单");
   }
 
   private 打开设置(): void {
