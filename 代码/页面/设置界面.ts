@@ -847,6 +847,7 @@ export class 设置界面 extends 页面基类 {
       主题: 背景值 as Parameters<typeof 绘制背景>[1]["主题"],
       动态: false,
       时间秒: 0,
+      按名称绘制: true,
     });
     图形.restore();
     画笔.弹出裁剪();
