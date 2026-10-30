@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { 读取游戏主题目录 } from "../代码/主题/主题组合";
-import { 解析方块外观 } from "../代码/主题/外观/方块外观";
-import { 设置预览主题读取 } from "../代码/主题/配色/主题读取";
+import { 读取游戏主题目录 } from "../主题/主题组合";
+import { 解析方块外观 } from "../主题/外观/方块外观";
+import { 设置预览主题读取 } from "../主题/配色/主题读取";
 import type { 方块类型 } from "../代码/玩法/再消一行";
 import { 组装模式卡数据 } from "../代码/界面/模式卡数据";
 import { 默认设置 } from "../代码/设置/游戏设置";

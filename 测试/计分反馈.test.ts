@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { 格式化仪表时间, 计算对局仪表 } from "../代码/界面/对局仪表";
-import { 计分反馈, 读取滚动数位 } from "../代码/视效/特效/计分反馈";
 import { 计算对局布局 } from "../代码/页面/布局/对局布局";
 import { 模式配置 } from "../代码/项目配置/模式";
+import { 计分反馈, 读取滚动数位 } from "../视效/特效/计分反馈";
 
 test("消行先发光、击中后才给数值动画新目标，不提前跳分", () => {
   const 反馈 = new 计分反馈();

@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { 绘制立体晶格背景, 绘制立体晶格背景动态 } from "../代码/视效/背景/立体晶格背景";
 import type { 图形对象 } from "../框架/界面/绘制/协议";
+import { 绘制立体晶格背景, 绘制立体晶格背景动态 } from "../视效/背景/立体晶格背景";
 
 /**
  * 立体晶格专属背景的规则测试：静态底与动态层都能完整绘制、同一时刻输出完全一致、
@@ -245,7 +245,7 @@ test("宽高按比例：多种画幅都能画、宽高非正时安全返回", ()
 });
 
 test("配方文件零颜色字面量、不依赖 Phaser、宽高不写死", () => {
-  const 内容 = readFileSync(join(import.meta.dir, "../代码/视效/背景/立体晶格背景.ts"), "utf8");
+  const 内容 = readFileSync(join(import.meta.dir, "../视效/背景/立体晶格背景.ts"), "utf8");
   expect(内容.match(/0x[0-9a-fA-F]{6}/g) ?? []).toHaveLength(0);
   expect(内容.includes("phaser")).toBe(false);
   // 背景一律按 宽/高 比例计算，不允许写死竖屏基准尺寸。

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { 立体规范 } from "../代码/主题/立体/立体规范";
-import { 计算后墙缩放, 计算房间取景 } from "../代码/视效/透视/取景";
-import { 转颜色向量 } from "../代码/视效/透视/直通颜色";
+import { 立体规范 } from "../主题/立体/立体规范";
+import { 计算后墙缩放, 计算房间取景 } from "../视效/透视/取景";
+import { 转颜色向量 } from "../视效/透视/直通颜色";
 
 const 列 = 10;
 const 行 = 20;

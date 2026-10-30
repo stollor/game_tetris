@@ -1,6 +1,6 @@
+import { 砖机液晶规范, 街机彩砖规范 } from "../../主题/像素/像素规范";
 import type { 音乐条目 } from "../../框架/音频/音乐目录";
 import type { 曲谱 } from "../../框架/音频/音乐编排";
-import { 砖机液晶规范, 街机彩砖规范 } from "../主题/像素/像素规范";
 import { 地点皮肤表 } from "./旅行地点";
 
 export const 像素曲谱: 曲谱 = {

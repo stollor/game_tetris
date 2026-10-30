@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import { 立体规范 } from "../../代码/主题/立体/立体规范";
+import { 立体规范 } from "../../主题/立体/立体规范";
 import type {} from "../../代码/应用/启动";
 import { type 再消一行状态, 读取格子 } from "../../代码/玩法/再消一行";
-import { 计算房间取景 } from "../../代码/视效/透视/取景";
 import { 计算对局布局 } from "../../代码/页面/布局/对局布局";
+import { 计算房间取景 } from "../../视效/透视/取景";
 
 /** 真实 Chrome 手机模拟：视觉像素、触屏按钮、消行与跨主题资源释放。 */
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";

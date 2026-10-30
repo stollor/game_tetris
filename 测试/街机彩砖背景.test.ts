@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { 绘制街机彩砖背景, 绘制街机彩砖背景动态 } from "../代码/视效/背景/街机彩砖背景";
 import type { 图形对象 } from "../框架/界面/绘制/协议";
+import { 绘制街机彩砖背景, 绘制街机彩砖背景动态 } from "../视效/背景/街机彩砖背景";
 
 /**
  * 街机彩砖背景的规则测试：静态底与动态层都能完整绘制、同一时刻可复现、亮度只缩放透明度，
@@ -241,7 +241,7 @@ test("宽高按比例推导，尺寸非法时安全返回", () => {
 });
 
 test("纯配方不依赖 Phaser、不出现颜色字面量，只 import 允许的模块", () => {
-  const 文件 = join(import.meta.dir, "../代码/视效/背景/街机彩砖背景.ts");
+  const 文件 = join(import.meta.dir, "../视效/背景/街机彩砖背景.ts");
   const 内容 = readFileSync(文件, "utf8");
   expect(内容.includes("phaser")).toBe(false);
   expect(内容.match(/0x[0-9a-fA-F]{6}/g) ?? []).toHaveLength(0);

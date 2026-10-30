@@ -1,12 +1,6 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 方块外观方案表 } from "../代码/主题/外观/方块外观";
-import {
-  type 结算飘字外观,
-  绘制结算操作,
-  绘制结算演出,
-  绘制结算飘字,
-} from "../代码/视效/特效/结算演出";
+import { 方块外观方案表 } from "../主题/外观/方块外观";
 import type { 三角形状, 四边形状, 紫外线矩形 } from "../框架/界面/图元合批";
 import { 图元合批 } from "../框架/界面/图元合批";
 import { 创建界面配色, 矩形相交 } from "../框架/界面/控件/工具";
@@ -18,6 +12,7 @@ import { 创建文字服务, type 文字图集接口 } from "../框架/界面/�
 import { 创建画笔, type 画笔, type 画笔合批接口, type 资源层 } from "../框架/界面/绘制/画笔";
 import { 成就图标编号列表 } from "../组件/基础/成就图标";
 import { 计算霓虹结算布局 } from "../组件/结算/结算台配方";
+import { type 结算飘字外观, 绘制结算操作, 绘制结算演出, 绘制结算飘字 } from "../视效/特效/结算演出";
 
 const 白块: 紫外线矩形 = { u: 0, v: 0, 宽: 0.1, 高: 0.1 };
 

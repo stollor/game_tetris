@@ -1,11 +1,10 @@
 import { expect, test } from "bun:test";
-import { 创建游戏主题 } from "../代码/主题/游戏主题";
+import { 创建游戏主题 } from "../主题/游戏主题";
 import type { 收藏结果, 旅行存档 } from "../代码/存档/旅行收藏";
 import type { 加载排行榜结果 } from "../代码/平台/排行榜";
 import type { 页面上下文 } from "../代码/应用/接口/上下文";
 import type { 应用服务, 设置服务 } from "../代码/应用/接口/服务";
 import { 创建语言服务 } from "../代码/应用/服务/语言";
-import { 绘制页面过渡, 页面过渡时长 } from "../代码/视效/过渡/页面过渡";
 import { type 游戏设置, 默认设置 } from "../代码/设置/游戏设置";
 import { 主界面 } from "../代码/页面/主界面";
 import { 商店界面 } from "../代码/页面/商店界面";
@@ -15,6 +14,7 @@ import { 界面流转时长 } from "../框架/界面/流转";
 import { Three图形 } from "../框架/界面/绘制/图形";
 import type { 画笔, 资源层 } from "../框架/界面/绘制/画笔";
 import { 命中分发 } from "../框架/运行时/输入路由";
+import { 绘制页面过渡, 页面过渡时长 } from "../视效/过渡/页面过渡";
 
 /**
  * 主界面纯享态的真实页面实例测试：上下文只提供页面进入/重建会碰到的资源与服务，

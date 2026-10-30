@@ -20,7 +20,7 @@ test("真实设置读取配置表完整主题；已有玩家偏好保留且预�
       const 数据=new Map(${已有 ? `[['gamemaker:settings',JSON.stringify({样式:'暖纸古典',音效音量:25})],['再消一行:设置',JSON.stringify({背景主题:'极光原野',方块外观:'极光原野',显示网格:false})]]` : 情况 === "保存的项目默认" ? `[['再消一行:设置',JSON.stringify({旅行样式:'成都熊猫',旅行音乐:'成都熊猫',旅行音效:'成都熊猫',背景主题:'成都熊猫',方块外观:'成都熊猫'})]]` : "[]"});
       globalThis.localStorage={getItem:k=>数据.get(k)??null,setItem:(k,v)=>数据.set(k,String(v)),removeItem:k=>数据.delete(k)};
       const {获取游戏设置,读取项目默认设置}=await import('./代码/设置/游戏设置.ts');
-      const {读取游戏主题目录}=await import('./代码/主题/主题组合.ts');
+      const {读取游戏主题目录}=await import('./主题/主题组合.ts');
       const 默认=读取项目默认设置();
       for(const 键 of ['背景主题','方块外观','旅行样式','旅行音乐','旅行音效']) assert.equal(默认[键],'成都熊猫');
       const 设置=获取游戏设置();

@@ -1,9 +1,4 @@
-import {
-  主题结果转设置,
-  解析游戏主题,
-  读取游戏主题目录,
-  默认主题编号,
-} from "../../代码/主题/主题组合";
+import { 主题结果转设置, 解析游戏主题, 读取游戏主题目录, 默认主题编号 } from "../../主题/主题组合";
 import { type 游戏设置, 默认设置 } from "../../代码/设置/游戏设置";
 import type {
   界面资源样品,
@@ -49,7 +44,7 @@ export function 读取预览主题解析(状态: Readonly<Record<string, string>
 
 /** 为旧独立样品补齐正式主题上下文，绘制仍调用原配方。 */
 export function 接入资源主题(样品: 界面资源样品, 槽位: readonly string[]): 界面资源样品 {
-  let 读取: typeof import("../../代码/主题/配色/主题读取");
+  let 读取: typeof import("../../主题/配色/主题读取");
   function 在主题内(环境: 界面资源绘制环境, 绘制: (环境: 界面资源绘制环境) => boolean) {
     const 设置 = 读取预览主题设置(环境.状态);
     const 状态 = { ...环境.状态 };
@@ -80,7 +75,7 @@ export function 接入资源主题(样品: 界面资源样品, 槽位: readonly 
     状态: [主题状态, ...样品.状态.filter((字段) => !主题管理字段.includes(字段.键))],
     async 准备资源() {
       const 资源 = await 样品.准备资源?.();
-      读取 = await import("../../代码/主题/配色/主题读取");
+      读取 = await import("../../主题/配色/主题读取");
       return 资源;
     },
     绘制(环境) {

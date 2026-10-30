@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { 颜色值 } from "../代码/主题/配色/主题读取";
-import { 设置预览界面样式, 读取霓虹调色板 } from "../代码/主题/配色/调色板";
+import { 颜色值 } from "../主题/配色/主题读取";
+import { 设置预览界面样式, 读取霓虹调色板 } from "../主题/配色/调色板";
 import { type 地点名称, 地点皮肤表 } from "../代码/框架配置/旅行地点";
 import { 操作键虚拟键 } from "../代码/页面/对局/对局绘制";
 import { type 对局布局操作键, 计算对局布局 } from "../代码/页面/布局/对局布局";

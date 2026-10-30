@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 方块外观方案表 } from "../代码/主题/外观/方块外观";
-import { 游戏外观 } from "../代码/主题/外观/游戏外观";
-import { 读取霓虹文字样式 } from "../代码/主题/文字/文字样式";
-import { 字号档设置, 文字档位配置, 读取档位文字样式, 默认字体栈 } from "../代码/主题/文字/文字配置";
-import { 创建游戏主题 } from "../代码/主题/游戏主题";
+import { 方块外观方案表 } from "../主题/外观/方块外观";
+import { 游戏外观 } from "../主题/外观/游戏外观";
+import { 读取霓虹文字样式 } from "../主题/文字/文字样式";
+import { 字号档设置, 文字档位配置, 读取档位文字样式, 默认字体栈 } from "../主题/文字/文字配置";
+import { 创建游戏主题 } from "../主题/游戏主题";
 import { 默认设置 } from "../代码/设置/游戏设置";
 import { 添加矩形, 绘制文字, 绘制文字行高, type 绘制环境 } from "../代码/页面/对局/对局图元";
 import type { 紫外线矩形 } from "../框架/界面/图元合批";
