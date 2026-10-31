@@ -17,6 +17,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["代码", "资源", "运行", "测试", ".gamemaker/依赖/框架"],
+  "include": ["代码", "资源", "测试", ".gamemaker/依赖/框架"],
   "exclude": ["node_modules"]
 }

@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun ./运行/运行游戏命令.ts ./运行/开发服务器.ts",
-    "build": "bun ./运行/运行游戏命令.ts ./运行/构建游戏.ts",
+    "gm": "bun .gamemaker/依赖/GM/工具链/命令行/主程序.ts",
+    "dev": "bun run gm -- 运行游戏 --端口=3000",
+    "build": "bun run gm -- 打包游戏 再消一行",
+    "build:验收": "bun run gm -- 构建 --验收",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "test": "bun ./运行/运行游戏命令.ts test ./测试",
-    "test:browser": "bun ./运行/运行游戏命令.ts ./测试/浏览器/three版验收.ts",
-    "build:验收": "bun ./运行/运行游戏命令.ts ./运行/构建资源验收.ts"
+    "test": "bun test ./测试",
+    "test:browser": "bun ./测试/浏览器/three版验收.ts"
   },
   "dependencies": {
     "three": "^0.186.1"

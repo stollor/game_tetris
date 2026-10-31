@@ -22,6 +22,7 @@ test("根目录只放项目自己的东西", async () => {
     ".git",
     ".gitattributes",
     ".gitignore",
+    ".vscode",
     "AGENTS.md",
     "GM预览协议.ts",
     "biome.json",
@@ -34,7 +35,6 @@ test("根目录只放项目自己的东西", async () => {
     "代码",
     "测试",
     "资源",
-    "运行",
     "配置",
   ]);
   expect((await readdir(根)).filter((名) => !允许.has(名))).toEqual([]);
