@@ -1,5 +1,4 @@
 import type { Tap排行榜分数 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
-import { 查找节点 } from "../../.gamemaker/依赖/框架/节点/遍历";
 import type { 文字项 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 坐标2D组件 } from "../../.gamemaker/依赖/框架/节点/坐标组件";
 import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
@@ -19,16 +18,16 @@ import {
 } from "../../资源/预制体/模式选择/模式装置";
 import {
   加载排行榜数据,
+  周期标签,
   type 排行榜周期,
   排行榜周期顺序,
-  周期标签,
   格式化排行榜错误,
   格式化榜分数,
 } from "../平台/排行榜";
 import { 请求Tap登录 } from "../平台/登录";
-import { 填充文案, type 游戏文案 } from "../语言/类型";
 import type { 页面上下文 } from "../应用/接口/上下文";
 import type { 游戏模式 } from "../玩法/再消一行";
+import { 填充文案, type 游戏文案 } from "../语言/类型";
 import { 计算排行榜页布局 } from "./布局/覆盖页布局";
 import { 页面基类 } from "./游戏页面基类";
 import { 创建按钮节点, 创建整页绘制节点, 创建文字节点, 更新文字节点 } from "./节点工具";
@@ -84,16 +83,7 @@ export class 排行榜界面 extends 页面基类 {
     this.周期 = "总";
     this.缓存 = { 状态文案: "", 分数列表: [] };
     super.进入();
-    this.确保标题节点();
     void this.刷新在线榜();
-  }
-
-  /** 跨页流转会销毁到达页的「排行榜:标题」；页面常驻，再次进入时按同一份构造补一棵。 */
-  private 确保标题节点(): void {
-    const 根 = this.读取节点根();
-    if (!根 || 查找节点(根, "排行榜:标题")) return;
-    this.标题节点 = this.创建标题节点(根);
-    this.应用注册参数(根);
   }
 
   private 创建标题节点(页面: 节点): 节点 {

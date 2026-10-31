@@ -1,5 +1,4 @@
 import type { 图形对象 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
-import { 查找节点 } from "../../.gamemaker/依赖/框架/节点/遍历";
 import type { 画笔 } from "../../.gamemaker/依赖/框架/界面/绘制/画笔";
 import { 创建注册节点 } from "../../.gamemaker/依赖/框架/节点/注册";
 import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
@@ -80,15 +79,6 @@ export class 纯享页 extends 页面基类 {
     this.场景背景秒 = 0;
     this.背景绘制秒 = 0;
     super.进入();
-    this.确保风景节点();
-  }
-
-  /** 跨页流转会销毁到达页的「纯享:风景」；页面常驻，再次进入时按同一份构造补一棵。 */
-  private 确保风景节点(): void {
-    const 根 = this.读取节点根();
-    if (!根 || 查找节点(根, "纯享:风景")) return;
-    this.风景节点 = this.创建风景节点(根);
-    this.应用注册参数(根);
   }
 
   更新(秒: number): void {
