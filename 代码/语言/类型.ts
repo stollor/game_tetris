@@ -56,8 +56,6 @@ export interface 再消一行文案 {
   模式冲刺: string;
   模式极限: string;
   模式每日挑战: string;
-  模式练习: string;
-  练习目标: string;
   有效用时: string;
   历史最佳: string;
   纪录刷新: string;

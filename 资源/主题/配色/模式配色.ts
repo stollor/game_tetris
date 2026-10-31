@@ -5,7 +5,6 @@ export const 模式配色: Record<游戏模式, number> = {
   冲刺: 0xffee58,
   极限: 0xff2d9b,
   每日挑战: 0x00e676,
-  练习: 0xb388ff,
 };
 
 export function 模式主题色(模式: 游戏模式): number {

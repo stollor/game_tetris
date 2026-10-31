@@ -64,8 +64,6 @@ export const 文案: 再消一行文案 = {
   模式冲刺: "Sprint",
   模式极限: "Ultra",
   模式每日挑战: "Daily",
-  模式练习: "Practice",
-  练习目标: "Level 1",
   有效用时: "Time",
   历史最佳: "Best",
   纪录刷新: "New record",

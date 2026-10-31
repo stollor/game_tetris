@@ -42,7 +42,7 @@ export interface 像素视觉规范 {
   外壳: { 外框: number; 内框: number };
   色: 像素色盘;
   方块: { I: number; O: number; T: number; S: number; Z: number; J: number; L: number };
-  模式: { 马拉松: number; 冲刺: number; 极限: number; 每日挑战: number; 练习: number };
+  模式: { 马拉松: number; 冲刺: number; 极限: number; 每日挑战: number };
   音频: { 节拍: number; 音量: number; 脉冲秒: number };
 }
 
@@ -93,7 +93,6 @@ export const 砖机液晶规范: 像素视觉规范 = {
     冲刺: 像素四色.暗,
     极限: 像素四色.亮,
     每日挑战: 身份(像素四色.墨, 3),
-    练习: 身份(像素四色.暗, 3),
   },
   音频: { 节拍: 96, 音量: 0.12, 脉冲秒: 0.05 },
 };
@@ -138,7 +137,6 @@ export const 街机彩砖规范: 像素视觉规范 = {
     冲刺: 0xff9a3c,
     极限: 0xff5a7a,
     每日挑战: 0xc46bff,
-    练习: 0x5dff7a,
   },
   音频: { 节拍: 120, 音量: 0.14, 脉冲秒: 0.05 },
 };

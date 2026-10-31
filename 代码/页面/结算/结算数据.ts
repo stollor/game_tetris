@@ -1,5 +1,5 @@
 import type { 对局纪录 } from "../../存档/对局纪录";
-import type { 收藏原因编号, 对局奖励输入 } from "../../存档/收藏";
+import type { 对局奖励输入, 收藏原因编号 } from "../../存档/收藏";
 import type { 对局结果 } from "../../应用/接口/服务";
 import { type 再消一行状态, 是否使用马拉松结算重开锁, type 游戏模式 } from "../../玩法/再消一行";
 import { 填充文案, type 游戏文案 } from "../../语言/类型";
@@ -144,8 +144,7 @@ export function 生成结算统计(
 
 /** 由规则状态生成结算输入：马拉松/每日挑战不记用时，冲刺/极限记有效用时。 */
 export function 生成对局结果(模式: 游戏模式, 状态: 再消一行状态, 日期: string): 对局结果 {
-  const 用时毫秒 =
-    模式 === "马拉松" || 模式 === "每日挑战" || 模式 === "练习" ? null : Math.round(状态.有效用时);
+  const 用时毫秒 = 模式 === "马拉松" || 模式 === "每日挑战" ? null : Math.round(状态.有效用时);
   return {
     模式,
     分数: 状态.分数,
@@ -170,10 +169,7 @@ export function 读取奖励文案(结算: 最近结算, 文案: 游戏文案): 
 }
 
 /** 新解锁成就的展示名：最多两个，其余合并成 +N。 */
-export function 读取成就文案(
-  编号列表: readonly string[],
-  文案: 游戏文案,
-): string {
+export function 读取成就文案(编号列表: readonly string[], 文案: 游戏文案): string {
   const 名称 = 编号列表.map((编号) => 文案.成就名称[编号]).filter((项) => 项 !== undefined);
   if (!名称.length) return "";
   const 前两个 = 填充文案(文案.成就解锁, { 名称: 名称.slice(0, 2).join(" / ") });

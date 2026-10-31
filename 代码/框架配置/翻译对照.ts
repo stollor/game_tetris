@@ -21,7 +21,6 @@ const 界面短语: Record<string, string> = {
   冲刺: "Sprint",
   极限: "Ultra",
   每日挑战: "Daily",
-  练习: "Practice",
   无时间限制: "No time limit",
   不断挑战更高等级与分数: "Chase higher levels and scores",
   "目标 40 行": "Goal 40 lines",
@@ -30,8 +29,6 @@ const 界面短语: Record<string, string> = {
   "120 秒内冲击最高分": "Top score in 120 seconds",
   每日更新: "Updates daily",
   "今天，每个人面对相同序列": "Everyone gets the same sequence today",
-  等级不变: "Fixed level",
-  "等级保持不变，方便反复练习": "Level stays fixed for repeated practice",
   最佳: "Best",
   尚无纪录: "No record yet",
   // 排行榜

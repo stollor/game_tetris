@@ -8,7 +8,7 @@ import { 模式配置 } from "../../项目配置/模式";
  * 规则状态机仍在 代码/玩法/再消一行.ts，这里只做「同一天、同一模式」的界面换算。
  */
 
-export const 模式列表: readonly 游戏模式[] = ["马拉松", "冲刺", "极限", "每日挑战", "练习"];
+export const 模式列表: readonly 游戏模式[] = ["马拉松", "冲刺", "极限", "每日挑战"];
 
 export function 读取每日日期(时间 = new Date()): string {
   // 与 Phaser 版/每日种子保持一致：UTC 日期，跨时区同日同序列。
@@ -23,8 +23,6 @@ export function 模式名称(模式: 游戏模式, 文案: 游戏文案): string
       return 文案.模式极限;
     case "每日挑战":
       return 文案.模式每日挑战;
-    case "练习":
-      return 文案.模式练习;
     default:
       return 文案.模式马拉松;
   }
@@ -39,8 +37,6 @@ export function 模式目标文案(模式: 游戏模式, 文案: 游戏文案): 
       return `${Math.round(模式配置.极限毫秒 / 1000)}s`;
     case "每日挑战":
       return 文案.模式每日挑战;
-    case "练习":
-      return 文案.练习目标;
     default:
       return `目标 ${模式配置.马拉松目标行数}L`;
   }

@@ -115,12 +115,9 @@ describe("模式装置", () => {
     expect(冲刺.色值).toBe(0xffee58);
     expect(冲刺.强调色).toBe("#ffee58");
     expect(每日.标题).toBe("DAILY");
+    expect(每日.细节).toBe("TODAY");
+    expect(每日.有排行).toBe(true);
     expect(每日.色值).toBe(0x00e676);
-    const 练习 = 组装模式卡数据("练习", true, null);
-    expect(练习.标题).toBe("PRACTICE");
-    expect(练习.细节).toBe("LEVEL 1");
-    expect(练习.有排行).toBe(false);
-    expect(练习.色值).toBe(0xb388ff);
     const 排行 = 计算模式卡排行区域({ 中心X: 200, 中心Y: 300, 宽: 340, 高: 96 });
     expect(排行.宽).toBe(30);
     expect(排行.高).toBe(30);
@@ -147,11 +144,11 @@ describe("模式装置", () => {
     expect(矮名?.样式.字号).toBeLessThan(矮选择?.样式.字号 ?? 0);
   });
 
-  test("手机模式选择放下五张卡，练习卡停在返回键上方", () => {
+  test("手机模式选择放下四张卡，末卡停在返回键上方", () => {
     const 布局 = 计算主界面布局(390, 844, "模式选择");
     const 选择 = 布局.模式选择;
     if (!选择) throw new Error("缺少模式选择");
-    expect(选择.卡.map((项) => 项.模式)).toEqual(["马拉松", "冲刺", "极限", "每日挑战", "练习"]);
+    expect(选择.卡.map((项) => 项.模式)).toEqual(["马拉松", "冲刺", "极限", "每日挑战"]);
     const 返回顶 = 选择.返回钮.中心Y - 选择.返回钮.高 / 2;
     for (const 项 of 选择.卡) {
       expect(项.中心Y - 项.高 / 2).toBeGreaterThan(选择.标题.y);

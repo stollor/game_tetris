@@ -9,14 +9,13 @@ import type { 游戏模式 } from "../玩法/再消一行";
  * 再交给 `资源/预制体/模式选择/模式卡配方.ts` 绘制。不读存档、不画像素。
  */
 
-const 英文标题 = ["MARATHON", "SPRINT", "ULTRA", "DAILY", "PRACTICE"];
-const 英文细节 = ["ENDLESS", "40 LINES", "120 SEC", "TODAY", "LEVEL 1"];
+const 英文标题 = ["MARATHON", "SPRINT", "ULTRA", "DAILY"];
+const 英文细节 = ["ENDLESS", "40 LINES", "120 SEC", "TODAY"];
 const 英文说明 = [
   "Keep climbing. Beat your best.",
   "Clear 40 lines as fast as you can.",
   "Score as much as possible in 120s.",
   "Same sequence for everyone today.",
-  "Level stays at 1, so you can practice.",
 ];
 
 /** 模式在 `游戏模式顺序` 中的位次，用于取英文对照文案。 */
@@ -35,6 +34,6 @@ export function 组装模式卡数据(模式: 游戏模式, 英文: boolean, 纪
     强调色: 模式主题色文本(模式),
     色值: 模式主题色(模式),
     装置: 模式,
-    有排行: 模式 !== "练习",
+    有排行: true,
   };
 }
