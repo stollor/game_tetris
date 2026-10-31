@@ -22,7 +22,7 @@
       "from": "菜单",
       "action": "开始游戏",
       "to": "模式选择",
-      "expectTextIncludes": ["过渡:无"]
+      "expectTextIncludes": ["开合:无"]
     },
     {
       "name": "从模式选择返回菜单",
