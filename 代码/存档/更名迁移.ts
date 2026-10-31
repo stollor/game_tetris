@@ -3,6 +3,8 @@
  * 旧设置键和旧成就编号只在这里读取一次，迁移成功后写回新名并删除旧键。
  */
 
+import { 收藏存档键, 旧收藏存档键 } from "./收藏";
+
 export interface 迁移存储 {
   getItem(键: string): string | null;
   setItem(键: string, 值: string): void;
@@ -12,7 +14,6 @@ export interface 迁移存储 {
 const 旧设置键 = "俄罗斯方块:设置";
 const 新设置键 = "再消一行:设置";
 const 成就存档键 = "neon-pulse:achievements";
-const 收藏存档键 = "旅行版:收藏";
 const 旧四行编号 = "tetris";
 const 新四行编号 = "four-lines";
 
@@ -81,16 +82,22 @@ function 迁移成就存档(存储: 迁移存储): void {
   存储.setItem(成就存档键, JSON.stringify(载荷));
 }
 
+/**
+ * 收藏存档的成就编号改名：旧键（旅行皮肤版）与新键（主题版）都改一次，
+ * 新键不存在时收藏会在首次读取时从旧键迁移，改完旧键才能继承正确的编号。
+ */
 function 迁移收藏存档(存储: 迁移存储): void {
-  const 原文 = 存储.getItem(收藏存档键);
-  if (原文 === null) return;
-  const 载荷 = 读取载荷(原文);
-  const 数据 = 载荷?.数据;
-  if (!载荷 || !是记录(数据) || !Array.isArray(数据.已领成就)) return;
-  const 已领成就 = 数据.已领成就;
-  if (!已领成就.includes(旧四行编号)) return;
-  数据.已领成就 = [...new Set(已领成就.map((项) => (项 === 旧四行编号 ? 新四行编号 : 项)))];
-  存储.setItem(收藏存档键, JSON.stringify(载荷));
+  for (const 键 of [旧收藏存档键, 收藏存档键]) {
+    const 原文 = 存储.getItem(键);
+    if (原文 === null) continue;
+    const 载荷 = 读取载荷(原文);
+    const 数据 = 载荷?.数据;
+    if (!载荷 || !是记录(数据) || !Array.isArray(数据.已领成就)) continue;
+    const 已领成就 = 数据.已领成就;
+    if (!已领成就.includes(旧四行编号)) continue;
+    数据.已领成就 = [...new Set(已领成就.map((项) => (项 === 旧四行编号 ? 新四行编号 : 项)))];
+    存储.setItem(键, JSON.stringify(载荷));
+  }
 }
 
 /** 幂等；新旧数据同时存在时取进度较大者并保留更早的解锁时间。 */

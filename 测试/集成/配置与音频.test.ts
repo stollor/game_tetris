@@ -33,9 +33,9 @@ describe("框架配置音频表", () => {
     expect(() => 校验音效库(音效库)).not.toThrow();
   });
 
-  test("十八种音效全部登记", () => {
+  test("十八种基础音效全部登记", () => {
     const 名称 = 音效库
-      .filter((项) => 项.id.startsWith("再消一行."))
+      .filter((项) => 项.id.startsWith("再消一行.") && !项.名称.endsWith("氛围"))
       .map((项) => 项.名称)
       .sort();
     expect(名称).toEqual(
@@ -69,22 +69,21 @@ describe("框架配置音频表", () => {
     ]);
   });
 
-  test("十二套旅行曲谱互不雷同", () => {
-    const 旅行 = 音乐库.filter((项) => 项.id.startsWith("旅行.") && 项.类型 === "曲谱");
-    expect(旅行.length).toBe(12);
-    const 谱 = 旅行.map((项) => (项.类型 === "曲谱" ? 项.曲谱 : undefined));
-    expect(new Set(谱.map((项) => JSON.stringify(项))).size).toBe(12);
-    expect(new Set(谱.map((项) => 项?.主音频率)).size).toBeGreaterThanOrEqual(10);
-    expect(new Set(谱.map((项) => 项?.气质)).size).toBeGreaterThanOrEqual(3);
+  test("像素主题各有一首主题曲，互不雷同", () => {
+    const 主题曲 = 音乐库.filter((项) => 项.id.endsWith(".主题") && 项.类型 === "曲谱");
+    expect(主题曲.map((项) => 项.id).sort()).toEqual(["砖机液晶.主题", "街机彩砖.主题"]);
+    const 谱 = 主题曲.map((项) => (项.类型 === "曲谱" ? JSON.stringify(项.曲谱) : ""));
+    expect(new Set(谱).size).toBe(2);
   });
 
-  test("十六处风景都有独立氛围谱", () => {
-    expect(Object.keys(场景氛围表)).toHaveLength(16);
-    expect(音效库.filter((项) => 项.id.startsWith("旅行.氛围.")).map((项) => 项.id)).toEqual(
-      Object.keys(场景氛围表).map((主题) => `旅行.氛围.${主题}`),
+  test("四套主题都有独立氛围谱", () => {
+    expect(Object.keys(场景氛围表).sort()).toEqual(
+      ["极光原野", "砖机液晶", "街机彩砖", "立体晶格"].sort(),
     );
-    const 指纹 = Object.values(场景氛围表).map((项) => JSON.stringify(项.循环));
-    expect(new Set(指纹).size).toBe(16);
+    expect(音效库.filter((项) => 项.id.startsWith("再消一行.氛围.")).map((项) => 项.id)).toEqual(
+      Object.keys(场景氛围表).map((主题) => `再消一行.氛围.${主题}`),
+    );
+    for (const 配方 of Object.values(场景氛围表)) expect(配方.循环.length).toBeGreaterThan(0);
   });
 
   test("冲刺完赛用胜利音，未完赛用结束音", () => {

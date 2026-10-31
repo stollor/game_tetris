@@ -1,8 +1,9 @@
+import { 收藏存档键 } from "../存档/收藏";
 import { Tap应用 } from "./配置";
 
 export const 云快照版本 = 1 as const;
 
-const 固定键 = ["旅行版:收藏", "neon-pulse:achievements"] as const;
+const 固定键 = [收藏存档键, "neon-pulse:achievements"] as const;
 
 export interface 云存档快照 {
   version: typeof 云快照版本;

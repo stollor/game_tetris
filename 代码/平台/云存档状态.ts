@@ -1,3 +1,5 @@
+import { 按英文取文案 } from "../语言/文案";
+import { 填充文案 } from "../语言/类型";
 import { 本地更新时间 } from "./云存档快照";
 import { 格式化用户身份文案, 读取Tap用户身份 } from "./用户身份";
 
@@ -44,26 +46,20 @@ export function 订阅云同步状态(回调: () => void): () => void {
 }
 
 export function 格式化云同步文案(状态: 云同步状态快照, 英文 = false): string {
+  const 文案 = 按英文取文案(英文);
   const 时 =
     状态.上次成功时间 && Number.isFinite(状态.上次成功时间)
-      ? new Date(状态.上次成功时间).toLocaleString("zh-CN", { hour12: false })
+      ? new Date(状态.上次成功时间).toLocaleString(英文 ? "en-US" : "zh-CN", { hour12: false })
       : "";
   const 用户 = 格式化用户身份文案(读取Tap用户身份(), 英文);
-  const 附 = (主: string) => (用户 ? `${主} · ${用户}` : 主);
-  if (英文) {
-    if (状态.状态 === "同步中") return 附("Syncing…");
-    if (状态.状态 === "已同步") return 附(时 ? `Synced ${时}` : "Synced");
-    if (状态.状态 === "失败") return 附(`Sync failed · ${状态.原因 || "error"}`);
-    if (状态.状态 === "未登录") return "Sign in to TapTap to sync";
-    if (状态.状态 === "无能力") return "Cloud save unavailable here";
-    if (状态.状态 === "跳过") return 附(状态.原因 || "Skipped");
-    return 附("Cloud save");
-  }
-  if (状态.状态 === "同步中") return 附("云存档同步中…");
-  if (状态.状态 === "已同步") return 附(时 ? `云存档已同步 · ${时}` : "云存档已同步");
-  if (状态.状态 === "失败") return 附(`云存档失败 · ${状态.原因 || "未知错误"}`);
-  if (状态.状态 === "未登录") return "未登录 TapTap，无法同步云存档";
-  if (状态.状态 === "无能力") return "当前环境不支持云存档";
-  if (状态.状态 === "跳过") return 附(状态.原因 || "已跳过同步");
-  return 附("云存档");
+  const 附 = (主: string) => (用户 ? 填充文案(文案.云同步附带, { 主, 用户 }) : 主);
+  if (状态.状态 === "同步中") return 附(文案.云同步中);
+  if (状态.状态 === "已同步")
+    return 附(时 ? 填充文案(文案.云同步已同步时间, { 时间: 时 }) : 文案.云同步已同步);
+  if (状态.状态 === "失败")
+    return 附(填充文案(文案.云同步失败, { 原因: 状态.原因 || 文案.未知错误 }));
+  if (状态.状态 === "未登录") return 文案.云同步未登录;
+  if (状态.状态 === "无能力") return 文案.云同步无能力;
+  if (状态.状态 === "跳过") return 附(状态.原因 || 文案.云同步跳过);
+  return 附(文案.云同步默认);
 }

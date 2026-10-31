@@ -1,4 +1,5 @@
 import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
+import { 按英文取文案 } from "../语言/文案";
 
 export interface 登录结果 {
   完成: boolean;
@@ -7,24 +8,25 @@ export interface 登录结果 {
 }
 
 /** 引导 Tap 登录；浏览器无宿主时友好失败，不抛错。 */
-export function 请求Tap登录(): Promise<登录结果> {
+export function 请求Tap登录(英文 = false): Promise<登录结果> {
+  const 文案 = 按英文取文案(英文);
   const 能力 = 探测Tap能力();
   if (!能力.在Tap容器) {
-    return Promise.resolve({ 完成: false, 原因: "请在 TapTap App 内打开游戏后再登录" });
+    return Promise.resolve({ 完成: false, 原因: 文案.登录需App内打开 });
   }
   if (!能力.有登录) {
-    return Promise.resolve({ 完成: false, 原因: "当前环境不支持登录" });
+    return Promise.resolve({ 完成: false, 原因: 文案.登录环境不支持 });
   }
   const 宿主 = 读取Tap宿主();
-  if (!宿主?.login) return Promise.resolve({ 完成: false, 原因: "登录接口不可用" });
+  if (!宿主?.login) return Promise.resolve({ 完成: false, 原因: 文案.登录接口不可用 });
   return new Promise((resolve) => {
     try {
       宿主.login!({
         success: (res) => {
-          if (res?.code) resolve({ 完成: true, 原因: "已登录", code: res.code });
-          else resolve({ 完成: false, 原因: res?.errMsg || "登录未返回凭证" });
+          if (res?.code) resolve({ 完成: true, 原因: 文案.登录已登录, code: res.code });
+          else resolve({ 完成: false, 原因: res?.errMsg || 文案.登录未返回凭证 });
         },
-        fail: (err) => resolve({ 完成: false, 原因: err?.errMsg || "登录失败" }),
+        fail: (err) => resolve({ 完成: false, 原因: err?.errMsg || 文案.登录失败 }),
       });
     } catch (e) {
       resolve({ 完成: false, 原因: e instanceof Error ? e.message : String(e) });

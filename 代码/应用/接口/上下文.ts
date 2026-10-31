@@ -42,7 +42,7 @@ export function 是浮层页面(页面: string): boolean {
   return (浮层页面 as readonly string[]).includes(页面);
 }
 
-/** 纯享页的风景来源：菜单从已解锁风景切，商店从旅行地点切。 */
+/** 纯享页的入口来源：菜单与商店各自回到自己的页面。 */
 export type 纯享来源 = "菜单" | "商店";
 
 /** 页面参数：导航时带过去的最小数据，其它状态从服务读取。 */

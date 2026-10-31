@@ -25,6 +25,7 @@ import {
 import { 新对局编号 } from "../../../代码/玩法/对局编号";
 import { 选择演示落点 } from "../../../代码/玩法/演示落子";
 import { 获取技巧反馈 } from "../../../代码/界面/技巧反馈";
+import { 获取文案 } from "../../../代码/语言/文案";
 import { 模式配置 } from "../../../代码/项目配置/模式";
 
 // ── 原 玩法.test.ts ──
@@ -611,7 +612,7 @@ describe("暂存技巧", () => {
     expect(e?.连续高难).toBe(true);
     expect(e?.得分).toBe(s.分数 - 分数);
     if (!e) throw new Error("缺少真实落块事件");
-    const 文案 = 获取技巧反馈(e, false);
+    const 文案 = 获取技巧反馈(e, 获取文案("简体中文"));
     expect(文案).toContain("完美清场");
     expect(文案).toContain("四连消");
     expect(文案).toContain("连击 ×2");
@@ -629,8 +630,8 @@ describe("暂存技巧", () => {
       连续高难: false,
       得分: 400,
     };
-    expect(获取技巧反馈(e, true)).toContain("T-SPIN");
-    expect(获取技巧反馈({ ...e, T旋: "无", 得分: 0 }, false)).toBe("");
+    expect(获取技巧反馈(e, 获取文案("English"))).toContain("T-SPIN");
+    expect(获取技巧反馈({ ...e, T旋: "无", 得分: 0 }, 获取文案("简体中文"))).toBe("");
   });
 });
 

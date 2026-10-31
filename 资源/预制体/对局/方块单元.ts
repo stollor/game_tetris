@@ -1,14 +1,7 @@
-import { 是像素风格 } from "../../主题/像素/像素风格";
-import {
-  type 方块外观名称,
-  type 方块外观方案,
-  解析方块外观,
-  读取当前方块外观,
-} from "../../主题/外观/方块外观";
-import { 获取游戏设置 } from "../../../代码/设置/游戏设置";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 亮色, 暗色 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
-import { 绘制地点纹样 } from "../外观/旅行纹样";
+import { 是像素风格 } from "../../主题/像素/像素风格";
+import { type 方块外观名称, type 方块外观方案, 解析方块外观 } from "../../主题/外观/方块外观";
 import { 绘制糖果方块 } from "./像素对局绘制";
 
 export interface 方块单元外观 {
@@ -31,7 +24,7 @@ export interface 方块单元绘制参数 extends 方块单元外观 {
 export function 解析方块单元方案(外观: 方块单元外观): 方块外观方案 {
   if (typeof 外观.方案 === "object") return 外观.方案;
   if (typeof 外观.方案 === "string") return 解析方块外观(外观.方案);
-  return 读取当前方块外观(获取游戏设置().方块外观);
+  return 解析方块外观(undefined);
 }
 
 /**
@@ -47,8 +40,7 @@ export function 绘制方块单元(绘图: 图形对象, x: number, y: number, �
   const 格子 = 外观.格子;
   const 方案 = 外观.方案;
   const 透明度 = 外观.透明度 ?? 1;
-  const 圆角 =
-    方案.质感 === "金属" || 方案.质感 === "像素" ? 0 : Math.max(2, 格子 * (外观.圆角比例 ?? 0.15));
+  const 圆角 = 方案.质感 === "像素" ? 0 : Math.max(2, 格子 * (外观.圆角比例 ?? 0.15));
   if (外观.幽灵) {
     绘制幽灵单元(绘图, x, y, 格子, 圆角, 外观.色值, 透明度);
     return;
@@ -56,61 +48,6 @@ export function 绘制方块单元(绘图: 图形对象, x: number, y: number, �
   const 色值 = 外观.色值;
   const 深 = 暗色(色值, 0.52);
   const 内缩 = Math.max(1, 格子 * 0.07);
-  if (方案.质感 === "柔瓷") {
-    const 弧 = 格子 * 0.26;
-    绘图.fillStyle(暗色(色值, 0.26), 透明度).fillRoundedRect(x, y + 1, 格子 - 1, 格子 - 1, 弧);
-    绘图.fillStyle(色值, 透明度).fillRoundedRect(x + 1, y, 格子 - 3, 格子 - 3, 弧);
-    绘图
-      .fillStyle(亮色(色值, 0.65), 透明度 * 0.5)
-      .fillRoundedRect(x + 格子 * 0.18, y + 格子 * 0.12, 格子 * 0.62, 格子 * 0.3, 弧 * 0.6);
-    绘图
-      .lineStyle(1, 亮色(色值, 0.65), 透明度 * 0.75)
-      .strokeRoundedRect(x + 1, y, 格子 - 3, 格子 - 3, 弧);
-    if (方案.纹样) 绘制地点纹样(绘图, x, y, 格子, 方案.纹样, 透明度);
-    return;
-  }
-  if (方案.质感 === "金属") {
-    绘图.fillStyle(深, 透明度).fillRect(x, y, 格子 - 1, 格子 - 1);
-    const 带 = [
-      暗色(色值, 0.25),
-      亮色(色值, 0.76),
-      暗色(色值, 0.48),
-      亮色(色值, 0.56),
-      暗色(色值, 0.2),
-    ];
-    for (let i = 0; i < 带.length - 1; i++) {
-      绘图
-        .fillGradientStyle(带[i], 带[i], 带[i + 1], 带[i + 1], 透明度)
-        .fillRect(
-          x + 1,
-          y + 1 + (i * (格子 - 3)) / (带.length - 1),
-          格子 - 3,
-          (格子 - 3) / (带.length - 1) + 0.5,
-        );
-    }
-    绘图.lineStyle(0.5, 0xffffff, 透明度 * 0.06);
-    for (let i = 3; i < 格子 - 2; i += 3) 绘图.lineBetween(x + 2, y + i, x + 格子 - 3, y + i);
-    绘图.lineStyle(1, 亮色(色值, 0.75), 透明度 * 0.9).strokeRect(x + 1, y + 1, 格子 - 3, 格子 - 3);
-    if (方案.纹样) 绘制地点纹样(绘图, x, y, 格子, 方案.纹样, 透明度);
-    return;
-  }
-  if (方案.质感 === "像素") {
-    const 边 = Math.max(1, Math.floor(格子 / 8));
-    绘图.fillStyle(深, 透明度).fillRect(x, y, 格子 - 1, 格子 - 1);
-    绘图.fillStyle(色值, 透明度).fillRect(x + 边, y + 边, 格子 - 边 * 2 - 1, 格子 - 边 * 2 - 1);
-    绘图
-      .fillStyle(亮色(色值, 0.55), 透明度)
-      .fillRect(x + 边, y + 边, 格子 - 边 * 2 - 1, 边)
-      .fillRect(x + 边, y + 边, 边, 格子 - 边 * 2 - 1);
-    for (let 行 = 0; 行 < 3; 行++)
-      for (let 列 = 0; 列 < 3; 列++)
-        if ((行 + 列) % 2 === 0)
-          绘图
-            .fillStyle(亮色(色值, 0.3), 透明度 * 0.42)
-            .fillRect(x + 格子 * (0.28 + 列 * 0.2), y + 格子 * (0.28 + 行 * 0.2), 边, 边);
-    if (方案.纹样) 绘制地点纹样(绘图, x, y, 格子, 方案.纹样, 透明度);
-    return;
-  }
   // 底部柔影，让方块浮在格面上
   绘图.fillStyle(0x000000, 0.32 * 透明度).fillRoundedRect(x + 1, y + 2.5, 格子 - 1, 格子 - 1, 圆角);
   // 外圈包边（深色），形成斜面外沿
@@ -151,7 +88,6 @@ export function 绘制方块单元(绘图: 图形对象, x: number, y: number, �
   绘图
     .lineStyle(1, 亮色(色值, 0.24), 0.62 * 透明度)
     .strokeRoundedRect(x, y, 格子 - 1, 格子 - 1, 圆角);
-  if (方案.纹样) 绘制地点纹样(绘图, x, y, 格子, 方案.纹样, 透明度);
 }
 
 /** 幽灵投影：极弱轮廓提示落点，不与实块抢眼。 */

@@ -1,8 +1,8 @@
 import type { 对局纪录 } from "../../存档/对局纪录";
-import type { 对局奖励输入 } from "../../存档/旅行收藏";
-import type { 对局结果, 成就定义项 } from "../../应用/接口/服务";
+import type { 收藏原因编号, 对局奖励输入 } from "../../存档/收藏";
+import type { 对局结果 } from "../../应用/接口/服务";
 import { type 再消一行状态, 是否使用马拉松结算重开锁, type 游戏模式 } from "../../玩法/再消一行";
-import type { 游戏文案 } from "../../语言/类型";
+import { 填充文案, type 游戏文案 } from "../../语言/类型";
 import { 模式配置 } from "../../项目配置/模式";
 import { 格式化用时, 模式名称 } from "../对局/四模式";
 
@@ -22,7 +22,9 @@ export interface 结算统计项 {
 export interface 金币奖励 {
   新增: number;
   总额: number;
+  /** 已本地化的展示原因；需要判断原因种类时用 原因编号。 */
   原因: string;
+  原因编号?: 收藏原因编号;
 }
 
 export interface 最近结算 {
@@ -156,10 +158,12 @@ export function 生成对局结果(模式: 游戏模式, 状态: 再消一行状
   };
 }
 
-/** 结算面板的金币/存旅行奖励文案，失败时提示点击重试。 */
-export function 读取奖励文案(结算: 最近结算): string {
+/** 结算面板的金币奖励文案，失败时提示点击重试。 */
+export function 读取奖励文案(结算: 最近结算, 文案: 游戏文案): string {
   if (结算.金币) {
-    return 结算.金币.新增 > 0 ? `旅行方块币 +${结算.金币.新增}` : 结算.金币.原因;
+    return 结算.金币.新增 > 0
+      ? 填充文案(文案.方块币奖励, { 数量: 结算.金币.新增 })
+      : 结算.金币.原因;
   }
   if (结算.金币失败原因) return `${结算.金币失败原因}\n点击这里重试`;
   return "";
@@ -168,13 +172,12 @@ export function 读取奖励文案(结算: 最近结算): string {
 /** 新解锁成就的展示名：最多两个，其余合并成 +N。 */
 export function 读取成就文案(
   编号列表: readonly string[],
-  定义表: readonly 成就定义项[],
-  英文: boolean,
+  文案: 游戏文案,
 ): string {
-  const 名称 = 编号列表
-    .map((编号) => 定义表.find((项) => 项.编号 === 编号))
-    .filter((项) => 项 !== undefined)
-    .map((项) => (英文 ? 项.英文 : 项.名称));
+  const 名称 = 编号列表.map((编号) => 文案.成就名称[编号]).filter((项) => 项 !== undefined);
   if (!名称.length) return "";
-  return `成就解锁 · ${名称.slice(0, 2).join(" / ")}${名称.length > 2 ? ` +${名称.length - 2}` : ""}`;
+  const 前两个 = 填充文案(文案.成就解锁, { 名称: 名称.slice(0, 2).join(" / ") });
+  return 名称.length > 2
+    ? `${前两个}${填充文案(文案.成就更多, { 数量: 名称.length - 2 })}`
+    : 前两个;
 }

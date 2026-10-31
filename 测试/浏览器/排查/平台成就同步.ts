@@ -10,7 +10,7 @@ declare global {
     __成就测试__?: { 请求: string[] };
   }
 }
-const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
+const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 const 输出 = resolve(".gamemaker/报告/更新准备/成就浏览器");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
@@ -87,7 +87,7 @@ try {
   await 点击("返回主菜单");
   await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   await 点击("开始游戏");
-  await 点击("开始:马拉松");
+  await 点击("模式:马拉松");
   await 页.waitForFunction(
     () =>
       window.__three版__?.读取界面().文字?.includes("入场:完成") &&

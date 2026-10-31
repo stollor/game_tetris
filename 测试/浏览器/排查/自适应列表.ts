@@ -30,7 +30,7 @@ async function 截图(名称: string) {
   记录.push({ 名称, 界面: await 页.evaluate(() => window.__three版__?.读取界面()) });
 }
 try {
-  await 页.goto(process.argv[2] ?? "http://127.0.0.1:3001");
+  await 页.goto(process.argv[2] ?? "http://127.0.0.1:3000");
   await 页.waitForFunction(() => window.__three版__);
   await 点击("成就");
   await 页.waitForFunction(() => window.__three版__?.读取状态().场景栈.at(-1) === "成就");

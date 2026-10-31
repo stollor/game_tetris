@@ -1,5 +1,7 @@
 import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import type { Tap排行榜管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
+import { 按英文取文案 } from "../语言/文案";
+import { 填充文案 } from "../语言/类型";
 import { 排行榜编号 } from "./配置";
 
 const 存储键 = "旅行版:Tap用户";
@@ -80,8 +82,9 @@ export function 记录Tap用户身份(部分: {
 }
 
 export function 格式化用户身份文案(身份 = 读取Tap用户身份(), 英文 = false): string {
-  if (身份.openid) return 英文 ? `ID ${身份.openid}` : `用户ID ${身份.openid}`;
-  if (身份.nickName) return 英文 ? `User ${身份.nickName}` : `用户 ${身份.nickName}`;
+  const 文案 = 按英文取文案(英文);
+  if (身份.openid) return 填充文案(文案.用户身份ID, { 编号: 身份.openid });
+  if (身份.nickName) return 填充文案(文案.用户身份昵称, { 昵称: 身份.nickName });
   return "";
 }
 

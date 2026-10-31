@@ -12,12 +12,12 @@
     {
       "id": "modes",
       "名称": "游戏模式",
-      "说明": "马拉松、冲刺、极限与每日挑战"
+      "说明": "马拉松、冲刺、极限、每日挑战与练习"
     },
     {
       "id": "experience",
       "名称": "界面与设置",
-      "说明": "主菜单、对局界面、设置与触屏操作"
+      "说明": "主菜单、模式选择、商店、成就、设置、纯享与触屏操作"
     },
     {
       "id": "presentation",
@@ -25,9 +25,14 @@
       "说明": "项目画风、动态反馈、音乐与音效"
     },
     {
+      "id": "quality",
+      "名称": "性能与画质",
+      "说明": "帧率、画质档位、省电模式与按需渲染策略"
+    },
+    {
       "id": "progress",
-      "名称": "成就与纪录",
-      "说明": "成就解锁、本地成绩与存档保护"
+      "名称": "成就、金币与商店",
+      "说明": "成就解锁、金币来源、主题商店与本地成绩"
     }
   ],
   "功能文件": [
@@ -37,16 +42,13 @@
     "sprint.json",
     "ultra.json",
     "daily-challenge.json",
+    "practice.json",
     "menus-settings.json",
     "visual-feedback.json",
     "audio.json",
     "achievements-records.json",
-    "travel-collection.json",
-    "performance-board-layers.json",
-    "performance-scenery.json",
-    "performance-hud.json",
-    "performance-idle.json",
-    "performance-layer-quality.json"
+    "theme-shop.json",
+    "performance-strategy.json"
   ],
   "关系": [
     {
@@ -73,6 +75,11 @@
       "source": "core-rules",
       "target": "daily-challenge",
       "label": "提供每日种子以外的共用规则"
+    },
+    {
+      "source": "core-rules",
+      "target": "practice",
+      "label": "共用棋盘与结算规则"
     },
     {
       "source": "marathon",
@@ -115,29 +122,49 @@
       "label": "提供按日隔离的成绩"
     },
     {
+      "source": "practice",
+      "target": "achievements-records",
+      "label": "提供练习落块与成就事件"
+    },
+    {
       "source": "core-rules",
-      "target": "travel-collection",
+      "target": "theme-shop",
       "label": "提供有效对局成绩与落块计数"
     },
     {
       "source": "achievements-records",
-      "target": "travel-collection",
-      "label": "提供一次性成就与破纪录奖励"
+      "target": "theme-shop",
+      "label": "提供成就解锁与金币领取"
     },
     {
       "source": "menus-settings",
-      "target": "travel-collection",
-      "label": "提供商店、纯享及穿戴入口"
+      "target": "theme-shop",
+      "label": "提供商店、纯享与主题切换入口"
     },
     {
       "source": "visual-feedback",
-      "target": "travel-collection",
-      "label": "提供地域背景与方块表现"
+      "target": "theme-shop",
+      "label": "提供四套主题的背景与方块表现"
     },
     {
       "source": "audio",
-      "target": "travel-collection",
-      "label": "提供每套音乐与音效"
+      "target": "theme-shop",
+      "label": "提供每套主题的音乐与音效"
+    },
+    {
+      "source": "menus-settings",
+      "target": "performance-strategy",
+      "label": "提供省电模式与画质设置入口"
+    },
+    {
+      "source": "core-rules",
+      "target": "performance-strategy",
+      "label": "提供对局状态与渲染负载"
+    },
+    {
+      "source": "visual-feedback",
+      "target": "performance-strategy",
+      "label": "提供背景与特效绘制需求"
     }
   ]
 }

@@ -52,7 +52,7 @@ await 等页面("模式选择");
 await 等过渡结束();
 await 拍("01-模式选择");
 
-await 点("开始:马拉松");
+await 点("模式:马拉松");
 await 等页面("对局");
 await 页.waitForTimeout(2400);
 await 拍("02-对局");

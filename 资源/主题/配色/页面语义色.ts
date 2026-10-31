@@ -1,4 +1,3 @@
-import type { 地点名称 } from "../../../代码/框架配置/旅行地点";
 import type { 样式选择 } from "../../../.gamemaker/依赖/框架/设置/设置";
 import { 界面主题, 颜色值 } from "./主题读取";
 
@@ -18,7 +17,7 @@ export interface 页面语义色 {
   遮罩透明度: number;
 }
 
-export function 读取页面语义色(样式?: 样式选择 | 地点名称): 页面语义色 {
+export function 读取页面语义色(样式?: 样式选择): 页面语义色 {
   const 主题 = 界面主题(样式);
   return {
     背景: 颜色值(主题.页面.背景),

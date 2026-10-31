@@ -58,11 +58,11 @@ async function 截图(名称: string) {
 }
 async function 开局(模式: string) {
   await 点击("开始游戏");
-  await 点击(`开始:${模式}`);
+  await 点击(`模式:${模式}`);
   await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "对局");
 }
 try {
-  await 页.goto(process.argv[2] ?? "http://127.0.0.1:3001");
+  await 页.goto(process.argv[2] ?? "http://127.0.0.1:3000");
   await 页.waitForFunction(() => window.__three版__);
   await 页.evaluate(() =>
     window.__three版__?.更新设置({ 背景动态: false, 省电模式: "关", 样式: "极光原野" }),
@@ -91,7 +91,7 @@ try {
       Storage.prototype.setItem = 原保存;
     });
     Storage.prototype.setItem = function (键, 值) {
-      if (键.includes("旅行版:收藏")) throw new Error("结算验收：模拟保存失败");
+      if (键.includes("再消一行:收藏")) throw new Error("结算验收：模拟保存失败");
       原保存.call(this, 键, 值);
     };
   });

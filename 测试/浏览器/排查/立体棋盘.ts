@@ -68,7 +68,7 @@ try {
     }),
   );
   await 点击("开始游戏");
-  await 点击("开始:马拉松");
+  await 点击("模式:马拉松");
   await 页.waitForFunction(() => window.__three版__?.读取界面().文字?.includes("入场:完成"));
   // 固定序列只用于搭建可复跑局面；横移、落地和软降仍经正式操作入口。
   await 页.evaluate(() =>

@@ -1,14 +1,14 @@
 import { 探测Tap能力 } from "../../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import { 解锁平台成就 } from "../../平台/平台成就";
-import type { 加载排行榜结果 } from "../../平台/排行榜";
-import { 加载排行榜数据, 提交模式分数 } from "../../平台/排行榜";
-import type { 平台服务 } from "../接口/服务";
+import { type 加载排行榜结果, 加载排行榜数据, 提交模式分数 } from "../../平台/排行榜";
+import type { 语言服务, 平台服务 } from "../接口/服务";
 
 /**
  * 平台服务：TapTap 能力在普通浏览器全部关闭，所有方法静默降级、不抛错。
- * 排行榜编号、周期与提交格式仍由 代码/平台/ 决定，这里只做能力判断和错误兜底。
+ * 排行榜编号、周期与提交格式仍由 代码/平台/ 决定，这里只做能力判断和错误兜底；
+ * 兜底文案通过语言服务取字典，不在这里写死中文。
  */
-export function 创建平台服务(): 平台服务 {
+export function 创建平台服务(语言: 语言服务): 平台服务 {
   const 能力 = () => 探测Tap能力();
   const 空榜 = (原因: string): 加载排行榜结果 => ({
     完成: false,
@@ -31,11 +31,12 @@ export function 创建平台服务(): 平台服务 {
       }
     },
     加载排行榜: async (模式, 周期) => {
-      if (!能力().有排行榜) return 空榜("当前环境不支持排行榜");
+      const 文 = 语言.读取();
+      if (!能力().有排行榜) return 空榜(文.排行榜无能力提示);
       try {
         return await 加载排行榜数据({ 模式, 周期 });
       } catch (错误) {
-        return 空榜(错误 instanceof Error ? 错误.message : "排行榜加载失败");
+        return 空榜(错误 instanceof Error ? 错误.message : 文.排行榜查询不可用);
       }
     },
     解锁成就: async (本地编号) => {

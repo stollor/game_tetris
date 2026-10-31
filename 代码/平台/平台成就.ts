@@ -1,7 +1,12 @@
 import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import type { Tap成就管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
+import { 按英文取文案 } from "../语言/文案";
+import { 填充文案, type 游戏文案 } from "../语言/类型";
 import { 是未登录错误 } from "./登录";
 import { 平台成就映射 } from "./配置";
+
+/** 状态原因会落盘并展示，统一用字典的简体中文表；英文界面由 成就同步文案 翻译。 */
+const 文案 = 按英文取文案(false);
 
 export type 成就同步状态码 = "未映射" | "无能力" | "待同步" | "同步中" | "已同步" | "失败";
 
@@ -96,10 +101,18 @@ export function 订阅成就同步状态(回调: () => void): () => void {
   return () => 监听.delete(回调);
 }
 
-export function 解释成就失败(代码?: number, 消息?: string): string {
+interface 失败解读 {
+  文案: string;
+  /** 平台已解锁不算失败；用结构化标记，避免拿中文串做逻辑判断。 */
+  已解锁: boolean;
+  需登录: boolean;
+}
+
+function 解读成就失败(代码?: number, 消息?: string): 失败解读 {
   const 文 = (消息 ?? "").trim();
   const 低 = 文.toLowerCase();
-  if (是未登录错误(代码, 文)) return "未登录 TapTap，请在 App 内重新打开游戏";
+  if (是未登录错误(代码, 文))
+    return { 文案: 文案.平台成就原因未登录, 已解锁: false, 需登录: true };
   if (
     低.includes("pending") ||
     低.includes("publish") ||
@@ -107,43 +120,46 @@ export function 解释成就失败(代码?: number, 消息?: string): string {
     文.includes("未发布") ||
     文.includes("审核")
   )
-    return "成就仍为待发布：请在开发者中心发布，或把账号加为成就测试人员";
+    return { 文案: 文案.平台成就原因待发布, 已解锁: false, 需登录: false };
   if (
     低.includes("not exist") ||
     低.includes("not found") ||
     文.includes("不存在") ||
     代码 === 500001
   )
-    return "平台成就 ID 无效或不存在，请核对配置映射";
+    return { 文案: 文案.平台成就原因ID无效, 已解锁: false, 需登录: false };
   if (低.includes("already") || 文.includes("已解锁") || 文.includes("已经解锁"))
-    return "平台侧已解锁";
-  if (文) return 文;
-  if (代码 != null && Number.isFinite(代码)) return `错误码 ${代码}`;
-  return "未知错误";
+    return { 文案: 文案.平台成就原因已解锁, 已解锁: true, 需登录: false };
+  if (文) return { 文案: 文, 已解锁: false, 需登录: false };
+  if (代码 != null && Number.isFinite(代码))
+    return {
+      文案: 填充文案(文案.平台成就原因错误码, { 代码 }),
+      已解锁: false,
+      需登录: false,
+    };
+  return { 文案: 文案.未知错误, 已解锁: false, 需登录: false };
+}
+
+export function 解释成就失败(代码?: number, 消息?: string): string {
+  return 解读成就失败(代码, 消息).文案;
 }
 
 export function 读取成就同步状态(本地编号: string): 状态项 {
   const 平台编号 = 平台成就映射[本地编号];
-  if (!平台编号) return { 状态: "未映射", 原因: "未配置平台成就 ID", 时间: 0 };
-  if (!探测Tap能力().有成就) return { 状态: "无能力", 原因: "当前环境无成就能力", 时间: 0 };
+  if (!平台编号) return { 状态: "未映射", 原因: 文案.平台成就ID未配置, 时间: 0 };
+  if (!探测Tap能力().有成就) return { 状态: "无能力", 原因: 文案.平台成就环境无能力, 时间: 0 };
   return 状态表.get(本地编号) ?? { 状态: "待同步", 原因: "", 时间: 0 };
 }
 
 export function 成就同步文案(状态: 状态项, 英文 = false): string {
-  if (英文) {
-    if (状态.状态 === "已同步") return "Synced to TapTap";
-    if (状态.状态 === "失败") return `Tap sync failed · ${状态.原因 || "error"}`;
-    if (状态.状态 === "同步中") return "Syncing to TapTap…";
-    if (状态.状态 === "无能力") return "Tap achievements unavailable";
-    if (状态.状态 === "未映射") return "Not linked";
-    return "Pending Tap sync";
-  }
-  if (状态.状态 === "已同步") return "已同步到 TapTap";
-  if (状态.状态 === "失败") return `Tap 同步失败 · ${状态.原因 || "未知错误"}`;
-  if (状态.状态 === "同步中") return "正在同步到 TapTap…";
-  if (状态.状态 === "无能力") return "当前环境无法同步成就";
-  if (状态.状态 === "未映射") return "未对接平台成就";
-  return "待同步到 TapTap";
+  const 文: 游戏文案 = 按英文取文案(英文);
+  if (状态.状态 === "已同步") return 文.平台成就已同步;
+  if (状态.状态 === "失败")
+    return 填充文案(文.平台成就同步失败, { 原因: 状态.原因 || 文.未知错误 });
+  if (状态.状态 === "同步中") return 文.平台成就同步中;
+  if (状态.状态 === "无能力") return 文.平台成就无能力;
+  if (状态.状态 === "未映射") return 文.平台成就未映射;
+  return 文.平台成就待同步;
 }
 
 function 确保监听(m: Tap成就管理器): void {
@@ -184,13 +200,13 @@ function 确保监听(m: Tap成就管理器): void {
     if (typeof 消息 === "string") msg = 消息;
     else if (typeof 代码 === "string" && !msg) msg = 代码;
 
-    const 解释 = 解释成就失败(code, msg);
+    const 解读 = 解读成就失败(code, msg);
     const 待 = 平台编号 ? 等待中.get(平台编号) : undefined;
     // 全局失败只回填明确 ID 对应的在途请求；无等待不置状态。
     if (!待) return;
     等待中.delete(平台编号);
-    if (解释 === "平台侧已解锁") 待.resolve(true);
-    else 待.reject(Object.assign(new Error(解释), { 代码: code }));
+    if (解读.已解锁) 待.resolve(true);
+    else 待.reject(Object.assign(new Error(解读.文案), { 代码: code }));
   };
 
   try {
@@ -230,20 +246,20 @@ export function 解锁平台成就(本地编号: string, 强制 = false): Promis
 async function 执行解锁平台成就(本地编号: string, 强制: boolean): Promise<成就同步结果> {
   const 平台编号 = 平台成就映射[本地编号] ?? "";
   if (!平台编号) {
-    return { 本地编号, 平台编号: "", 完成: false, 原因: "未配置平台成就 ID" };
+    return { 本地编号, 平台编号: "", 完成: false, 原因: 文案.平台成就ID未配置 };
   }
   if (!探测Tap能力().有成就) {
-    置状态(本地编号, { 状态: "无能力", 原因: "当前环境无成就能力", 时间: Date.now() });
-    return { 本地编号, 平台编号, 完成: false, 原因: "当前环境无成就能力" };
+    置状态(本地编号, { 状态: "无能力", 原因: 文案.平台成就环境无能力, 时间: Date.now() });
+    return { 本地编号, 平台编号, 完成: false, 原因: 文案.平台成就环境无能力 };
   }
   const 现 = 状态表.get(本地编号);
   if (!强制 && 现?.状态 === "已同步") {
-    return { 本地编号, 平台编号, 完成: true, 原因: 现.原因 || "已同步到 TapTap" };
+    return { 本地编号, 平台编号, 完成: true, 原因: 现.原因 || 文案.平台成就已同步 };
   }
   const m = 取成就管理器();
   if (!m?.unlockAchievement) {
-    置状态(本地编号, { 状态: "无能力", 原因: "成就管理器不可用", 时间: Date.now() });
-    return { 本地编号, 平台编号, 完成: false, 原因: "成就管理器不可用" };
+    置状态(本地编号, { 状态: "无能力", 原因: 文案.平台成就管理器不可用, 时间: Date.now() });
+    return { 本地编号, 平台编号, 完成: false, 原因: 文案.平台成就管理器不可用 };
   }
   置状态(本地编号, { 状态: "同步中", 原因: "", 时间: Date.now() });
   try {
@@ -271,7 +287,7 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
       });
       // 先建超时再调用 unlock：同步成功/失败都会清掉，不残留计时器。
       超时 = setTimeout(() => {
-        失败(new Error("平台无响应，请稍后在成就页重试或检查成就是否已发布"));
+        失败(new Error(文案.平台成就无响应));
       }, 8000);
       try {
         // 官方文档结果走 registerListener；部分宿主仍支持 option.callback，两者都接。
@@ -286,9 +302,9 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
                   : typeof 错误 === "object" && 错误 && "message" in 错误
                     ? String((错误 as { message: unknown }).message)
                     : String(错误);
-              const 解释 = 解释成就失败(undefined, 原始消息);
-              if (解释 === "平台侧已解锁") 成功();
-              else 失败(Object.assign(new Error(解释), { 原始: 错误 }));
+              const 解读 = 解读成就失败(undefined, 原始消息);
+              if (解读.已解锁) 成功();
+              else 失败(Object.assign(new Error(解读.文案), { 原始: 错误 }));
             },
           },
         });
@@ -296,8 +312,8 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
         失败(同步错误);
       }
     });
-    置状态(本地编号, { 状态: "已同步", 原因: "已同步到 TapTap", 时间: Date.now() });
-    return { 本地编号, 平台编号, 完成: true, 原因: "已同步到 TapTap" };
+    置状态(本地编号, { 状态: "已同步", 原因: 文案.平台成就已同步, 时间: Date.now() });
+    return { 本地编号, 平台编号, 完成: true, 原因: 文案.平台成就已同步 };
   } catch (错误) {
     const 原因 =
       错误 instanceof Error
@@ -305,25 +321,24 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
         : typeof 错误 === "object" && 错误 && "message" in 错误
           ? String((错误 as { message: unknown }).message)
           : String(错误);
-    const 解释 = 解释成就失败(
+    const 解读 = 解读成就失败(
       typeof (错误 as { 代码?: number })?.代码 === "number"
         ? (错误 as { 代码: number }).代码
         : undefined,
       原因,
     );
-    const 需登录 = 是未登录错误(undefined, 解释);
-    const 已解锁 = 解释 === "平台侧已解锁";
+    const 完成原因 = 解读.已解锁 ? 文案.平台成就已解锁同步 : 解读.文案;
     置状态(本地编号, {
-      状态: 已解锁 ? "已同步" : "失败",
-      原因: 已解锁 ? "已同步到 TapTap（平台侧已解锁）" : 解释,
+      状态: 解读.已解锁 ? "已同步" : "失败",
+      原因: 完成原因,
       时间: Date.now(),
     });
     return {
       本地编号,
       平台编号,
-      完成: 已解锁,
-      原因: 已解锁 ? "已同步到 TapTap（平台侧已解锁）" : 解释,
-      需登录,
+      完成: 解读.已解锁,
+      原因: 完成原因,
+      需登录: 解读.需登录,
     };
   }
 }

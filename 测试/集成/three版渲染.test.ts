@@ -247,14 +247,14 @@ describe("three版模式与结算", () => {
           日期: "2026-10-20",
         },
       };
-      expect(读取奖励文案(基础)).toBe("旅行方块币 +55");
-      expect(读取奖励文案({ ...基础, 金币: { 新增: 0, 总额: 120, 原因: "对局满45秒" } })).toBe(
-        "对局满45秒",
-      );
-      expect(读取奖励文案({ ...基础, 金币: null, 金币失败原因: "存储空间不足" })).toContain(
+      expect(读取奖励文案(基础, 文案)).toBe("方块币 +55");
+      expect(
+        读取奖励文案({ ...基础, 金币: { 新增: 0, 总额: 120, 原因: "对局满45秒" } }, 文案),
+      ).toBe("对局满45秒");
+      expect(读取奖励文案({ ...基础, 金币: null, 金币失败原因: "存储空间不足" }, 文案)).toContain(
         "点击这里重试",
       );
-      expect(读取奖励文案({ ...基础, 金币: null, 金币失败原因: "" })).toBe("");
+      expect(读取奖励文案({ ...基础, 金币: null, 金币失败原因: "" }, 文案)).toBe("");
     });
   });
 
@@ -613,7 +613,7 @@ describe("three版计分接入", () => {
       expect(状态.落块事件?.全清).toBe(true);
       expect(状态.棋盘.every((行) => 行.every((格) => 格 === null))).toBe(true);
       if (!状态.落块事件) throw new Error("缺少落块事件");
-      expect(获取技巧反馈(状态.落块事件, false)).toContain("完美清场");
+      expect(获取技巧反馈(状态.落块事件, 获取文案("简体中文"))).toContain("完美清场");
     });
 
     test("连续两次单行消除触发连击倍率 1.2", () => {
@@ -652,7 +652,7 @@ describe("three版计分接入", () => {
       expect(状态.落块事件?.连续高难).toBe(true);
       expect(状态.消行数).toBe(8);
       if (!状态.落块事件) throw new Error("缺少落块事件");
-      expect(获取技巧反馈(状态.落块事件, false)).toContain("背靠背");
+      expect(获取技巧反馈(状态.落块事件, 获取文案("简体中文"))).toContain("背靠背");
     });
 
     test("旋转方块与会话输入一致：左转/180° 都走规则踢墙", () => {
@@ -746,16 +746,19 @@ describe("three版计分接入", () => {
         连续高难: true,
         得分: 1500,
       };
-      const 文本 = 获取技巧反馈(事件, false);
+      const 文本 = 获取技巧反馈(事件, 获取文案("简体中文"));
       expect(文本).toContain("完美清场");
       expect(文本).toContain("T 旋");
       expect(文本).toContain("四连消");
       expect(文本).toContain("连击 ×3");
       expect(文本).toContain("背靠背");
       expect(文本).toContain("+1500");
-      expect(获取技巧反馈({ ...事件, T旋: "迷你" }, false)).toContain("迷你 T 旋");
+      expect(获取技巧反馈({ ...事件, T旋: "迷你" }, 获取文案("简体中文"))).toContain("迷你 T 旋");
       expect(
-        获取技巧反馈({ ...事件, T旋: "无", 行数: 2, 连击: 0, 连续高难: false, 全清: false }, false),
+        获取技巧反馈(
+          { ...事件, T旋: "无", 行数: 2, 连击: 0, 连续高难: false, 全清: false },
+          获取文案("简体中文"),
+        ),
       ).toContain("消除 2 行");
     });
 

@@ -1,4 +1,5 @@
 import type { Tap排行榜分数 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
+import { 查找节点 } from "../../.gamemaker/依赖/框架/节点/遍历";
 import type { 文字项 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 坐标2D组件 } from "../../.gamemaker/依赖/框架/节点/坐标组件";
 import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
@@ -20,11 +21,12 @@ import {
   加载排行榜数据,
   type 排行榜周期,
   排行榜周期顺序,
+  周期标签,
   格式化排行榜错误,
   格式化榜分数,
 } from "../平台/排行榜";
 import { 请求Tap登录 } from "../平台/登录";
-import { 排行榜周期标签 } from "../平台/配置";
+import { 填充文案, type 游戏文案 } from "../语言/类型";
 import type { 页面上下文 } from "../应用/接口/上下文";
 import type { 游戏模式 } from "../玩法/再消一行";
 import { 计算排行榜页布局 } from "./布局/覆盖页布局";
@@ -42,6 +44,10 @@ interface 榜面缓存 {
   状态文案: string;
   分数列表: readonly Tap排行榜分数[];
   需登录?: boolean;
+  /** 本轮查询已有结果：空提示只在查完且没有成绩时出现。 */
+  已加载?: boolean;
+  /** 「我的」那一行（已本地化），空串表示还没有我的成绩。 */
+  我的行?: string;
 }
 
 export class 排行榜界面 extends 页面基类 {
@@ -51,9 +57,7 @@ export class 排行榜界面 extends 页面基类 {
   private 滚动位置 = 0;
   private 缓存: 榜面缓存 = { 状态文案: "", 分数列表: [] };
   private 加载中 = false;
-  private 色: 页面语义色 = 读取页面语义色(
-    this.上下文.服务.设置.读取().旅行样式 ?? this.上下文.服务.设置.读取().样式,
-  );
+  private 色: 页面语义色 = 读取页面语义色(this.上下文.服务.设置.读取().样式);
 
   private 底板节点: 节点 | null = null;
   private 标题节点: 节点 | null = null;
@@ -80,7 +84,25 @@ export class 排行榜界面 extends 页面基类 {
     this.周期 = "总";
     this.缓存 = { 状态文案: "", 分数列表: [] };
     super.进入();
+    this.确保标题节点();
     void this.刷新在线榜();
+  }
+
+  /** 跨页流转会销毁到达页的「排行榜:标题」；页面常驻，再次进入时按同一份构造补一棵。 */
+  private 确保标题节点(): void {
+    const 根 = this.读取节点根();
+    if (!根 || 查找节点(根, "排行榜:标题")) return;
+    this.标题节点 = this.创建标题节点(根);
+    this.应用注册参数(根);
+  }
+
+  private 创建标题节点(页面: 节点): 节点 {
+    return 创建文字节点(
+      页面,
+      { 名称: "排行榜:标题", 项: this.标题文字项() },
+      this.逻辑高,
+      this.测量文字,
+    );
   }
 
   protected 构建节点树(页面: 节点): void {
@@ -89,12 +111,7 @@ export class 排行榜界面 extends 页面基类 {
     this.底板节点 = 创建整页绘制节点(页面, "排行榜:底板", this.逻辑宽, this.逻辑高, (环境) =>
       this.绘制底板(环境),
     );
-    this.标题节点 = 创建文字节点(
-      页面,
-      { 名称: "排行榜:标题", 项: this.标题文字项() },
-      this.逻辑高,
-      this.测量文字,
-    );
+    this.标题节点 = this.创建标题节点(页面);
     this.状态节点 = 创建文字节点(
       页面,
       { 名称: "排行榜:状态", 项: this.状态文字项() },
@@ -181,20 +198,16 @@ export class 排行榜界面 extends 页面基类 {
   }
 
   private 创建页签组件(): 页签组件 {
-    const 英文 = this.上下文.服务.语言.是否英文();
-    const 标签 = 排行榜周期标签;
+    const 文案 = this.上下文.服务.语言.读取();
     return new 页签组件({
-      条目: 排行榜周期顺序.map((周期) => (英文 ? 标签[周期].英文 : 标签[周期].中文)),
+      条目: 排行榜周期顺序.map((周期) => 周期标签(周期, 文案)),
       已选: 排行榜周期顺序.indexOf(this.周期),
       间距: this.计算布局().页签.间距,
       变化: (序号) => {
         const 周期 = 排行榜周期顺序[序号];
         if (!周期 || this.周期 === 周期 || this.加载中) return;
         this.周期 = 周期;
-        this.缓存 = {
-          状态文案: this.上下文.服务.语言.是否英文() ? "Loading…" : "加载中…",
-          分数列表: [],
-        };
+        this.缓存 = { 状态文案: this.上下文.服务.语言.读取().排行榜加载中, 分数列表: [] };
         this.重建();
         void this.刷新在线榜();
       },
@@ -232,9 +245,7 @@ export class 排行榜界面 extends 页面基类 {
 
   /** 主题 / 语言 / 尺寸 / 数据变化：重算注册参数与内容高度，只标脏不重建节点。 */
   protected 应用注册参数(_页面: 节点): void {
-    this.色 = 读取页面语义色(
-      this.上下文.服务.设置.读取().旅行样式 ?? this.上下文.服务.设置.读取().样式,
-    );
+    this.色 = 读取页面语义色(this.上下文.服务.设置.读取().样式);
     const 布局 = this.计算布局();
     this.底板节点?.读取二维坐标()?.更新参数({
       位置X: 0,
@@ -251,19 +262,14 @@ export class 排行榜界面 extends 页面基类 {
       高: 布局.页签.高,
     });
     this.页签节点?.读取组件<页签组件>(页签组件)?.应用参数({
-      条目: 排行榜周期顺序.map((周期) =>
-        this.上下文.服务.语言.是否英文() ? 排行榜周期标签[周期].英文 : 排行榜周期标签[周期].中文,
-      ),
+      条目: 排行榜周期顺序.map((周期) => 周期标签(周期, this.上下文.服务.语言.读取())),
       已选: 排行榜周期顺序.indexOf(this.周期),
       间距: 布局.页签.间距,
       变化: (序号) => {
         const 周期 = 排行榜周期顺序[序号];
         if (!周期 || this.周期 === 周期 || this.加载中) return;
         this.周期 = 周期;
-        this.缓存 = {
-          状态文案: this.上下文.服务.语言.是否英文() ? "Loading…" : "加载中…",
-          分数列表: [],
-        };
+        this.缓存 = { 状态文案: this.上下文.服务.语言.读取().排行榜加载中, 分数列表: [] };
         this.重建();
         void this.刷新在线榜();
       },
@@ -367,7 +373,6 @@ export class 排行榜界面 extends 页面基类 {
     this.上下文.资源.画笔.测量文字(文案, 样式);
 
   private 标题文字项(): 文字项 {
-    const 英文 = this.上下文.服务.语言.是否英文();
     const 布局 = this.计算布局();
     return 生成页面文字项(
       "中中",
@@ -377,14 +382,14 @@ export class 排行榜界面 extends 页面基类 {
       this.色.正文,
       "粗体",
       "中",
-      `${this.模式} ${英文 ? "LEADERBOARD" : "排行榜"}`,
+      填充文案(this.上下文.服务.语言.读取().排行榜标题, { 模式: this.模式 }),
     );
   }
 
   private 状态文字项(): 文字项 {
-    const 英文 = this.上下文.服务.语言.是否英文();
+    const 文案 = this.上下文.服务.语言.读取();
     const 布局 = this.计算布局();
-    const 状态 = this.加载中 ? (英文 ? "Loading…" : "加载中…") : this.缓存.状态文案;
+    const 状态 = this.加载中 ? 文案.排行榜加载中 : this.缓存.状态文案;
     return {
       文案: 状态,
       样式: 派生覆盖页文字样式({ 字号: 12, 颜色: this.色.次要, 对齐: "中" }),
@@ -396,7 +401,6 @@ export class 排行榜界面 extends 页面基类 {
   }
 
   private 空提示文字项(): 文字项 {
-    const 英文 = this.上下文.服务.语言.是否英文();
     return 生成页面文字项(
       "中中",
       this.计算布局().状态.中心X,
@@ -405,16 +409,13 @@ export class 排行榜界面 extends 页面基类 {
       this.色.次要,
       "常规",
       "中",
-      英文 ? "No scores yet" : "暂无上榜成绩",
+      this.上下文.服务.语言.读取().排行榜空提示,
     );
   }
 
   private 读取应显示空提示(): boolean {
     return (
-      !this.缓存.分数列表.length &&
-      !this.加载中 &&
-      !this.缓存.需登录 &&
-      this.缓存.状态文案.includes("我的")
+      !this.缓存.分数列表.length && !this.加载中 && !this.缓存.需登录 && this.缓存.已加载 === true
     );
   }
 
@@ -431,7 +432,7 @@ export class 排行榜界面 extends 页面基类 {
     for (const 节点 of this.行节点) 内容.移除子(节点);
     this.行节点 = [];
     const 布局 = this.计算布局();
-    const 英文 = this.上下文.服务.语言.是否英文();
+    const 文案 = this.上下文.服务.语言.读取();
     const 内容高 = Math.max(布局.列表.高, this.缓存.分数列表.length * 布局.行高 + 8);
     this.缓存.分数列表.forEach((项, i) => {
       const 行矩形 = { 左: 0, 上: 0, 宽: 布局.行宽, 高: 布局.行板高 };
@@ -449,7 +450,7 @@ export class 排行榜界面 extends 页面基类 {
       );
       行节点.挂载组件(
         new 绘制组件({
-          绘制: (环境) => this.绘制榜单行(环境, 项, i, 行矩形, 英文),
+          绘制: (环境) => this.绘制榜单行(环境, 项, i, 行矩形, 文案),
         }),
       );
       内容.添加子(行节点);
@@ -462,7 +463,7 @@ export class 排行榜界面 extends 页面基类 {
     项: Tap排行榜分数,
     i: number,
     行矩形: { 左: number; 上: number; 宽: number; 高: number },
-    英文: boolean,
+    文案: 游戏文案,
   ): void {
     const 画笔 = 画法画笔(环境);
     在本地空间绘制(环境, () => {
@@ -470,7 +471,7 @@ export class 排行榜界面 extends 页面基类 {
       图形
         .fillStyle(this.色.按钮底, 0.65)
         .fillRoundedRect(行矩形.左, 行矩形.上, 行矩形.宽, 行矩形.高, 10);
-      const 名 = 项.user?.name || (英文 ? "Player" : "玩家");
+      const 名 = 项.user?.name || 文案.排行榜玩家;
       const 排名 = 项.rankDisplay ?? String(项.rank ?? i + 1);
       const 分 = 项.scoreDisplay ?? 格式化榜分数(this.模式, 项.score);
       画笔.绘制文字(
@@ -489,10 +490,10 @@ export class 排行榜界面 extends 页面基类 {
     if (!画笔 || !矩形) return;
     const 区域 = 由矩形得到装置区域({ 左: 0, 上: 0, 宽: 矩形.宽, 高: 矩形.高 });
     在本地空间绘制(环境, () => {
-      const 文案 = this.上下文.服务.语言.是否英文() ? "Back" : "返回";
-      绘制返回传送装置(环境.图形, 区域, { 时间秒: 0, 下沉: 0, 点亮: [], 文案 });
+      const 文字 = this.上下文.服务.语言.读取().返回;
+      绘制返回传送装置(环境.图形, 区域, { 时间秒: 0, 下沉: 0, 点亮: [], 文案: 文字 });
       画笔.绘制文字({
-        ...生成返回按键文字项(区域, 文案),
+        ...生成返回按键文字项(区域, 文字),
         变换: 文字空间矩阵(环境, 矩形.高),
       });
     });
@@ -502,11 +503,11 @@ export class 排行榜界面 extends 页面基类 {
     const 画笔 = 读取画笔(环境);
     const 矩形 = 环境.节点.读取本地矩形();
     if (!画笔 || !矩形) return;
-    const 文案 = this.上下文.服务.语言.是否英文() ? "Sign in" : "登录 Tap";
+    const 文字 = this.上下文.服务.语言.读取().排行榜登录Tap;
     在本地空间绘制(环境, () => {
       绘制覆盖页按钮(环境.图形, 矩形.宽 / 2, 矩形.高 / 2, 矩形.宽, 矩形.高);
       画笔.绘制文字({
-        文案,
+        文案: 文字,
         样式: 读取覆盖页按钮文字样式(false, 15),
         锚点: "中中",
         x: 矩形.宽 / 2,
@@ -518,12 +519,14 @@ export class 排行榜界面 extends 页面基类 {
 
   private 登录(): void {
     const 英文 = this.上下文.服务.语言.是否英文();
-    void 请求Tap登录().then((结果) => {
-      this.缓存.状态文案 = 结果.完成
-        ? 英文
-          ? "Signed in, refreshing…"
-          : "登录成功，正在刷新…"
-        : 结果.原因;
+    const 文案 = this.上下文.服务.语言.读取();
+    void 请求Tap登录(英文).then((结果) => {
+      this.缓存 = {
+        ...this.缓存,
+        状态文案: 结果.完成 ? 文案.排行榜登录成功 : 结果.原因,
+        已加载: false,
+        我的行: "",
+      };
       this.重建();
       if (结果.完成) void this.刷新在线榜();
     });
@@ -542,7 +545,7 @@ export class 排行榜界面 extends 页面基类 {
       `模式:${this.模式}`,
       `周期:${this.周期}`,
       `状态:${this.缓存.状态文案}`,
-      `我的:${this.缓存.状态文案.startsWith("我的") || this.缓存.状态文案.startsWith("Me:") ? this.缓存.状态文案 : "无"}`,
+      `我的:${this.缓存.我的行 || "无"}`,
       `行数:${this.缓存.分数列表.length}`,
       `滚动:${this.读取滚动位置()}`,
       `本地最佳:${
@@ -558,31 +561,31 @@ export class 排行榜界面 extends 页面基类 {
 
   private async 刷新在线榜(): Promise<void> {
     const 英文 = this.上下文.服务.语言.是否英文();
+    const 文案 = this.上下文.服务.语言.读取();
     if (this.加载中) return;
     this.加载中 = true;
-    this.缓存 = { 状态文案: 英文 ? "Loading…" : "加载中…", 分数列表: [] };
+    this.缓存 = { 状态文案: 文案.排行榜加载中, 分数列表: [] };
     this.重建();
-    const 结果 = await 加载排行榜数据({ 模式: this.模式, 周期: this.周期, 条数: 20 });
+    const 结果 = await 加载排行榜数据({ 模式: this.模式, 周期: this.周期, 条数: 20, 英文 });
     this.加载中 = false;
     const 我的 = 结果.我的;
     const 我的行 =
       我的 && (我的.rank != null || 我的.score != null)
-        ? 英文
-          ? `Me: #${我的.rankDisplay ?? 我的.rank ?? "—"} · ${我的.scoreDisplay ?? 格式化榜分数(this.模式, 我的.score)}`
-          : `我的：第 ${我的.rankDisplay ?? 我的.rank ?? "—"} 名 · ${我的.scoreDisplay ?? 格式化榜分数(this.模式, 我的.score)}`
-        : 英文
-          ? "Me: no score yet"
-          : "我的：暂无成绩";
+        ? 填充文案(文案.排行榜我的名次, {
+            名次: 我的.rankDisplay ?? 我的.rank ?? "—",
+            分数: 我的.scoreDisplay ?? 格式化榜分数(this.模式, 我的.score),
+          })
+        : 文案.排行榜我的暂无成绩;
     this.缓存 = {
       状态文案: 结果.完成
         ? `${我的行}${结果.当前周期展示 ? ` · ${结果.当前周期展示}` : ""}`
         : 结果.需登录
-          ? 英文
-            ? "Please sign in to TapTap first."
-            : "尚未登录 TapTap，请点下方登录后再查看。"
+          ? 文案.排行榜需登录
           : 格式化排行榜错误(结果.代码, 结果.原因, 英文),
       分数列表: 结果.完成 ? 结果.分数列表 : [],
       需登录: 结果.需登录,
+      已加载: 结果.完成,
+      我的行: 结果.完成 ? 我的行 : "",
     };
     this.重建();
   }

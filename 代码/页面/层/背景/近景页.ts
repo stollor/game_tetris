@@ -62,7 +62,7 @@ export class 近景页 extends 页面基类 {
 
   private 绘制动态(): void {
     if (!this.读取背景动态()) return;
-    const 主题 = this.上下文.服务.设置.读取().背景主题;
+    const 主题 = this.上下文.服务.设置.读取().主题选择;
     绘制背景动态(this.上下文.资源.画笔.图形, {
       宽: this.逻辑宽,
       高: this.逻辑高,

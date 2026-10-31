@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import type { 界面按钮快照 } from "../../../代码/应用/接口/上下文";
 
-const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
+const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 const 省电 = process.argv.includes("--省电");
 const 输出 = resolve(`.gamemaker/报告/页面开合/${省电 ? "省电" : "标准"}`);
 await mkdir(输出, { recursive: true });

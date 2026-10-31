@@ -9,7 +9,7 @@ import type { 矩形, 绘制环境 } from "../../../.gamemaker/依赖/框架/界
 import type { 轻提示样式状态, 轻提示队列 } from "../../../.gamemaker/依赖/框架/界面/控件/轻提示";
 import { 解析颜色数值 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 画笔 } from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
-import { 绘制旅行图标 } from "../../预制体/基础/图标/图标";
+import { 绘制界面图标 } from "../../预制体/基础/图标/图标";
 import { type 成就图标编号, 绘制成就图标 } from "../../预制体/基础/图标/成就图标";
 import { 绘制像素面板 } from "../../预制体/基础/面板/像素面板";
 import { 绘制方块单元 } from "../../预制体/对局/方块单元";
@@ -278,7 +278,7 @@ export function 绘制结算演出(画笔: 画笔, 输入: 结算演出输入): 
     .save()
     .translateCanvas(币区.左 + 14 * s, 币区.上 + 13 * s)
     .scaleCanvas((22 * s) / 32);
-  绘制旅行图标(图, "方块币");
+  绘制界面图标(图, "方块币");
   图.restore();
   图.restore();
   字(输入.金币标签, 币区.左 + 110 * s, 定位.金币行Y, 13, 色.次要文字, 126 * s, 奖励入场);

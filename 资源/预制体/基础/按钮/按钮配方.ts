@@ -13,7 +13,7 @@ import {
   解析颜色数值,
 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 颜色字符串 } from "../../../../.gamemaker/依赖/框架/界面/颜色工具";
-import { type 旅行图标名称, 绘制旅行图标 } from "../图标/图标";
+import { type 界面图标名称, 绘制界面图标 } from "../图标/图标";
 import { 绘制玻璃按钮底板 } from "./玻璃按钮底板";
 
 /**
@@ -44,7 +44,7 @@ export interface 常规按钮选项 extends 常规按钮状态 {
 export interface 常规按钮文字选项 extends 常规按钮选项 {
   字号?: number;
   字重?: "常规" | "粗体";
-  图标?: 旅行图标名称;
+  图标?: 界面图标名称;
   图标尺寸?: number;
   图文方向?: "横排" | "竖排";
 }
@@ -150,7 +150,7 @@ export function 绘制常规按钮(
 }
 
 export interface 常规按钮图标 {
-  名称: 旅行图标名称;
+  名称: 界面图标名称;
   中心X: number;
   中心Y: number;
   尺寸: number;
@@ -212,12 +212,12 @@ export function 生成常规按钮内容(
   return { 文字项, 图标 };
 }
 
-/** 把程序化旅行图标按 32×32 源尺寸缩放画到按钮内（与 Phaser generateTexture 同一套指令）。 */
+/** 把程序化界面图标按 32×32 源尺寸缩放画到按钮内（与 Phaser generateTexture 同一套指令）。 */
 export function 绘制常规按钮图标(绘图: 图形对象, 图标: 常规按钮图标): void {
   绘图.save();
   绘图.translateCanvas(图标.中心X - 图标.尺寸 / 2, 图标.中心Y - 图标.尺寸 / 2);
   绘图.scaleCanvas(图标.尺寸 / 32);
-  绘制旅行图标(绘图, 图标.名称);
+  绘制界面图标(绘图, 图标.名称);
   绘图.restore();
 }
 

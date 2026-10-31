@@ -1,6 +1,15 @@
 import type { Page } from "playwright";
 
 async function 点击(页: Page, 名称: string) {
+  // 页面开合动画期间交互项 enabled=false，标准桥也点不到；先等它真的可点。
+  await 页.waitForFunction(
+    (名) => {
+      const 快照 = window.__GAMEMAKER_TEST__?.getSnapshot();
+      return Boolean(快照?.interactives.some((项) => 项.name === 名 && 项.enabled));
+    },
+    名称,
+    { timeout: 10000 },
+  );
   const 点 = await 页.evaluate((名) => {
     const 桥 = window.__GAMEMAKER_TEST__;
     const 快照 = 桥?.getSnapshot();
@@ -19,7 +28,7 @@ async function 准备(页: Page, 地址: string, 对局 = false) {
   await 页.waitForFunction(() => (window.__GAMEMAKER_TEST__?.getSnapshot().sequence ?? 0) > 0);
   if (对局) {
     await 点击(页, "开始游戏");
-    await 点击(页, "开始:马拉松");
+    await 点击(页, "模式:马拉松");
     await 页.waitForFunction(
       () =>
         window.__three版__?.读取状态().入场秒 === null &&

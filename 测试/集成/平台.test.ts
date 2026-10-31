@@ -152,11 +152,11 @@ describe("平台开放能力", () => {
     });
   });
 
-  test("云快照往返保留旅行与纪录键", () => {
-    const 旅行 = JSON.stringify({ 金币: 1 });
+  test("云快照往返保留收藏与纪录键", () => {
+    const 收藏 = JSON.stringify({ 金币: 1 });
     const 纪录 = JSON.stringify({ 分数: 9, 用时: null });
     const 存储 = 假存储({
-      "旅行版:收藏": 旅行,
+      "再消一行:收藏": 收藏,
       "neon-pulse:achievements": "{}",
       "neon-pulse:best:马拉松": 纪录,
       其它: "忽略",
@@ -170,7 +170,7 @@ describe("平台开放能力", () => {
     expect(还原).not.toBeNull();
     const 目标 = 假存储();
     expect(应用快照到本地(目标, 还原!)).toBe(3);
-    expect(目标.getItem("旅行版:收藏")).toBe(旅行);
+    expect(目标.getItem("再消一行:收藏")).toBe(收藏);
   });
 
   test("冲刺排行榜用完赛用时毫秒，未完赛不上榜", () => {
@@ -286,14 +286,14 @@ describe("平台开放能力", () => {
       },
     };
     (globalThis as { window?: { tap?: typeof 宿主 } }).window = { tap: 宿主 };
-    const 源 = 假存储({ "旅行版:收藏": JSON.stringify({ 金币: 7 }) });
+    const 源 = 假存储({ "再消一行:收藏": JSON.stringify({ 金币: 7 }) });
     const 上传 = await 上传云存档(源);
     expect(上传.完成).toBe(true);
     expect(上传.方向).toBe("上传");
     const 目标 = 假存储();
     const 拉取 = await 拉取云存档(目标);
     expect(拉取.完成).toBe(true);
-    expect(目标.getItem("旅行版:收藏")).toContain("7");
+    expect(目标.getItem("再消一行:收藏")).toContain("7");
     delete (globalThis as { window?: unknown }).window;
   });
 

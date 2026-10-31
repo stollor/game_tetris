@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../../代码/应用/启动";
 import { 入场参数, 对局入场时长, 模式退场时长 } from "../../../资源/视效/过渡/入场演出";
 
-const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
+const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 const 宽 = Number(process.argv.find((项) => 项.startsWith("--宽="))?.split("=")[1] ?? 390);
 const 高 = Number(process.argv.find((项) => 项.startsWith("--高="))?.split("=")[1] ?? 844);
 const 省电 = process.argv.includes("--省电");
@@ -96,7 +96,7 @@ async function 入模式页() {
   await 页.waitForFunction(() => window.__three版__?.读取状态().页面 === "菜单");
   if ((await 界面())?.按钮.some((项) => 项.名称 === "开始游戏")) await 点击("开始游戏");
   await 页.waitForFunction(() =>
-    window.__three版__?.读取界面().按钮.some((项) => 项.名称 === "开始:马拉松"),
+    window.__three版__?.读取界面().按钮.some((项) => 项.名称 === "模式:马拉松"),
   );
 }
 let 成功 = false;
@@ -108,7 +108,7 @@ try {
     await 入模式页();
     await 截图(`${模式}-00-选择`);
     const 起 = performance.now();
-    await 点击(`开始:${模式}`);
+    await 点击(`模式:${模式}`);
     assert.equal((await 界面())?.按钮.length, 0, "入场清除旧热区");
     await 页.keyboard.press("Escape");
     await 页.keyboard.press("Space");
@@ -167,7 +167,7 @@ try {
   if (!process.argv.includes("--仅模式")) {
     // 失焦、暂停恢复，以及重开只接短节拍。
     await 入模式页();
-    await 点击("开始:极限");
+    await 点击("模式:极限");
     await 等待节拍("Ready");
     await 页.keyboard.press("KeyP");
     await 页.waitForFunction(() => window.__再消一行测试__?.读取状态().阶段 === "暂停");
@@ -219,12 +219,12 @@ try {
     await 点击("暂停");
     await 点击("返回主菜单");
     await 入模式页();
-    await 点击("开始:冲刺");
+    await 点击("模式:冲刺");
     await 等待节拍("展开");
     await 点击("暂停");
     await 点击("返回主菜单");
     await 入模式页();
-    await 点击("开始:每日挑战");
+    await 点击("模式:每日挑战");
     await 等待节拍("完成");
     assert.equal((await 页.evaluate(() => window.__three版__?.读取状态()))?.模式, "每日挑战");
     记录.push({

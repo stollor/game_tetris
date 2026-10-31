@@ -1,35 +1,32 @@
 import { describe, expect, test } from "bun:test";
 import { 计算重排视口 } from "../../../../.gamemaker/依赖/框架/界面/正交相机";
 import { 计算对局仪表 } from "../../../../代码/界面/对局仪表";
-import {
-  计算商店布局,
-  计算商店方块陈列,
-  计算商店界面示意,
-} from "../../../../代码/页面/布局/商店布局";
+import { 计算商店布局, 计算商店确认布局 } from "../../../../代码/页面/布局/商店布局";
 import { 计算信息栏内部, 计算对局布局 } from "../../../../代码/页面/布局/对局布局";
+import { 主题列表 } from "../../../../代码/项目配置/主题目录";
 import { 计算下拉展开区域 } from "../../../../资源/预制体/基础/输入与选择/页面控件";
 
 // ── 原 商店布局.test.ts ──
 describe("商店布局", () => {
-  test("手机商店坞区、目录与陈列尺寸稳定", () => {
+  test("手机商店：主题卡排、主按钮、纯享/退出与预览区尺寸稳定", () => {
     const 页面 = 计算商店布局(390, 844);
-    expect(页面.坞高).toBe(332);
-    expect(页面.坞顶).toBe(504);
-    expect(页面.部位卡[0]).toEqual({ 左: 16, 上: 512, 宽: 346 / 3, 高: 48 });
-    expect(页面.目录).toEqual({ 左: 16, 上: 676, 宽: 358, 高: 100 });
-    expect(页面.目录卡宽).toBe(96);
-    expect(计算商店方块陈列(390, 844, 页面.坞高).列).toBe(2);
+    expect(页面.主题卡).toHaveLength(主题列表.length);
     expect(页面.副题Y - 页面.标题Y).toBe(40);
-    expect(页面.底板.左).toBe(0);
-    expect(页面.底板.宽).toBe(390);
-    expect(页面.底板.上).toBe(页面.纯享.上 + 页面.纯享.高);
-    expect(页面.部位卡[0]?.上).toBeGreaterThanOrEqual(页面.底板.上);
-    expect(页面.底板.上 + 页面.底板.高).toBe(844);
-    expect(页面.目录.上).toBeGreaterThanOrEqual(页面.底板.上);
-    expect(页面.目录.上 + 页面.目录.高).toBeLessThanOrEqual(844);
+    expect(页面.消息Y - 页面.副题Y).toBe(20);
+    expect(页面.预览.上).toBeGreaterThan(页面.消息Y);
+    expect(页面.预览.上 + 页面.预览.高).toBeLessThan(页面.主题卡[0]!.上);
+    // 四张主题卡一横排，等宽等距。
+    const 卡宽 = 页面.主题卡[0]!.宽;
+    for (const [序号, 卡] of 页面.主题卡.entries()) {
+      expect(卡.宽).toBeCloseTo(卡宽, 5);
+      if (序号 > 0) {
+        const 前 = 页面.主题卡[序号 - 1]!;
+        expect(卡.左 - (前.左 + 前.宽)).toBeCloseTo(页面.卡间距, 5);
+      }
+    }
   });
 
-  test("三档商店的部位、购买、目录与退出按钮均在屏幕内", () => {
+  test("四档尺寸的主题卡、主按钮、纯享、退出与预览均在屏幕内", () => {
     for (const [宽, 高] of [
       [390, 844],
       [430, 860],
@@ -37,18 +34,31 @@ describe("商店布局", () => {
       [844, 390],
     ]) {
       const 页 = 计算商店布局(宽, 高);
-      for (const 区 of [...页.部位卡, 页.单件, 页.整套, 页.目录, 页.退出, 页.纯享]) {
+      for (const 区 of [...页.主题卡, 页.主按钮, 页.退出, 页.纯享, 页.预览]) {
         expect(区.左).toBeGreaterThanOrEqual(0);
         expect(区.上).toBeGreaterThanOrEqual(0);
         expect(区.左 + 区.宽).toBeLessThanOrEqual(宽);
         expect(区.上 + 区.高).toBeLessThanOrEqual(高);
       }
-      expect(计算商店界面示意(宽, 高, 页.坞高).宽).toBeLessThanOrEqual(宽);
-      expect(页.底板.左).toBe(0);
-      expect(页.底板.宽).toBe(宽);
-      expect(页.底板.上 + 页.底板.高).toBe(高);
-      expect(页.目录.上).toBeGreaterThanOrEqual(页.底板.上);
+      // 预览在主题卡上方不重叠；主按钮在主题卡下面，纯享/退出在最底一排。
+      expect(页.预览.上 + 页.预览.高).toBeLessThanOrEqual(页.主题卡[0]!.上);
+      expect(页.主按钮.上).toBeGreaterThan(页.主题卡[0]!.上 + 页.主题卡[0]!.高);
+      expect(页.退出.上 + 页.退出.高).toBeLessThanOrEqual(高);
+      expect(页.纯享.上 + 页.纯享.高).toBeLessThanOrEqual(高);
     }
+  });
+
+  test("确认纸页：面板居中，确认/取消/关闭都在面板内", () => {
+    const 确认 = 计算商店确认布局(390, 844);
+    expect(确认.面板.左).toBeGreaterThan(0);
+    expect(确认.面板.上).toBeGreaterThan(0);
+    for (const 区 of [确认.确认, 确认.取消, 确认.关闭]) {
+      expect(区.左).toBeGreaterThanOrEqual(确认.面板.左);
+      expect(区.上).toBeGreaterThanOrEqual(确认.面板.上);
+      expect(区.左 + 区.宽).toBeLessThanOrEqual(确认.面板.左 + 确认.面板.宽);
+      expect(区.上 + 区.高).toBeLessThanOrEqual(确认.面板.上 + 确认.面板.高);
+    }
+    expect(确认.确认.上).toBeLessThan(确认.取消.上);
   });
 
   test("语言菜单向上展开，选项命中框完全位于共享面板内", () => {

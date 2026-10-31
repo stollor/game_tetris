@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../../代码/应用/启动";
 import type { 界面按钮快照 } from "../../../代码/应用/接口/上下文";
 
-const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
+const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 const 输出 = resolve(".gamemaker/报告/界面细修/修改后");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
@@ -78,7 +78,7 @@ try {
       项.变化,
     );
     await 点击("开始游戏");
-    await 点击("开始:马拉松");
+    await 点击("模式:马拉松");
     await 页.waitForFunction(
       () =>
         window.__three版__?.读取状态().页面 === "对局" &&
@@ -170,7 +170,7 @@ try {
     "离开 3D 对局后释放透视场景",
   );
   await 点击("开始游戏");
-  await 点击("开始:马拉松");
+  await 点击("模式:马拉松");
   await 页.waitForFunction(
     () =>
       window.__three版__?.读取状态().页面 === "对局" &&

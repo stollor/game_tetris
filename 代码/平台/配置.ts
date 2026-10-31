@@ -18,13 +18,6 @@ export type 排行榜周期 = "日" | "周" | "月" | "总";
 
 export const 排行榜周期顺序: readonly 排行榜周期[] = ["日", "周", "月", "总"];
 
-export const 排行榜周期标签 = {
-  日: { 中文: "日榜", 英文: "Daily" },
-  周: { 中文: "周榜", 英文: "Weekly" },
-  月: { 中文: "月榜", 英文: "Monthly" },
-  总: { 中文: "总榜", 英文: "All-time" },
-} as const;
-
 /** 模式 × 周期 → 后台排行榜 ID；空字符串表示尚未在控制台创建该周期榜。 */
 function 读取周期编号(模式: string): Record<排行榜周期, string> {
   const 编号 = (周期: 排行榜周期) =>

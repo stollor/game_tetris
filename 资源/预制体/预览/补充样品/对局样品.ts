@@ -1,7 +1,10 @@
+import type {
+  界面资源样品 as 样品,
+  界面资源绘制环境,
+} from "../../../../.gamemaker/依赖/框架/开发/界面资源协议";
+import { 解析颜色数值 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 方块类型, 游戏模式 } from "../../../../代码/玩法/再消一行";
 import type { 对局布局数据 } from "../../../../代码/页面/布局/对局布局";
-import type { 界面资源样品 as 样品, 界面资源绘制环境 } from "../../../../.gamemaker/依赖/框架/开发/界面资源协议";
-import { 解析颜色数值 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 计分反馈视图 } from "../../../视效/特效/计分反馈";
 import type { 对局仪表输入 } from "../../对局/对局仪表";
 import type { 暂存槽输入 } from "../../对局/暂存槽";
@@ -85,8 +88,6 @@ function 在预览主题内<T>(状态: Readonly<Record<string, string>>, 绘制:
   const 设置 = 读取预览主题设置(状态, {
     ...设置模块.默认设置,
     显示网格: true,
-    背景主题: "晨光海岸",
-    方块外观: "极光原野",
   });
   主题读取.设置预览主题读取(
     () => 设置,

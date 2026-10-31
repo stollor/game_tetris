@@ -1,7 +1,6 @@
 import type { 音效条目, 音效谱 } from "../../.gamemaker/依赖/框架/音频/音效目录";
 import { 像素规范 } from "../../资源/主题/像素/像素规范";
 import { 场景氛围库 } from "./场景氛围";
-import { 构建旅行音效库 } from "./旅行音效";
 
 export function 应用像素音效(谱: 音效谱): 音效谱 {
   return {
@@ -261,4 +260,4 @@ export const 基础音效库: 音效条目[] = [
   },
 ];
 
-export const 音效库: 音效条目[] = [...基础音效库, ...构建旅行音效库(基础音效库), ...场景氛围库];
+export const 音效库: 音效条目[] = [...基础音效库, ...场景氛围库];

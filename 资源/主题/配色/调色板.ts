@@ -1,17 +1,18 @@
-import { type 地点名称, 地点皮肤表 } from "../../../代码/框架配置/旅行地点";
-import { 游戏主题表 } from "../../../.gamemaker/依赖/框架/样式/样式";
 import type { 样式选择 } from "../../../.gamemaker/依赖/框架/设置/设置";
 import { 游戏外观 } from "../外观/游戏外观";
+import { 像素主题列表 } from "../像素/像素规范";
+import { 再消一行主题 } from "./基础配色";
 import { 界面主题, 颜色值 } from "./主题读取";
 
-export const 霓虹界面主题: readonly (样式选择 | 地点名称)[] = [
-  ...(Object.keys(游戏主题表) as 样式选择[]),
-  ...地点皮肤表.map((项) => 项.名称),
+/** 可预览的配色样式：基础配色表 + 两套像素配色；立体晶格没有独立配色，不列入。 */
+export const 霓虹界面主题: readonly 样式选择[] = [
+  ...Object.keys(再消一行主题),
+  ...像素主题列表.map((项) => 项.名称),
 ];
-let 预览界面样式: 样式选择 | 地点名称 | undefined;
+let 预览界面样式: 样式选择 | undefined;
 
 /** 预览整套配色；商店试穿和 GM 组件预览共用，不写入玩家设置。 */
-export function 设置预览界面样式(样式?: 样式选择 | 地点名称): void {
+export function 设置预览界面样式(样式?: 样式选择): void {
   预览界面样式 = 样式;
 }
 
@@ -60,7 +61,7 @@ export interface 霓虹调色板 {
   };
 }
 
-export function 读取霓虹调色板(样式?: 样式选择 | 地点名称): 霓虹调色板 {
+export function 读取霓虹调色板(样式?: 样式选择): 霓虹调色板 {
   const 主题 = 界面主题(样式 ?? 预览界面样式);
   const 按钮 = 主题.按钮;
   return {

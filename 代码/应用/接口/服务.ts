@@ -1,10 +1,10 @@
 import type { 对局纪录 } from "../../存档/对局纪录";
-import type { 对局奖励输入, 收藏结果, 旅行存档 } from "../../存档/旅行收藏";
+import type { 对局奖励输入, 收藏存档, 收藏结果 } from "../../存档/收藏";
 import type { 加载排行榜结果, 排行榜周期 } from "../../平台/排行榜";
 import type { 再消一行状态, 方块类型, 游戏模式 } from "../../玩法/再消一行";
 import type { 游戏设置 } from "../../设置/游戏设置";
 import type { 游戏文案 } from "../../语言/类型";
-import type { 外观部位 } from "../../项目配置/旅行皮肤";
+import type { 主题名 } from "../../项目配置/主题目录";
 
 /**
  * 《再消一行》Three 版的应用服务契约：页面只依赖这里的接口，不直接 import 存档/平台细节。
@@ -49,10 +49,11 @@ export interface 纪录服务 {
   保存(模式: 游戏模式, 纪录: 对局纪录, 日期?: string): boolean;
 }
 
+/** 金币与整套主题所有权：商店只卖主题，成就与对局只发金币。 */
 export interface 金币服务 {
-  读取(): 旅行存档;
+  读取(): 收藏存档;
   增加(数量: number): 收藏结果;
-  购买(名称: string, 部位: 外观部位 | "整套"): 收藏结果;
+  购买主题(主题: 主题名): 收藏结果;
   领取成就(已解锁: readonly string[]): 收藏结果;
   结算对局(输入: 对局奖励输入): 收藏结果;
   订阅(回调: () => void): () => void;
@@ -61,10 +62,6 @@ export interface 金币服务 {
 export interface 成就定义项 {
   编号: string;
   目标: number;
-  名称: string;
-  英文: string;
-  说明: string;
-  英文说明: string;
 }
 
 export interface 成就服务 {
@@ -87,9 +84,6 @@ export interface 音频服务 {
   停止音乐(): void;
   播放音效(编号: 音效编号): void;
   播放消行(消行数: number, 连击: number): void;
-  /** 场景氛围（背景音效）：传 null 停止；主题与音量来自设置。 */
-  播放氛围(主题: string | null): void;
-  停止氛围(): void;
   设置音量(): void;
   /** 用户手势后解锁音频上下文（启动层在首次 pointerdown/keydown 调用）。 */
   解锁(): void;
@@ -100,7 +94,6 @@ export interface 音频服务 {
     音效音量: number;
     上下文: string;
     当前音乐: string | null;
-    当前氛围: string | null;
     暂停: boolean;
   };
   停止全部(): void;
