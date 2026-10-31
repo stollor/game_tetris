@@ -8,7 +8,7 @@ import {
 } from "../.gamemaker/依赖/GM/工具链/游戏项目/构建/资源装配";
 
 // 资源夹具只进入隔离验收目录，不向正式产物复制测试图片。
-const 根 = resolve(".gamemaker"),
+const 根 = resolve(".gamemaker/缓存"),
   输出 = join(根, "资源验收");
 if (relative(根, 输出) !== "资源验收") throw Error("资源验收输出越界");
 await rm(输出, { recursive: true, force: true });

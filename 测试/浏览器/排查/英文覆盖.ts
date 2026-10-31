@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium, type Page } from "playwright";
-import type {} from "../../代码/应用/启动";
+import type {} from "../../../代码/应用/启动";
 
 /**
  * 英文界面覆盖验收：语言设为 English，逐页走主菜单、模式选择、排行榜、设置、成就、商店、

@@ -26,4 +26,7 @@ console.log(结果.摘要.产物目录);
 await 搬走(join(项目目录, "产物"), join(项目目录, ".gamemaker/产物"));
 await 搬走(join(项目目录, "reports"), join(项目目录, ".gamemaker/报告"));
 await rmdir(join(项目目录, "reports")).catch(() => {});
+// GM 的打包中间物仍写 .gamemaker 根；统一收进 缓存/，避免托管区继续平铺。
+for (const 名 of ["包体构建", "包体记录", "包体预览", "测试包", "开发"])
+  await 搬走(join(项目目录, ".gamemaker", 名), join(项目目录, ".gamemaker/缓存", 名));
 console.log("产物目录：" + resolve(项目目录, ".gamemaker/产物"));

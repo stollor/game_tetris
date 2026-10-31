@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type {} from "../../代码/应用/启动";
+import type {} from "../../../代码/应用/启动";
 
 const 输出 = resolve(".gamemaker/报告/自适应列表");
 await mkdir(输出, { recursive: true });

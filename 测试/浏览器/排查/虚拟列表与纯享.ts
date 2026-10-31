@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type {} from "../../代码/应用/启动";
+import type {} from "../../../代码/应用/启动";
 
 // 项目目标：手机390×844 DPR1；Chrome模拟视口，不是真机。
 const 输出 = resolve(process.argv[3] ?? ".gamemaker/报告/虚拟列表与纯享");

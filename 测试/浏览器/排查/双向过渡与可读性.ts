@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type {} from "../../代码/应用/启动";
+import type {} from "../../../代码/应用/启动";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
 const 输出 = resolve(process.argv[3] ?? ".gamemaker/报告/双向过渡与可读性");

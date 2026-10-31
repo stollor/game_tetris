@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type { 界面按钮快照 } from "../../代码/应用/接口/上下文";
+import type { 界面按钮快照 } from "../../../代码/应用/接口/上下文";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
 const 省电 = process.argv.includes("--省电");

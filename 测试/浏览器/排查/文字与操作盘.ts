@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { type Browser, chromium } from "playwright";
-import type { 调试状态, 调试统计 } from "../../代码/应用/启动";
-import type { 界面快照, 界面按钮快照 } from "../../代码/应用/接口/上下文";
+import type { 调试状态, 调试统计 } from "../../../代码/应用/启动";
+import type { 界面快照, 界面按钮快照 } from "../../../代码/应用/接口/上下文";
 
 /**
  * 文字与操作盘采样：390×844 手机视口，DPR1 / DPR2 各开独立 Chromium context。

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type { Tap成就管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
-import type {} from "../../代码/应用/启动";
+import type { Tap成就管理器 } from "../../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
+import type {} from "../../../代码/应用/启动";
 
 declare global {
   interface Window {

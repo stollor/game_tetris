@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
-import type {} from "../../代码/应用/启动";
-import type { 结算页面 } from "../../代码/页面/结算/结算页面";
+import type {} from "../../../代码/应用/启动";
+import type { 结算页面 } from "../../../代码/页面/结算/结算页面";
 
 const 输出 = resolve(process.argv[3] ?? ".gamemaker/报告/结算循环");
 await mkdir(输出, { recursive: true });
