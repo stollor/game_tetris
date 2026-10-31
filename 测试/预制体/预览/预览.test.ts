@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { Texture } from "three";
+import type { 界面资源场景环境 } from "../../../.gamemaker/依赖/框架/开发/界面资源协议";
+import { 图元合批 } from "../../../.gamemaker/依赖/框架/界面/图元合批";
+import type {
+  文字服务 as 控件文字服务,
+  界面配色,
+} from "../../../.gamemaker/依赖/框架/界面/控件/类型";
+import { Three图形 } from "../../../.gamemaker/依赖/框架/界面/绘制/图形";
+import type { 画笔, 资源层 } from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 命中分发 } from "../../../.gamemaker/依赖/框架/运行时/输入路由";
 import type { 对局奖励输入 } from "../../../代码/存档/旅行收藏";
-import type { 界面资源场景环境 } from "../../../框架/开发/界面资源协议";
-import { 图元合批 } from "../../../框架/界面/图元合批";
-import type { 文字服务 as 控件文字服务, 界面配色 } from "../../../框架/界面/控件/类型";
-import { Three图形 } from "../../../框架/界面/绘制/图形";
-import type { 画笔, 资源层 } from "../../../框架/界面/绘制/画笔";
-import { 命中分发 } from "../../../框架/运行时/输入路由";
-import { 界面资源样品 } from "../../../预制体/预览/界面资源";
+import { 界面资源样品 } from "../../../资源/预制体/预览/界面资源";
 import { 项目根 as 项目根路径 } from "../../接入/项目路径";
 
 // ── 原 资源主题预览.test.ts ──
@@ -222,7 +225,7 @@ describe("页面预览环境", () => {
     const 恢复存储 = 安装存储(存储);
     const 网络 = 安装网络计数();
     try {
-      const { 页面样品, 页面样品清单 } = await import("../../../预制体/预览/页面样品");
+      const { 页面样品, 页面样品清单 } = await import("../../../资源/预制体/预览/页面样品");
       expect(存储.写入次数()).toBe(0);
       expect(网络.读取次数()).toBe(0);
       expect(页面样品).toHaveLength(10);
@@ -299,7 +302,7 @@ describe("页面预览环境", () => {
     const 存储 = 创建计数存储();
     const 恢复存储 = 安装存储(存储);
     try {
-      const { 创建预览页面上下文 } = await import("../../../预制体/预览/页面环境");
+      const { 创建预览页面上下文 } = await import("../../../资源/预制体/预览/页面环境");
       const { 环境, 标记失效次数 } = 创建测试环境();
       const 甲 = 创建预览页面上下文(环境, { 页面: "菜单" });
       const 乙 = 创建预览页面上下文(环境, { 页面: "菜单" });
@@ -331,7 +334,7 @@ describe("页面预览环境", () => {
     const 恢复存储 = 安装存储(存储);
     const 网络 = 安装网络计数();
     try {
-      const { 创建预览页面上下文 } = await import("../../../预制体/预览/页面环境");
+      const { 创建预览页面上下文 } = await import("../../../资源/预制体/预览/页面环境");
       const { 环境 } = 创建测试环境();
       const 甲 = 创建预览页面上下文(环境, { 页面: "商店" });
       const 乙 = 创建预览页面上下文(环境, { 页面: "商店" });
@@ -378,7 +381,7 @@ describe("页面预览环境", () => {
     const 恢复存储 = 安装存储(存储);
     const 网络 = 安装网络计数();
     try {
-      const { 页面样品: 样品列表 } = await import("../../../预制体/预览/页面样品");
+      const { 页面样品: 样品列表 } = await import("../../../资源/预制体/预览/页面样品");
       for (const 样品 of 样品列表) await 样品.准备资源?.();
       存储.重置写入();
       网络.重置();
@@ -412,7 +415,7 @@ describe("页面预览环境", () => {
   test("结算页由框架管理命中生命周期，重建不重复绑定，退出取消按住", async () => {
     const 恢复存储 = 安装存储(创建计数存储());
     try {
-      const { 创建预览页面上下文 } = await import("../../../预制体/预览/页面环境");
+      const { 创建预览页面上下文 } = await import("../../../资源/预制体/预览/页面环境");
       const { 结算页面 } = await import("../../../代码/页面/结算/结算页面");
       const { 环境 } = 创建测试环境();
       const 会话 = 创建预览页面上下文(环境, { 页面: "结算" });

@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
-import type { Tap云存档项 } from "../../框架/平台/TapTap/宿主类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
+import type { Tap云存档项 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
 import { 迁移更名前存档 } from "../存档/更名迁移";
 import {
   序列化快照,

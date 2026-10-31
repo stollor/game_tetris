@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import type { Tap成就管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
 import type {} from "../../代码/应用/启动";
-import type { Tap成就管理器 } from "../../框架/平台/TapTap/宿主类型";
 
 declare global {
   interface Window {
@@ -11,7 +11,7 @@ declare global {
   }
 }
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
-const 输出 = resolve("reports/更新准备/成就浏览器");
+const 输出 = resolve(".gamemaker/报告/更新准备/成就浏览器");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 环境 = await 浏览器.newContext({

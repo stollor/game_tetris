@@ -1,6 +1,6 @@
 import type { 界面快照 } from "../../../代码/应用/接口/上下文";
 import type { 测试状态 } from "../../../代码/页面/对局/对局页面";
-import type { 特效状态 } from "../../../视效/特效/对局特效";
+import type { 特效状态 } from "../../../资源/视效/特效/对局特效";
 
 declare global {
   interface Window {

@@ -1,4 +1,13 @@
-import { 读取有效游戏主题 } from "../../../主题/主题组合";
+import type { 渲染编排 } from "../../../.gamemaker/依赖/框架/世界/渲染编排";
+import type { 游戏性能接口 } from "../../../.gamemaker/依赖/框架/测试/性能协议";
+import { 是否本机或局域网, 注册游戏测试控制 } from "../../../.gamemaker/依赖/框架/测试/测试控制";
+import { 创建测试桥接 } from "../../../.gamemaker/依赖/框架/测试/测试桥接";
+import { 创建资源压力 } from "../../../.gamemaker/依赖/框架/测试/资源压力";
+import type { 图元合批, 图元合批统计 } from "../../../.gamemaker/依赖/框架/界面/图元合批";
+import type { 资源统计 } from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 生成主题选择 } from "../../../.gamemaker/依赖/框架/设置/主题组合";
+import type { 场景栈 } from "../../../.gamemaker/依赖/框架/运行时/场景栈";
+import type { 游戏循环 } from "../../../.gamemaker/依赖/框架/运行时/循环";
 import type {
   导航服务,
   界面快照,
@@ -12,17 +21,8 @@ import { 更新游戏设置 } from "../../../代码/设置/游戏设置";
 import { 应用素材皮肤 } from "../../../代码/设置/素材皮肤";
 import { 素材演示状态 } from "../../../代码/页面/对局/素材演示";
 import { 项目默认主题 } from "../../../代码/项目配置/主题";
-import type { 渲染编排 } from "../../../框架/世界/渲染编排";
-import type { 游戏性能接口 } from "../../../框架/测试/性能协议";
-import { 是否本机或局域网, 注册游戏测试控制 } from "../../../框架/测试/测试控制";
-import { 创建测试桥接 } from "../../../框架/测试/测试桥接";
-import { 创建资源压力 } from "../../../框架/测试/资源压力";
-import type { 图元合批, 图元合批统计 } from "../../../框架/界面/图元合批";
-import type { 资源统计 } from "../../../框架/界面/绘制/画笔";
-import { 生成主题选择 } from "../../../框架/设置/主题组合";
-import type { 场景栈 } from "../../../框架/运行时/场景栈";
-import type { 游戏循环 } from "../../../框架/运行时/循环";
-import { 读取透视棋盘占用 } from "../../../视效/透视/透视棋盘";
+import { 读取有效游戏主题 } from "../../../资源/主题/主题组合";
+import { 读取透视棋盘占用 } from "../../../资源/视效/透视/透视棋盘";
 
 /**
  * 调试桥：启动层统一挂 window.__three版__ 与 window.__再消一行测试__。

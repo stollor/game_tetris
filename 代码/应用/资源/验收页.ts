@@ -1,15 +1,15 @@
-import { 默认字体栈 } from "../../../主题/文字/文字配置";
-import type { 渲染编排统计 } from "../../../框架/世界/渲染编排";
-import { 创建渲染编排 } from "../../../框架/世界/渲染编排";
-import type { 图元合批统计 } from "../../../框架/界面/图元合批";
-import { 图元合批 } from "../../../框架/界面/图元合批";
-import type { 文字服务统计 } from "../../../框架/界面/文字服务";
-import { 创建文字服务 } from "../../../框架/界面/文字服务";
-import type { 文字样式 } from "../../../框架/界面/绘制/协议";
-import { 创建画笔 } from "../../../框架/界面/绘制/画笔";
-import type { 图层缓存统计 } from "../../../框架/缓存/图层缓存";
-import { 创建图层缓存 } from "../../../框架/缓存/图层缓存";
-import { 图层作用域 } from "../../../框架/运行时/图层";
+import type { 渲染编排统计 } from "../../../.gamemaker/依赖/框架/世界/渲染编排";
+import { 创建渲染编排 } from "../../../.gamemaker/依赖/框架/世界/渲染编排";
+import type { 图元合批统计 } from "../../../.gamemaker/依赖/框架/界面/图元合批";
+import { 图元合批 } from "../../../.gamemaker/依赖/框架/界面/图元合批";
+import type { 文字服务统计 } from "../../../.gamemaker/依赖/框架/界面/文字服务";
+import { 创建文字服务 } from "../../../.gamemaker/依赖/框架/界面/文字服务";
+import type { 文字样式 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 创建画笔 } from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import type { 图层缓存统计 } from "../../../.gamemaker/依赖/框架/缓存/图层缓存";
+import { 创建图层缓存 } from "../../../.gamemaker/依赖/框架/缓存/图层缓存";
+import { 图层作用域 } from "../../../.gamemaker/依赖/框架/运行时/图层";
+import { 默认字体栈 } from "../../../资源/主题/文字/文字配置";
 import type { 资源层实例 } from "./资源加载";
 import { 创建资源层, 读取默认散图 } from "./资源加载";
 

@@ -1,13 +1,13 @@
-import { 读取霓虹调色板 } from "../../主题/配色/调色板";
-import type { 图形对象, 文字项 } from "../../框架/界面/绘制/协议";
-import type { 画笔 } from "../../框架/界面/绘制/画笔";
-import { 创建注册节点 } from "../../框架/节点/注册";
-import type { 节点绘制环境 } from "../../框架/节点/渲染";
-import { 文字空间矩阵 } from "../../框架/节点/渲染";
-import { 手势组件 } from "../../框架/节点/组件/手势";
-import { 按钮组件, type 按钮绘制状态 } from "../../框架/节点/组件/按钮";
-import { 文字组件, 读取画笔 } from "../../框架/节点/组件/文字";
-import type { 节点 } from "../../框架/节点/节点";
+import type { 图形对象, 文字项 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
+import type { 画笔 } from "../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 创建注册节点 } from "../../.gamemaker/依赖/框架/节点/注册";
+import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import { 文字空间矩阵 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import { 手势组件 } from "../../.gamemaker/依赖/框架/节点/组件/手势";
+import { 按钮组件, type 按钮绘制状态 } from "../../.gamemaker/依赖/框架/节点/组件/按钮";
+import { 文字组件, 读取画笔 } from "../../.gamemaker/依赖/框架/节点/组件/文字";
+import type { 节点 } from "../../.gamemaker/依赖/框架/节点/节点";
+import { 读取霓虹调色板 } from "../../资源/主题/配色/调色板";
 import {
   type 常规按钮文字选项,
   type 常规按钮状态,
@@ -15,7 +15,7 @@ import {
   绘制常规按钮,
   绘制常规按钮图标,
   读取常规按钮文字样式,
-} from "../../预制体/基础/按钮/按钮配方";
+} from "../../资源/预制体/基础/按钮/按钮配方";
 import type { 页面上下文 } from "../应用/接口/上下文";
 import { 生成菜单文字项, type 菜单布局, 计算菜单布局 } from "./布局/菜单布局";
 import { 页面基类 } from "./游戏页面基类";

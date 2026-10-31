@@ -1,4 +1,4 @@
-import type { 渲染编排 } from "../../框架/世界/渲染编排";
+import type { 渲染编排 } from "../../.gamemaker/依赖/框架/世界/渲染编排";
 import type { 页面编号 } from "../应用/接口/上下文";
 import type { 设置服务 } from "../应用/接口/服务";
 import { 是省电模式, 画质参数 } from "./画质";

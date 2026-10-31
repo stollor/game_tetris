@@ -1,5 +1,9 @@
 import { afterEach, expect, test } from "bun:test";
-import { 获取画布像素比, 计算画布像素比, 设置画布像素比 } from "../../框架/界面/画布像素比";
+import {
+  获取画布像素比,
+  计算画布像素比,
+  设置画布像素比,
+} from "../../.gamemaker/依赖/框架/界面/画布像素比";
 
 afterEach(() => 设置画布像素比(1));
 

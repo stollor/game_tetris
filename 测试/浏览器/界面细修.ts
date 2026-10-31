@@ -6,7 +6,7 @@ import type {} from "../../代码/应用/启动";
 import type { 界面按钮快照 } from "../../代码/应用/接口/上下文";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
-const 输出 = resolve("reports/界面细修/修改后");
+const 输出 = resolve(".gamemaker/报告/界面细修/修改后");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 环境 = await 浏览器.newContext({

@@ -1,0 +1,221 @@
+import { 像素规范 } from "../../../主题/像素/像素规范";
+import { 是像素风格 } from "../../../主题/像素/像素风格";
+import { 派生霓虹文字样式 } from "../../../主题/文字/文字样式";
+import { 读取控件规格 } from "../../../../.gamemaker/依赖/框架/样式/控件规格";
+import type { 图形对象, 文字项, 矩形 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 绘制像素面板 } from "../面板/像素面板";
+
+/**
+ * 设置/列表类页面的引擎无关视觉配方：滑块、下拉框、开关、列表行、页签等输入与选择类组件。
+ * 从 Phaser 版设置/成就/排行榜页面与框架控件的现行视觉逐条复刻，Three 页面 + 预览共用；
+ * Phaser 侧对应控件（框架 界面滑块/界面分组/下拉菜单）仍按原实现绘制，二者视觉同源。
+ */
+
+/**
+ * 水平滑块（中心定位）：玻璃质感轨道 + 强调色填充 + 辉光滑块头。
+ * 与 Phaser 框架 `界面滑块` 的 重绘视觉 逐条指令一致。
+ */
+export function 绘制滑块(
+  绘图: 图形对象,
+  中心X: number,
+  中心Y: number,
+  宽: number,
+  比例: number,
+  轨道色: number,
+  强调色: number,
+  命中高 = 32,
+): void {
+  if (是像素风格()) {
+    const p = 像素规范.网格;
+    const 左 = 中心X - 宽 / 2;
+    const 头X = 左 + 宽 * Math.max(0, Math.min(1, 比例));
+    绘图.fillStyle(像素规范.色.墨).fillRect(左, 中心Y - p, 宽, p * 2);
+    绘图.fillStyle(强调色).fillRect(左, 中心Y - p, 头X - 左, p * 2);
+    绘制像素面板(绘图, 头X - p * 2, 中心Y - p * 3, p * 4, p * 6, 像素规范.色.纸, 强调色);
+    return;
+  }
+  const 左 = 中心X - 宽 / 2;
+  const 顶 = 中心Y;
+  const 轨道高 = 7;
+  绘图
+    .fillStyle(轨道色, 0.95)
+    .fillRoundedRect(左, 顶 - 轨道高 / 2, 宽, 轨道高, 轨道高 / 2)
+    .fillStyle(轨道色, 0.5)
+    .fillRoundedRect(左, 顶 - 轨道高 / 2, 宽, 轨道高 * 0.55, 轨道高 / 2);
+  const 比例值 = Math.max(0, Math.min(1, 比例));
+  if (比例值 > 0) {
+    绘图
+      .fillStyle(强调色, 0.95)
+      .fillRoundedRect(左, 顶 - 轨道高 / 2, Math.max(轨道高, 宽 * 比例值), 轨道高, 轨道高 / 2);
+  }
+  const 头X = 左 + 宽 * 比例值;
+  const 头半径 = 命中高 < 30 ? 8 : 9;
+  for (let 层 = 2; 层 >= 1; 层 -= 1) {
+    绘图.fillStyle(强调色, 0.16 / 层).fillCircle(头X, 顶, 头半径 * (1 + 层 * 0.5));
+  }
+  绘图
+    .fillStyle(强调色, 1)
+    .fillCircle(头X, 顶, 头半径)
+    .fillStyle(0xffffff, 0.55)
+    .fillCircle(头X - 头半径 * 0.25, 顶 - 头半径 * 0.28, 头半径 * 0.34)
+    .lineStyle(1, 0xffffff, 0.35)
+    .strokeCircle(头X, 顶, 头半径);
+}
+
+/** 下拉框外框（左对齐文字 + 右侧三角箭头），与框架下拉菜单收起态一致。 */
+export function 绘制下拉框(
+  绘图: 图形对象,
+  矩形: 矩形,
+  面板色: number,
+  强调色: number,
+  圆角 = 8,
+): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 面板色, 强调色);
+    const p = 像素规范.网格;
+    const x = 矩形.左 + 矩形.宽 - p * 6,
+      y = 矩形.上 + 矩形.高 / 2;
+    绘图
+      .fillStyle(像素规范.色.墨)
+      .fillRect(x, y - p, p * 5, p)
+      .fillRect(x + p, y, p * 3, p)
+      .fillRect(x + p * 2, y + p, p, p);
+    return;
+  }
+  绘图.fillStyle(面板色, 0.9).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  绘图.lineStyle(1, 强调色, 0.6).strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  const 箭头X = 矩形.左 + 矩形.宽 - 16;
+  const 箭头Y = 矩形.上 + 矩形.高 / 2;
+  绘图.lineStyle(1.8, 强调色, 0.95);
+  绘图.lineBetween(箭头X - 4, 箭头Y - 2, 箭头X, 箭头Y + 2);
+  绘图.lineBetween(箭头X, 箭头Y + 2, 箭头X + 4, 箭头Y - 2);
+}
+
+/** 下拉框当前值文字项（左中锚点，留出箭头空间）。 */
+export function 生成下拉框文字项(矩形: 矩形, 文案: string, 颜色: number | string): 文字项 {
+  return {
+    文案,
+    样式: 派生霓虹文字样式("正文", { 字号: 14, 颜色, 对齐: "左" }),
+    锚点: "左中",
+    x: 矩形.左 + 12,
+    y: 矩形.上 + 矩形.高 / 2,
+    最大宽: 矩形.宽 - 32,
+  };
+}
+
+export interface 开关布局 {
+  中心X: number;
+  中心Y: number;
+  宽: number;
+  高: number;
+}
+
+/** 开关（能力由 GM 控件负责，样式按主题画）：关=冷灰轨道，开=强调色轨道 + 白色圆点。 */
+export function 绘制开关(
+  绘图: 图形对象,
+  布局: 开关布局,
+  开: boolean,
+  轨道色: number,
+  强调色: number,
+): void {
+  if (是像素风格()) {
+    const p = 像素规范.网格;
+    const x = 布局.中心X - 布局.宽 / 2,
+      y = 布局.中心Y - 布局.高 / 2;
+    绘制像素面板(绘图, x, y, 布局.宽, 布局.高, 开 ? 强调色 : 轨道色);
+    const 宽 = 布局.高 - p * 2;
+    绘图.fillStyle(像素规范.色.墨).fillRect(开 ? x + 布局.宽 - 宽 - p : x + p, y + p, 宽, 宽);
+    return;
+  }
+  const 半径 = 布局.高 / 2;
+  const x = 布局.中心X - 布局.宽 / 2;
+  const y = 布局.中心Y - 半径;
+  绘图
+    .fillStyle(开 ? 强调色 : 轨道色, 开 ? 0.9 : 0.6)
+    .fillRoundedRect(x, y, 布局.宽, 布局.高, 半径);
+  const 圆点X = 开 ? x + 布局.宽 - 半径 : x + 半径;
+  绘图.fillStyle(0xffffff, 0.95).fillCircle(圆点X, 布局.中心Y, 半径 * 0.72);
+}
+
+/** 列表行底板：稀有面板底 + 可选强调描边 + 底部进度线（成就/排行榜/商店列表共用）。 */
+export function 绘制列表行(
+  绘图: 图形对象,
+  矩形: 矩形,
+  面板色: number,
+  描边色: number,
+  描边透明度 = 读取控件规格().列表项.描边透明度,
+  圆角 = 读取控件规格().列表项.圆角,
+  进度?: { 比例: number; 轨道色: number; 强调色: number },
+): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 面板色, 描边色);
+    if (进度) {
+      const p = 像素规范.网格,
+        宽 = 矩形.宽 - p * 8;
+      绘图.fillStyle(像素规范.色.墨).fillRect(矩形.左 + p * 4, 矩形.上 + 矩形.高 - p * 4, 宽, p);
+      绘图
+        .fillStyle(进度.强调色)
+        .fillRect(
+          矩形.左 + p * 4,
+          矩形.上 + 矩形.高 - p * 4,
+          Math.round((宽 * Math.max(0, Math.min(1, 进度.比例))) / p) * p,
+          p,
+        );
+    }
+    return;
+  }
+  const 规格 = 读取控件规格().列表项;
+  绘图.fillStyle(面板色, 规格.面板透明度).fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  if (规格.描边宽 > 0)
+    绘图
+      .lineStyle(规格.描边宽, 描边色, 描边透明度)
+      .strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  if (!进度) return;
+  const 轨道: 矩形 = {
+    左: 矩形.左 + 16,
+    上: 矩形.上 + 矩形.高 - 17,
+    宽: 矩形.宽 - 44,
+    高: 3,
+  };
+  绘图.fillStyle(进度.轨道色, 0.5).fillRoundedRect(轨道.左, 轨道.上, 轨道.宽, 轨道.高, 1);
+  const 比例 = Math.max(0, Math.min(1, 进度.比例));
+  if (比例 > 0)
+    绘图.fillStyle(进度.强调色, 0.9).fillRoundedRect(轨道.左, 轨道.上, 轨道.宽 * 比例, 轨道.高, 1);
+}
+
+/** 页签按钮底板（排行榜/商店分类）：选中=强调色描边 + 亮底，未选=面板底。 */
+export function 绘制页签(
+  绘图: 图形对象,
+  矩形: 矩形,
+  选中: boolean,
+  面板色: number,
+  强调色: number,
+  圆角 = 10,
+): void {
+  if (是像素风格()) {
+    绘制像素面板(绘图, 矩形.左, 矩形.上, 矩形.宽, 矩形.高, 选中 ? 强调色 : 面板色);
+    return;
+  }
+  绘图
+    .fillStyle(面板色, 选中 ? 0.95 : 0.55)
+    .fillRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+  绘图
+    .lineStyle(选中 ? 2 : 1, 强调色, 选中 ? 0.95 : 0.35)
+    .strokeRoundedRect(矩形.左, 矩形.上, 矩形.宽, 矩形.高, 圆角);
+}
+
+/** Phaser 下拉菜单默认向上展开：当前行下方不挤压设置页脚。 */
+export function 计算下拉展开区域(当前行: 矩形, 选项数: number): { 面板: 矩形; 选项: 矩形[] } {
+  return {
+    面板: {
+      左: 当前行.左 - 6,
+      上: 当前行.上 - 选项数 * 当前行.高 - 9,
+      宽: 当前行.宽 + 12,
+      高: (选项数 + 1) * 当前行.高 + 14,
+    },
+    选项: Array.from({ length: 选项数 }, (_, i) => ({
+      ...当前行,
+      上: 当前行.上 - 2 - (选项数 - i) * 当前行.高,
+    })),
+  };
+}

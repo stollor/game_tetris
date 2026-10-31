@@ -1,4 +1,4 @@
-import { 页面基类 as 框架页面基类, type 界面快照 } from "../../框架/界面/页面基类";
+import { 页面基类 as 框架页面基类, type 界面快照 } from "../../.gamemaker/依赖/框架/界面/页面基类";
 import type { 页面上下文 } from "../应用/接口/上下文";
 
 /**

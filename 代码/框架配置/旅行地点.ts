@@ -1,4 +1,4 @@
-import type { 五声名, 音乐气质 } from "../../框架/音频/音乐编排";
+import type { 五声名, 音乐气质 } from "../../.gamemaker/依赖/框架/音频/音乐编排";
 
 export type 地点名称 =
   | "成都熊猫"

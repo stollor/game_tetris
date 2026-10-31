@@ -1,29 +1,29 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 查找地点 } from "../../../代码/框架配置/旅行地点";
+import type { 背景主题 } from "../../../代码/设置/游戏设置";
+import { 默认设置 } from "../../../代码/设置/游戏设置";
 import {
   主题结果转设置,
   解析游戏主题,
   读取游戏主题目录,
   默认主题编号,
-} from "../../../主题/主题组合";
-import { 背景主题选项, 背景主题配置 } from "../../../主题/外观/背景主题";
-import { 设置预览主题读取 } from "../../../主题/配色/主题读取";
-import { 查找地点 } from "../../../代码/框架配置/旅行地点";
-import type { 背景主题 } from "../../../代码/设置/游戏设置";
-import { 默认设置 } from "../../../代码/设置/游戏设置";
-import type { 图形对象 } from "../../../框架/界面/绘制/协议";
-import { 绘制像素背景 } from "../../../视效/背景/像素背景";
-import { 绘制立体晶格背景, 绘制立体晶格背景动态 } from "../../../视效/背景/立体晶格背景";
+} from "../../../资源/主题/主题组合";
+import { 背景主题选项, 背景主题配置 } from "../../../资源/主题/外观/背景主题";
+import { 设置预览主题读取 } from "../../../资源/主题/配色/主题读取";
+import { 绘制像素背景 } from "../../../资源/视效/背景/像素背景";
+import { 绘制立体晶格背景, 绘制立体晶格背景动态 } from "../../../资源/视效/背景/立体晶格背景";
 import {
   绘制背景,
   绘制背景动态,
   绘制背景静底,
   读取背景动态亮度,
   读取背景外观配色,
-} from "../../../视效/背景/背景绘制";
-import { 绘制街机彩砖背景, 绘制街机彩砖背景动态 } from "../../../视效/背景/街机彩砖背景";
-import { 读取预览主题解析, 读取预览主题设置 } from "../../../预制体/预览/主题状态";
+} from "../../../资源/视效/背景/背景绘制";
+import { 绘制街机彩砖背景, 绘制街机彩砖背景动态 } from "../../../资源/视效/背景/街机彩砖背景";
+import { 读取预览主题解析, 读取预览主题设置 } from "../../../资源/预制体/预览/主题状态";
 import { 项目根 as 项目根路径 } from "../../接入/项目路径";
 
 // ── 原 背景配方.test.ts ──
@@ -265,16 +265,17 @@ describe("背景配方", () => {
   });
 
   test("纯配方模块只允许框架绘制协议类型，不依赖引擎运行时", () => {
-    const 目录 = join(项目根路径, "视效/背景");
+    const 目录 = join(项目根路径, "资源/视效/背景");
     const 文件 = readdirSync(目录).filter((名) => 名.endsWith(".ts"));
     for (const 名 of 文件) {
       const 内容 = readFileSync(join(目录, 名), "utf8");
       const 依赖行 = 内容.match(/^\s*import[^;]*from\s+"[^"]+";/gm) ?? [];
       for (const 行 of 依赖行) {
         expect(行.includes("phaser")).toBe(false);
-        if (行.includes("/框架/"))
+        if (行.includes("/.gamemaker/依赖/框架/"))
           expect(
-            行.includes("框架/界面/颜色工具") || 行.trimStart().startsWith("import type "),
+            行.includes(".gamemaker/依赖/框架/界面/颜色工具") ||
+              行.trimStart().startsWith("import type "),
           ).toBe(true);
       }
     }
@@ -322,20 +323,20 @@ describe("主题背景接线", () => {
 
   test("完整主题各自登记专属背景资源与源码", () => {
     expect(资源("静态背景.街机彩砖")?.源码[0]).toMatchObject({
-      路径: "视效/背景/街机彩砖背景.ts",
+      路径: "资源/视效/背景/街机彩砖背景.ts",
       导出: "绘制街机彩砖背景",
     });
     expect(资源("动态背景.街机彩砖")?.源码[0]).toMatchObject({
-      路径: "视效/背景/街机彩砖背景.ts",
+      路径: "资源/视效/背景/街机彩砖背景.ts",
       导出: "绘制街机彩砖背景动态",
     });
     // 砖机液晶仍指向掌机液晶壳配方，街机彩砖不借用它。
     expect(资源("静态背景.砖机液晶")?.源码[0]).toMatchObject({
-      路径: "视效/背景/像素背景.ts",
+      路径: "资源/视效/背景/像素背景.ts",
     });
     for (const 槽 of ["静态背景", "动态背景"]) {
       expect(资源(`${槽}.立体晶格`)?.源码[0]).toMatchObject({
-        路径: "视效/背景/立体晶格背景.ts",
+        路径: "资源/视效/背景/立体晶格背景.ts",
       });
     }
     for (const 主题 of ["街机彩砖", "立体晶格"]) {
@@ -700,7 +701,7 @@ describe("立体晶格背景", () => {
   });
 
   test("配方文件零颜色字面量、不依赖 Phaser、宽高不写死", () => {
-    const 内容 = readFileSync(join(项目根路径, "视效/背景/立体晶格背景.ts"), "utf8");
+    const 内容 = readFileSync(join(项目根路径, "资源/视效/背景/立体晶格背景.ts"), "utf8");
     expect(内容.match(/0x[0-9a-fA-F]{6}/g) ?? []).toHaveLength(0);
     expect(内容.includes("phaser")).toBe(false);
     // 背景一律按 宽/高 比例计算，不允许写死竖屏基准尺寸。
@@ -710,10 +711,11 @@ describe("立体晶格背景", () => {
     expect(依赖行.length).toBeGreaterThan(0);
     for (const 行 of 依赖行) {
       expect(行.includes("phaser")).toBe(false);
-      if (行.includes("/框架/"))
-        expect(行.includes("框架/界面/颜色工具") || 行.trimStart().startsWith("import type ")).toBe(
-          true,
-        );
+      if (行.includes("/.gamemaker/依赖/框架/"))
+        expect(
+          行.includes(".gamemaker/依赖/框架/界面/颜色工具") ||
+            行.trimStart().startsWith("import type "),
+        ).toBe(true);
     }
   });
 });
@@ -964,7 +966,7 @@ describe("街机彩砖背景", () => {
   });
 
   test("纯配方不依赖 Phaser、不出现颜色字面量，只 import 允许的模块", () => {
-    const 文件 = join(项目根路径, "视效/背景/街机彩砖背景.ts");
+    const 文件 = join(项目根路径, "资源/视效/背景/街机彩砖背景.ts");
     const 内容 = readFileSync(文件, "utf8");
     expect(内容.includes("phaser")).toBe(false);
     expect(内容.match(/0x[0-9a-fA-F]{6}/g) ?? []).toHaveLength(0);
@@ -973,7 +975,7 @@ describe("街机彩砖背景", () => {
       const 放行 =
         行.includes('"./通用"') ||
         行.includes("像素/像素规范") ||
-        行.includes("框架/界面/颜色工具") ||
+        行.includes(".gamemaker/依赖/框架/界面/颜色工具") ||
         行.trimStart().startsWith("import type ");
       expect(放行).toBe(true);
     }

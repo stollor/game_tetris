@@ -1,5 +1,5 @@
-import { 创建重绘节拍 } from "../../框架/性能/帧率";
-import { 正在实况观测 } from "../../框架/测试/实况观测";
+import { 创建重绘节拍 } from "../../.gamemaker/依赖/框架/性能/帧率";
+import { 正在实况观测 } from "../../.gamemaker/依赖/框架/测试/实况观测";
 import { 获取游戏设置 } from "../设置/游戏设置";
 
 /**

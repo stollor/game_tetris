@@ -1,30 +1,30 @@
 import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { 读取游戏主题目录 } from "../../主题/主题组合";
-import { 解析方块外观 } from "../../主题/外观/方块外观";
-import { 设置预览主题读取 } from "../../主题/配色/主题读取";
+import { 配置控件规格 } from "../../.gamemaker/依赖/框架/样式/控件规格";
+import type { 图形对象 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
+import type { 画笔 } from "../../.gamemaker/依赖/框架/界面/绘制/画笔";
 import type { 方块类型 } from "../../代码/玩法/再消一行";
 import { 组装模式卡数据 } from "../../代码/界面/模式卡数据";
 import { 默认设置 } from "../../代码/设置/游戏设置";
 import { 计算对局布局 } from "../../代码/页面/布局/对局布局";
-import { 配置控件规格 } from "../../框架/样式/控件规格";
-import type { 图形对象 } from "../../框架/界面/绘制/协议";
-import type { 画笔 } from "../../框架/界面/绘制/画笔";
+import { 读取游戏主题目录 } from "../../资源/主题/主题组合";
+import { 解析方块外观 } from "../../资源/主题/外观/方块外观";
+import { 设置预览主题读取 } from "../../资源/主题/配色/主题读取";
 import {
   主题槽位 as 仪表主题槽位,
   控件分类 as 仪表分类,
   绘制对局仪表,
-} from "../../预制体/对局/对局仪表";
-import { 控件分类 as 操作键分类 } from "../../预制体/对局/操作键配方";
-import { 控件分类 as 方块分类, 绘制居中方块 } from "../../预制体/对局/方块绘制";
-import { 控件分类 as 暂存槽分类, 绘制暂存槽 } from "../../预制体/对局/暂存槽";
+} from "../../资源/预制体/对局/对局仪表";
+import { 控件分类 as 操作键分类 } from "../../资源/预制体/对局/操作键配方";
+import { 控件分类 as 方块分类, 绘制居中方块 } from "../../资源/预制体/对局/方块绘制";
+import { 控件分类 as 暂存槽分类, 绘制暂存槽 } from "../../资源/预制体/对局/暂存槽";
 import {
   主题槽位 as 棋盘主题槽位,
   控件分类 as 棋盘分类,
   绘制棋盘,
-} from "../../预制体/对局/棋盘配方";
-import { 控件分类 as 模式卡分类, 绘制模式卡输入 } from "../../预制体/模式选择/模式卡配方";
+} from "../../资源/预制体/对局/棋盘配方";
+import { 控件分类 as 模式卡分类, 绘制模式卡输入 } from "../../资源/预制体/模式选择/模式卡配方";
 import { 项目根 as 项目根路径 } from "../接入/项目路径";
 
 interface 调用 {
@@ -81,8 +81,8 @@ test("业务组件对外声明分类为业务，供静态发现", () => {
 
 test("玩法规则测试不导入皮肤或业务组件", async () => {
   const 文本 = await readFile(join(项目根路径, "测试/代码/玩法/玩法.test.ts"), "utf8");
-  expect(文本.includes("预制体/")).toBe(false);
-  expect(文本.includes("主题/外观")).toBe(false);
+  expect(文本.includes("资源/预制体/")).toBe(false);
+  expect(文本.includes("资源/主题/外观")).toBe(false);
 });
 
 test("棋盘按传入方案着色，不绑定某一套皮肤", () => {

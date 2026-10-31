@@ -1,4 +1,4 @@
-import { 发布Tap探针, 探测Tap能力 } from "../../框架/平台/TapTap/宿主探测";
+import { 发布Tap探针, 探测Tap能力 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import { 拉取云存档 } from "./云存档";
 import { 更新云同步状态 } from "./云存档状态";
 import { 记录分析事件 } from "./分析";

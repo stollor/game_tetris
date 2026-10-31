@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../代码/应用/启动";
 import type { 结算页面 } from "../../代码/页面/结算/结算页面";
 
-const 输出 = resolve(process.argv[3] ?? "reports/结算循环");
+const 输出 = resolve(process.argv[3] ?? ".gamemaker/报告/结算循环");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });

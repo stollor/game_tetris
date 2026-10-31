@@ -26,8 +26,9 @@ async function 收集(目录: string): Promise<string[]> {
 
 /** 从 Three 启动递归导入图，确保项目预制体都接入当前运行引擎。 */
 async function 未接入预制体(): Promise<string[]> {
-  const 预制体 = (await 收集(join(项目, "预制体"))).filter(
-    (文件) => !归一(文件).includes("/预制体/预览/") && !归一(文件).includes("/预制体/草稿/"),
+  const 预制体 = (await 收集(join(项目, "资源/预制体"))).filter(
+    (文件) =>
+      !归一(文件).includes("/资源/预制体/预览/") && !归一(文件).includes("/资源/预制体/草稿/"),
   );
   const 已载 = new Set<string>();
   const 队列 = [join(项目, "代码/应用/启动.ts")];
@@ -42,8 +43,8 @@ async function 未接入预制体(): Promise<string[]> {
       const 规格 = 匹配[1];
       const 目标 = 规格.startsWith(".")
         ? resolve(dirname(文件), 规格)
-        : 规格.startsWith("框架/")
-          ? resolve(项目, "框架", 规格.slice("框架/".length))
+        : 规格.startsWith(".gamemaker/依赖/框架/")
+          ? resolve(项目, ".gamemaker/依赖/框架", 规格.slice(".gamemaker/依赖/框架/".length))
           : null;
       if (!目标) continue;
       for (const 候选 of [`${目标}.ts`, join(目标, "index.ts")]) {

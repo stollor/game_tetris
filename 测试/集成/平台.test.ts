@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
-
+import { 探测Tap能力 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import * as 云 from "../../代码/平台/云存档";
 import { 序列化快照, 应用快照到本地, 收集本地键, 解析快照 } from "../../代码/平台/云存档快照";
 import { 清空分析缓冲, 记录分析事件, 读取分析缓冲 } from "../../代码/平台/分析";
@@ -7,7 +7,6 @@ import { 排行榜分数 } from "../../代码/平台/排行榜";
 import { 结算后同步平台 } from "../../代码/平台/结算同步";
 import { Tap应用 } from "../../代码/平台/配置";
 import { 创建纪录服务 } from "../../代码/应用/服务/纪录";
-import { 探测Tap能力 } from "../../框架/平台/TapTap/宿主探测";
 
 // ── 原 平台生命周期.test.ts ──
 describe("平台生命周期", () => {

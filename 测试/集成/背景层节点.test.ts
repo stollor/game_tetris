@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { 近景页 } from "../../代码/页面/层/背景/近景页";
 import { 远景页 } from "../../代码/页面/层/背景/远景页";
-import { 创建页面上下文 } from "./主界面与控件.test";
+import { 创建页面上下文 } from "./主界面与控件.test.ts";
 
 /**
  * 背景层页面必须走节点树：远景/近景的风景画在整页绘制节点里。

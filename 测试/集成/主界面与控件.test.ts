@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { 创建游戏主题 } from "../../主题/游戏主题";
+import { 图元合批 } from "../../.gamemaker/依赖/框架/界面/图元合批";
+import type { 文字服务 as 控件文字服务, 界面配色 } from "../../.gamemaker/依赖/框架/界面/控件/类型";
+import { Three图形 } from "../../.gamemaker/依赖/框架/界面/绘制/图形";
+import type { 画笔, 资源层 } from "../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 开关组件 } from "../../.gamemaker/依赖/框架/节点/组件/开关";
+import { 按钮组件 } from "../../.gamemaker/依赖/框架/节点/组件/按钮";
+import { 遍历节点 } from "../../.gamemaker/依赖/框架/节点/遍历";
+import { 命中分发 } from "../../.gamemaker/依赖/框架/运行时/输入路由";
 import type { 收藏结果, 旅行存档 } from "../../代码/存档/旅行收藏";
 import type { 加载排行榜结果 } from "../../代码/平台/排行榜";
 import type { 页面上下文 } from "../../代码/应用/接口/上下文";
@@ -13,15 +20,8 @@ import { 模式选择页 } from "../../代码/页面/模式选择页";
 import { 纯享页 } from "../../代码/页面/纯享页";
 import { 菜单页 } from "../../代码/页面/菜单页";
 import { 设置界面 } from "../../代码/页面/设置界面";
-import { 图元合批 } from "../../框架/界面/图元合批";
-import type { 文字服务 as 控件文字服务, 界面配色 } from "../../框架/界面/控件/类型";
-import { Three图形 } from "../../框架/界面/绘制/图形";
-import type { 画笔, 资源层 } from "../../框架/界面/绘制/画笔";
-import { 开关组件 } from "../../框架/节点/组件/开关";
-import { 按钮组件 } from "../../框架/节点/组件/按钮";
-import { 遍历节点 } from "../../框架/节点/遍历";
-import { 命中分发 } from "../../框架/运行时/输入路由";
-import { 模式退场时长 } from "../../视效/过渡/入场演出";
+import { 创建游戏主题 } from "../../资源/主题/游戏主题";
+import { 模式退场时长 } from "../../资源/视效/过渡/入场演出";
 import { 项目根 as 项目根路径 } from "../接入/项目路径";
 
 // ── 原 three主界面交互.test.ts ──

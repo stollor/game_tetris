@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import type {} from "../../代码/应用/启动";
 
-const 输出 = resolve("reports/自适应列表");
+const 输出 = resolve(".gamemaker/报告/自适应列表");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });

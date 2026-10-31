@@ -1,7 +1,12 @@
 import { LinearFilter, type Texture, TextureLoader } from "three";
-import { 创建图集纹理, type 图集纹理 } from "../../../框架/世界/图集纹理";
-import type { 图集帧渲染, 散图渲染, 资源层, 资源统计 } from "../../../框架/界面/绘制/画笔";
-import { 读取构建资源 } from "../../../框架/运行时/资源编排";
+import { 创建图集纹理, type 图集纹理 } from "../../../.gamemaker/依赖/框架/世界/图集纹理";
+import type {
+  图集帧渲染,
+  散图渲染,
+  资源层,
+  资源统计,
+} from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 读取构建资源 } from "../../../.gamemaker/依赖/框架/运行时/资源编排";
 
 /**
  * Three 版资源层：把 GM 静态图集（`清单.json` + 页图）与游戏散图（图标 / GM 套件图）

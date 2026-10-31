@@ -8,7 +8,7 @@ import { 项目根 as 项目根路径 } from "../接入/项目路径";
  *
  * 目的：Three 版是 Phaser 版的架构替换，视觉资产/逻辑必须单一来源：
  * 1) `代码/应用/**` 不得出现独立的主题色/背景基色/方块色数值表——颜色只能来自
- *    `视效/外观/`、`代码/框架配置/`、`预制体/霓虹街机/`（调色板/文字样式/配方）等共享来源；
+ *    `资源/视效/外观/`、`代码/框架配置/`、`资源/预制体/霓虹街机/`（调色板/文字样式/配方）等共享来源；
  * 2) 页面布局不得在 Three 页面里自造硬编码布局表，必须来自共享配方/共享配置的布局函数；
  * 3) Three 包不得引入 Phaser 运行时（含经共享配方间接 import 到 `phaser` 的情况）。
  *
@@ -88,11 +88,11 @@ test("Three 页面不得自造硬编码布局表（白名单外零容忍）", as
   expect(违规).toEqual([]);
 });
 
-/** 解析 import 目标：相对路径、框架/*、GM预览协议；返回绝对路径（去扩展名）。 */
+/** 解析 import 目标：相对路径、.gamemaker/依赖/框架/*、GM预览协议；返回绝对路径（去扩展名）。 */
 function 解析导入(来源文件: string, 规格: string): string | null {
   if (规格.startsWith(".")) return resolve(dirname(来源文件), 规格);
   if (规格 === "GM预览协议") return resolve(项目, "GM预览协议");
-  if (规格.startsWith("框架/")) return resolve(项目, 规格);
+  if (规格.startsWith(".gamemaker/依赖/框架/")) return resolve(项目, 规格);
   return null;
 }
 

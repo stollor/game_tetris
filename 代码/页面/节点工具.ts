@@ -1,11 +1,11 @@
-import type { 文字项 } from "../../框架/界面/绘制/协议";
-import { 创建注册节点 } from "../../框架/节点/注册";
-import type { 节点绘制环境 } from "../../框架/节点/渲染";
-import { 区域画法, 文字空间矩阵 } from "../../框架/节点/渲染";
-import { 按钮组件 } from "../../框架/节点/组件/按钮";
-import { 文字组件, 读取画笔 } from "../../框架/节点/组件/文字";
-import { 绘制组件 } from "../../框架/节点/组件/绘制";
-import type { 节点 } from "../../框架/节点/节点";
+import type { 文字项 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 创建注册节点 } from "../../.gamemaker/依赖/框架/节点/注册";
+import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import { 区域画法, 文字空间矩阵 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import { 按钮组件 } from "../../.gamemaker/依赖/框架/节点/组件/按钮";
+import { 文字组件, 读取画笔 } from "../../.gamemaker/依赖/框架/节点/组件/文字";
+import { 绘制组件 } from "../../.gamemaker/依赖/框架/节点/组件/绘制";
+import type { 节点 } from "../../.gamemaker/依赖/框架/节点/节点";
 
 /**
  * 《再消一行》的节点注册小工具：把布局给的几何 / 文字项换算成节点坐标（y 向上），
@@ -141,8 +141,8 @@ export function 用区域画法(
   环境: 节点绘制环境,
   区域: { 左: number; 上: number },
   绘制: (画法: {
-    图形: import("../../框架/界面/绘制/协议").图形对象;
-    画笔: import("../../框架/界面/绘制/画笔").画笔;
+    图形: import("../../.gamemaker/依赖/框架/界面/绘制/协议").图形对象;
+    画笔: import("../../.gamemaker/依赖/框架/界面/绘制/画笔").画笔;
   }) => void,
 ): void {
   区域画法(环境, 区域, 绘制);

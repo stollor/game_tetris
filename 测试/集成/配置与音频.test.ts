@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
+import { 校验音乐库 } from "../../.gamemaker/依赖/框架/音频/音乐目录";
+import { 校验音效库 } from "../../.gamemaker/依赖/框架/音频/音效目录";
 import { 场景氛围表 } from "../../代码/框架配置/场景氛围";
 import { 音乐库 } from "../../代码/框架配置/音乐";
 import { 消行谱, 连击谱, 音效库 } from "../../代码/框架配置/音效";
 import { 结算音效名称 } from "../../代码/音频/结算音效";
 import { 模式配置, 节奏配置, 速度表 } from "../../代码/项目配置/模式";
-import { 校验音乐库 } from "../../框架/音频/音乐目录";
-import { 校验音效库 } from "../../框架/音频/音效目录";
 
 describe("配置表运行值", () => {
   test("模式目标与用户确认的当前配置一致", () => {

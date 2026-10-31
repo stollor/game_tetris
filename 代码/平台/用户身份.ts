@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
-import type { Tap排行榜管理器 } from "../../框架/平台/TapTap/宿主类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
+import type { Tap排行榜管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
 import { 排行榜编号 } from "./配置";
 
 const 存储键 = "旅行版:Tap用户";

@@ -17,7 +17,9 @@ import type {} from "../../代码/应用/启动";
  */
 const 地址 = process.argv.find((项) => /^https?:/.test(项)) ?? "http://127.0.0.1:3000";
 const 当场切换 = process.argv.includes("--live");
-const 输出 = resolve(当场切换 ? "reports/英文覆盖/当场切换" : "reports/英文覆盖/重新加载");
+const 输出 = resolve(
+  当场切换 ? ".gamemaker/报告/英文覆盖/当场切换" : ".gamemaker/报告/英文覆盖/重新加载",
+);
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 环境 = await 浏览器.newContext({

@@ -14,7 +14,7 @@ import type { 界面快照, 界面按钮快照 } from "../../代码/应用/接�
  * 只保存截图、文字图集几何、画布尺寸与规则断言，截图必须人工查看。
  */
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
-const 输出 = resolve("reports/文字与操作盘");
+const 输出 = resolve(".gamemaker/报告/文字与操作盘");
 const 视口 = { 宽: 390, 高: 844 } as const;
 const 纹理预算字节 = 32 * 1024 * 1024;
 const DPR列表 = [1, 2] as const;

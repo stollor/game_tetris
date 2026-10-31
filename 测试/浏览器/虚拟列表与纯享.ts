@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 import type {} from "../../代码/应用/启动";
 
 // 项目目标：手机390×844 DPR1；Chrome模拟视口，不是真机。
-const 输出 = resolve(process.argv[3] ?? "reports/虚拟列表与纯享");
+const 输出 = resolve(process.argv[3] ?? ".gamemaker/报告/虚拟列表与纯享");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 页 = await 浏览器.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });

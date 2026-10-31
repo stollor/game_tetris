@@ -5,7 +5,7 @@ import { chromium } from "playwright";
 /** 分层静止截图（验收辅助）：对局、暂停菜单、设置、成就、商店、商店纯享。 */
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
-const 输出 = resolve("reports/过渡抓帧/静止");
+const 输出 = resolve(".gamemaker/报告/过渡抓帧/静止");
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 环境 = await 浏览器.newContext({

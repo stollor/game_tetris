@@ -1,4 +1,4 @@
-import { 探测Tap能力 } from "../../../框架/平台/TapTap/宿主探测";
+import { 探测Tap能力 } from "../../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import { 解锁平台成就 } from "../../平台/平台成就";
 import type { 加载排行榜结果 } from "../../平台/排行榜";
 import { 加载排行榜数据, 提交模式分数 } from "../../平台/排行榜";

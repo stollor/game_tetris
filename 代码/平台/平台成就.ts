@@ -1,5 +1,5 @@
-import { 探测Tap能力, 读取Tap宿主 } from "../../框架/平台/TapTap/宿主探测";
-import type { Tap成就管理器 } from "../../框架/平台/TapTap/宿主类型";
+import { 探测Tap能力, 读取Tap宿主 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
+import type { Tap成就管理器 } from "../../.gamemaker/依赖/框架/平台/TapTap/宿主类型";
 import { 是未登录错误 } from "./登录";
 import { 平台成就映射 } from "./配置";
 

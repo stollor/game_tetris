@@ -12,13 +12,13 @@ import type { 对局快照 } from "../../代码/页面/对局/对局页面";
  * 暂停/继续 → 结束 → 结算 → 重新开始 → 返回主菜单；设置项持久化；商店购买/穿戴；
  * 音频静音；性能数据（首帧/平均帧间隔/单帧脚本耗时/内存/绘制调用/四边形数）。
  * 页面操作通过调试桥 `读取界面()` 的按钮名称真实点击，不硬编码坐标。
- * 结果写游戏 reports/three版/结果.json 与截图。
+ * 结果写 .gamemaker/报告/three版/结果.json 与截图。
  */
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3000";
 /** 默认与历史证据一致用 DPR1；P3 手机验收要求 DPR2，可用 --DPR=2 复跑。 */
 const DPR = Number(process.argv.find((项) => 项.startsWith("--DPR="))?.split("=")[1] ?? 1);
-const 输出 = resolve("reports/three版");
+const 输出 = resolve(".gamemaker/报告/three版");
 await mkdir(输出, { recursive: true });
 
 type 验收记录 = {
@@ -430,7 +430,7 @@ try {
       2,
     ),
   );
-  console.log("Three 版完整功能验收通过，截图与结果：reports/three版/");
+  console.log("Three 版完整功能验收通过，截图与结果：.gamemaker/报告/three版/");
 } finally {
   await 浏览器.close();
 }

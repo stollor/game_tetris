@@ -6,7 +6,7 @@ import type { 界面按钮快照 } from "../../代码/应用/接口/上下文";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
 const 省电 = process.argv.includes("--省电");
-const 输出 = resolve(`reports/页面开合/${省电 ? "省电" : "标准"}`);
+const 输出 = resolve(`.gamemaker/报告/页面开合/${省电 ? "省电" : "标准"}`);
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 环境 = await 浏览器.newContext({

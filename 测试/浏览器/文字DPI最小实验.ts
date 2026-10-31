@@ -8,7 +8,7 @@ import { chromium } from "playwright";
  * 8x 超采样）逐行对照，用来定位 DPR1 小字发虚/缺笔画是光栅分辨率还是合批定位造成的。
  * Chromium 模拟视口，由同目录分析脚本做像素统计。
  */
-const 输出 = resolve(process.argv[2] ?? "reports/视觉返工/文字DPI复核/最小实验");
+const 输出 = resolve(process.argv[2] ?? ".gamemaker/报告/视觉返工/文字DPI复核/最小实验");
 await mkdir(输出, { recursive: true });
 // 入口脚本属于运行缓存，不落进 reports；相对路径按仓库根生成。
 const 入口目录 = resolve(".gamemaker/文字DPI最小实验");
@@ -17,9 +17,9 @@ const 入口 = join(入口目录, "入口.ts");
 const 前缀 = relative(入口目录, resolve(".")).replaceAll("\\", "/") + "/";
 
 const 实验源码 = `
-import { 创建渲染编排 } from "${前缀}框架/世界/渲染编排";
-import { 图元合批 } from "${前缀}框架/界面/图元合批";
-import { 创建文字图集 } from "${前缀}框架/界面/文字图集";
+import { 创建渲染编排 } from "${前缀}.gamemaker/依赖/框架/世界/渲染编排";
+import { 图元合批 } from "${前缀}.gamemaker/依赖/框架/界面/图元合批";
+import { 创建文字图集 } from "${前缀}.gamemaker/依赖/框架/界面/文字图集";
 
 const 字体 = '"Segoe UI", "Microsoft YaHei", sans-serif';
 const 字号 = 13;

@@ -1,12 +1,16 @@
-import type { 组件事件 } from "../../框架/节点/命中";
-import type { 节点绘制环境 } from "../../框架/节点/渲染";
-import { 在本地空间绘制, 文字空间矩阵 } from "../../框架/节点/渲染";
-import type { 矩形 } from "../../框架/节点/类型";
-import { 包含点 } from "../../框架/节点/类型";
-import { 组件 } from "../../框架/节点/组件";
-import { 读取画笔 } from "../../框架/节点/组件/文字";
-import type { 模式卡数据, 模式卡绘制状态 } from "../../预制体/模式选择/模式卡配方";
-import { 生成模式卡文字项, 绘制模式卡, 计算模式卡排行区域 } from "../../预制体/模式选择/模式卡配方";
+import type { 组件事件 } from "../../.gamemaker/依赖/框架/节点/命中";
+import type { 节点绘制环境 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import { 在本地空间绘制, 文字空间矩阵 } from "../../.gamemaker/依赖/框架/节点/渲染";
+import type { 矩形 } from "../../.gamemaker/依赖/框架/节点/类型";
+import { 包含点 } from "../../.gamemaker/依赖/框架/节点/类型";
+import { 组件 } from "../../.gamemaker/依赖/框架/节点/组件";
+import { 读取画笔 } from "../../.gamemaker/依赖/框架/节点/组件/文字";
+import type { 模式卡数据, 模式卡绘制状态 } from "../../资源/预制体/模式选择/模式卡配方";
+import {
+  生成模式卡文字项,
+  绘制模式卡,
+  计算模式卡排行区域,
+} from "../../资源/预制体/模式选择/模式卡配方";
 
 /**
  * 模式卡组件（游戏特有）：一张模式装置卡 = 一个节点。

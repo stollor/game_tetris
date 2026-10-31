@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
-import { 构建项目 } from "../GM工具/工具链/游戏项目/构建/构建项目";
-import { 校验配置 } from "../游戏模块库/框架/配置表/配置协议";
+import { 构建项目 } from "../.gamemaker/依赖/GM/工具链/游戏项目/构建/构建项目";
+import { 校验配置 } from "../.gamemaker/依赖/游戏模块库/框架/配置表/配置协议";
 import { 读取服务地址 } from "./服务地址";
 
 /**
@@ -17,6 +17,9 @@ const 基础目录 = process.cwd();
 const 图集目录 = resolve(基础目录, ".gamemaker/图集/项目/再消一行");
 const 资源目录 = resolve(基础目录, "资源");
 const 测试资源目录 = resolve(基础目录, "测试/资源");
+/** 资源验收页在测试目录内；构建产物按文件名索引，所以运行时用文件名当别名。 */
+const 资源验收入口 = "./测试/资源验收/资源验收.html";
+const 资源验收别名 = "资源验收.html";
 
 const 静态路由列表 = [
   { 前缀: "/图集/", 目录: 图集目录 },
@@ -64,7 +67,7 @@ async function 确保构建(): Promise<void> {
   构建中 = (async () => {
     校验配置(await Bun.file("配置/配置表.json").json());
     const 结果 = await 构建项目({
-      entrypoints: ["./index.html", "./index.资源验收.html"],
+      entrypoints: ["./index.html", 资源验收入口],
       target: "browser",
     });
     if (!结果.success) throw new Error(结果.logs.map(String).join("\n"));
@@ -102,8 +105,8 @@ await 确保构建();
                 },
               });
             }
-            const 别名 = 路径 === "资源验收" ? "index.资源验收.html" : 路径;
-            if (!别名 || 别名 === "index.html" || 别名 === "index.资源验收.html") await 确保构建();
+            const 别名 = 路径 === "资源验收" ? 资源验收别名 : 路径;
+            if (!别名 || 别名 === "index.html" || 别名 === 资源验收别名) await 确保构建();
             const 文件 = 静态文件.get(别名 || "index.html") ?? 上次文件.get(别名);
             if (!文件) return new Response("Not Found", { status: 404 });
             return new Response(文件, {

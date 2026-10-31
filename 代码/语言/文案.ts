@@ -1,4 +1,8 @@
-import { type 支持语言, 获取文案 as 获取通用文案, 解析语言 } from "../../框架/设置/多语言";
+import {
+  type 支持语言,
+  获取文案 as 获取通用文案,
+  解析语言,
+} from "../../.gamemaker/依赖/框架/设置/多语言";
 import { 文案 as English } from "./English";
 import { 文案 as 简体中文 } from "./简体中文";
 import type { 游戏文案 } from "./类型";

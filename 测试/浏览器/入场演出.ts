@@ -3,13 +3,13 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 import type {} from "../../代码/应用/启动";
-import { 入场参数, 对局入场时长, 模式退场时长 } from "../../视效/过渡/入场演出";
+import { 入场参数, 对局入场时长, 模式退场时长 } from "../../资源/视效/过渡/入场演出";
 
 const 地址 = process.argv[2] ?? "http://127.0.0.1:3001";
 const 宽 = Number(process.argv.find((项) => 项.startsWith("--宽="))?.split("=")[1] ?? 390);
 const 高 = Number(process.argv.find((项) => 项.startsWith("--高="))?.split("=")[1] ?? 844);
 const 省电 = process.argv.includes("--省电");
-const 输出 = resolve(`reports/入场精修/${宽}x${高}${省电 ? "-省电" : ""}`);
+const 输出 = resolve(`.gamemaker/报告/入场精修/${宽}x${高}${省电 ? "-省电" : ""}`);
 await mkdir(输出, { recursive: true });
 const 浏览器 = await chromium.launch({ channel: "chrome" });
 const 上下文 = await 浏览器.newContext({
