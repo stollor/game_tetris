@@ -108,6 +108,12 @@ export class 模式选择页 extends 页面基类 {
     this.场景秒 = 0;
     this.装饰绘制秒 = 0;
     super.进入();
+    this.切换演出显示(false);
+  }
+
+  恢复(): void {
+    this.切换演出显示(false);
+    super.恢复();
   }
 
   private get 布局(): 模式选择布局 {
@@ -237,7 +243,6 @@ export class 模式选择页 extends 页面基类 {
       if (this.启动.秒 >= 模式退场时长) {
         const 模式 = this.启动.模式;
         this.启动 = null;
-        this.切换演出显示(false);
         this.进入对局(模式);
         return;
       }
@@ -266,7 +271,8 @@ export class 模式选择页 extends 页面基类 {
   }
 
   private 进入对局(模式: 游戏模式): void {
-    this.上下文.导航.进入("对局", { 模式, 入场演出: true });
+    // 专属启动演出已经完成离场，只保留对局自己的入场。
+    this.上下文.导航.进入("对局", { 模式, 入场演出: true }, { 关闭秒: 0 });
   }
 
   // ---- 节点坐标与画法 ----

@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { Texture } from "three";
+import { type Mesh, Texture } from "three";
 import { 图元合批 } from "../../.gamemaker/依赖/框架/界面/图元合批";
 import type { 文字服务 as 控件文字服务, 界面配色 } from "../../.gamemaker/依赖/框架/界面/控件/类型";
 import { Three图形 } from "../../.gamemaker/依赖/框架/界面/绘制/图形";
 import type { 画笔, 资源层 } from "../../.gamemaker/依赖/框架/界面/绘制/画笔";
+import { 渲染节点 } from "../../.gamemaker/依赖/框架/节点/渲染";
 import { 开关组件 } from "../../.gamemaker/依赖/框架/节点/组件/开关";
 import { 按钮组件 } from "../../.gamemaker/依赖/框架/节点/组件/按钮";
 import { 遍历节点 } from "../../.gamemaker/依赖/框架/节点/遍历";
@@ -377,12 +378,88 @@ test("模式选择页列出模式卡、排行与返回，返回上一层，选�
   点按钮(命中, 页面, "返回");
   expect(导航.返回次数).toBe(1);
 
+  let 进入过渡: Parameters<页面上下文["导航"]["进入"]>[2];
+  const 原进入 = 上下文.导航.进入;
+  上下文.导航.进入 = (页, 参数, 过渡) => {
+    进入过渡 = 过渡;
+    原进入(页, 参数, 过渡);
+  };
   点按钮(命中, 页面, "模式:马拉松");
   expect(页面.读取界面().文字).toContain("启动:马拉松");
   // 启动后内容节点全部隐藏，等待退场演出结束再进对局。
   expect(页面.读取界面().按钮).toHaveLength(0);
   页面.更新(模式退场时长);
   expect(导航.进入.at(-1)).toEqual({ 页面: "对局", 参数: { 模式: "马拉松", 入场演出: true } });
+  expect(进入过渡).toEqual({ 关闭秒: 0 });
+  expect(页面.读取界面().按钮).toHaveLength(0);
+  页面.恢复();
+  expect(页面.读取界面().按钮.some((项) => 项.名称 === "模式:马拉松")).toBe(true);
+  页面.销毁();
+});
+
+test("纯享沿用菜单背景，商店与纯享的同帧背景几何一致", () => {
+  准备存储();
+  const 菜单上下文 = 创建页面上下文().上下文;
+  const 菜单纯享 = new 纯享页(菜单上下文);
+  菜单纯享.进入();
+  expect(菜单纯享.读取窗口策略().遮挡).toBe(false);
+  expect(菜单纯享.读取节点("纯享:风景")?.可见).toBe(false);
+  菜单纯享.退出();
+  菜单上下文.参数 = { 来源: "商店", 风景: "砖机液晶", 风景动态: false };
+  expect(菜单纯享.读取窗口策略().遮挡).toBe(true);
+  菜单纯享.进入();
+  expect(菜单纯享.读取节点("纯享:风景")?.可见).toBe(true);
+  expect(菜单纯享.读取背景动态()).toBe(false);
+  菜单纯享.销毁();
+
+  const 背景帧 = (类型: typeof 商店界面 | typeof 纯享页, 名称: string) => {
+    const { 上下文 } = 创建页面上下文({ 参数: { 来源: "商店", 风景: "极光原野", 风景动态: true } });
+    上下文.读取背景时间 = () => 42.25;
+    const 纹理 = new Texture();
+    const 合批 = 上下文.资源.合批;
+    合批.注册纹理("纯色", 纹理);
+    合批.设置纯色({ 紫外线: { u: 0, v: 0, 宽: 1, 高: 1 } });
+    const 页面 = new 类型(上下文);
+    页面.进入();
+    const 风景 = 页面.读取节点(名称);
+    if (!风景) throw new Error("缺少风景节点");
+    渲染节点(风景, { 图形: 上下文.资源.画笔.图形, 页面高: 844, 扩展: { 画笔: 上下文.资源.画笔 } });
+    const 数据 = 合批.提交().children.map((项) => {
+      const 网格 = 项 as Mesh;
+      if (!网格.isMesh) throw new Error("背景应由合批网格绘制");
+      return Object.fromEntries(
+        Object.entries(网格.geometry.attributes).map(([键, 值]) => [键, Array.from(值.array)]),
+      );
+    });
+    页面.销毁();
+    合批.销毁();
+    纹理.dispose();
+    return 数据;
+  };
+  expect(背景帧(纯享页, "纯享:风景")).toEqual(背景帧(商店界面, "商店:风景"));
+});
+
+test("设置遮罩四角与面板上下均可关闭，面板空白不关闭", () => {
+  准备存储();
+  const { 上下文, 命中, 导航 } = 创建页面上下文();
+  const 页面 = new 设置界面(上下文);
+  页面.进入();
+  const 点 = (x: number, y: number) => {
+    命中.派发("按下", { x, y });
+    命中.派发("抬起", { x, y });
+  };
+  点(20, 300);
+  expect(导航.返回次数).toBe(0);
+  for (const [x, y] of [
+    [1, 1],
+    [389, 843],
+    [195, 100],
+    [195, 740],
+  ] as const)
+    点(x, y);
+  expect(导航.返回次数).toBe(4);
+  const 遮罩 = 页面.读取界面().按钮.find((项) => 项.名称 === "设置:遮罩");
+  expect(遮罩).toMatchObject({ 左: 0, 上: 0, 宽: 390, 高: 844 });
   页面.销毁();
 });
 

@@ -6,7 +6,6 @@ import { 在本地空间绘制, 文字空间矩阵 } from "../../.gamemaker/依�
 import { 手势组件 } from "../../.gamemaker/依赖/框架/节点/组件/手势";
 import { 读取画笔 } from "../../.gamemaker/依赖/框架/节点/组件/文字";
 import type { 节点 } from "../../.gamemaker/依赖/框架/节点/节点";
-import { 读取霓虹调色板 } from "../../资源/主题/配色/调色板";
 import { 读取背景动态 } from "../../资源/视效/背景/背景开关";
 import { 绘制背景动态, 绘制背景静底, 读取背景动态亮度 } from "../../资源/视效/背景/背景绘制";
 import { 生成返回按键文字项, 绘制返回传送装置 } from "../../资源/预制体/模式选择/模式装置";
@@ -14,6 +13,7 @@ import { 生成纯享文字项, 绘制纯享圆点 } from "../../资源/预制�
 import type { 页面上下文 } from "../应用/接口/上下文";
 import { 相邻风景, 风景浏览列表, 风景说明, 默认风景 } from "../界面/风景浏览";
 import type { 主题名 } from "../项目配置/主题目录";
+import { 读取部位主题 } from "../项目配置/外观部位";
 import { 计算纯享布局 } from "./布局/纯享布局";
 import { 页面基类 } from "./游戏页面基类";
 import {
@@ -38,6 +38,7 @@ export class 纯享页 extends 页面基类 {
   private 主题: 主题名 = 默认风景("");
   private 停留主题: readonly 主题名[] = [];
   private 动态 = true;
+  private 沿用菜单背景 = true;
   private 场景背景秒 = 0;
   private 背景绘制秒 = 0;
 
@@ -50,10 +51,10 @@ export class 纯享页 extends 页面基类 {
     super(上下文, { 名称: "纯享", 开合: { 打开秒: 0.26, 关闭秒: 0.18 }, 节点树: { 绘制带数: 1 } });
   }
 
-  /** 纯享整页自带主题背景，背景层不再露出。 */
+  /** 菜单入口保留正在显示的混搭背景，切景后才绘制自己的风景。 */
   读取窗口策略() {
     return {
-      遮挡: true,
+      遮挡: this.上下文.参数.来源 === "商店",
       不透明: true,
       暂停下层: true,
       独占命中: true,
@@ -66,12 +67,15 @@ export class 纯享页 extends 页面基类 {
     this.停留主题 = 风景浏览列表();
     const 设置 = this.上下文.服务.设置.读取();
     const 指定 = typeof 参数.风景 === "string" ? 参数.风景 : "";
-    const 候选 = 默认风景(指定 || 设置.主题选择);
+    this.沿用菜单背景 = this.来源 === "菜单";
+    const 候选 = 默认风景(指定 || 读取部位主题(设置, "静态背景"));
     this.主题 = this.停留主题.includes(候选) ? 候选 : (this.停留主题[0] ?? 候选);
-    this.动态 = 读取背景动态(设置);
+    this.动态 = 参数.风景动态 ?? 读取背景动态(设置);
     this.场景背景秒 = 0;
     this.背景绘制秒 = 0;
     super.进入();
+    const 根 = this.读取节点根();
+    if (根) this.应用注册参数(根);
   }
 
   更新(秒: number): void {
@@ -97,6 +101,7 @@ export class 纯享页 extends 页面基类 {
   protected 构建节点树(页面: 节点): void {
     this.创建手势节点(页面);
     this.风景节点 = this.创建风景节点(页面);
+    this.风景节点.设置可见(!this.沿用菜单背景);
     this.标题节点 = 创建文字节点(
       页面,
       { 名称: "纯享:标题", 项: this.标题项() },
@@ -163,6 +168,7 @@ export class 纯享页 extends 页面基类 {
     });
 
     this.风景节点?.读取二维坐标()?.更新参数({ 宽: this.逻辑宽, 高: this.逻辑高 });
+    this.风景节点?.设置可见(!this.沿用菜单背景);
   }
 
   调整尺寸(): void {
@@ -172,6 +178,7 @@ export class 纯享页 extends 页面基类 {
   }
 
   private 切风景(方向: -1 | 1): void {
+    this.沿用菜单背景 = false;
     this.主题 = 相邻风景(this.主题, 方向);
     const 根 = this.读取节点根();
     if (根) this.应用注册参数(根);
@@ -224,11 +231,9 @@ export class 纯享页 extends 页面基类 {
     绘制纯享圆点(图形, this.逻辑宽, this.逻辑高, this.停留主题.length, 当前);
   }
 
-  /** 整屏风景：先用该主题的页面底色兜底，再按主题名画真实背景与动态层。 */
+  /** 与商店使用相同背景配方和时间，不额外叠一层底色。 */
   private 绘制风景(画笔: 画笔): void {
     const 图形 = 画笔.图形;
-    const 调色板 = 读取霓虹调色板(this.主题);
-    图形.fillStyle(调色板.背景, 1).fillRect(0, 0, this.逻辑宽, this.逻辑高);
     const 参数 = {
       宽: this.逻辑宽,
       高: this.逻辑高,
@@ -239,7 +244,7 @@ export class 纯享页 extends 页面基类 {
     if (this.动态)
       绘制背景动态(图形, {
         ...参数,
-        时间秒: this.背景绘制秒,
+        时间秒: this.上下文.读取背景时间?.() ?? this.背景绘制秒,
         亮度: 读取背景动态亮度(this.主题),
       });
   }
