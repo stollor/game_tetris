@@ -1,7 +1,10 @@
-产物/
-node_modules/
-框架/
-GM预览协议.ts
+# 只忽略项目根的共享框架/构建联接与产物，不按目录名忽略任意层级
+/框架/
+/游戏模块库/
+/GM工具/
+/产物/
+/node_modules/
+/GM预览协议.ts
 *.log
 
 # 本地打包与渠道二维码，不进仓库
@@ -25,18 +28,13 @@ GM预览协议.ts
 测试/自测截图/
 测试/dump_*.mjs
 测试/*自测.mjs
-截图/*
-!截图/MVP-对局.png
-!截图/布局适配-手机竖屏.png
-!截图/布局适配-桌面.png
-!截图/布局适配-窗口变化.png
-.gamemaker-contrast-probe/
+/截图/*
+!/截图/MVP-对局.png
+!/截图/布局适配-手机竖屏.png
+!/截图/布局适配-桌面.png
+!/截图/布局适配-窗口变化.png
+/.gamemaker-contrast-probe/
 
 # 本地验收看板
-reports/
-.gamemaker/
-
-游戏模块库/
-
-# GM构建工具只在运行/脚本使用，不提交本机联接
-GM工具/
+/reports/
+/.gamemaker/
