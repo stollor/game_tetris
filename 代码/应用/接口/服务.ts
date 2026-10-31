@@ -5,6 +5,7 @@ import type { 再消一行状态, 方块类型, 游戏模式 } from "../../玩�
 import type { 游戏设置 } from "../../设置/游戏设置";
 import type { 游戏文案 } from "../../语言/类型";
 import type { 主题名 } from "../../项目配置/主题目录";
+import type { 外观部位 } from "../../项目配置/外观部位";
 
 /**
  * 《再消一行》Three 版的应用服务契约：页面只依赖这里的接口，不直接 import 存档/平台细节。
@@ -49,10 +50,12 @@ export interface 纪录服务 {
   保存(模式: 游戏模式, 纪录: 对局纪录, 日期?: string): boolean;
 }
 
-/** 金币与整套主题所有权：商店只卖主题，成就与对局只发金币。 */
+/** 金币与外观所有权：商店可买整套或单个部位，成就与对局只发金币。 */
 export interface 金币服务 {
   读取(): 收藏存档;
   增加(数量: number): 收藏结果;
+  购买(主题: 主题名, 部位: 外观部位 | "整套"): 收藏结果;
+  /** 兼容旧调用方：等同购买整套。 */
   购买主题(主题: 主题名): 收藏结果;
   领取成就(已解锁: readonly string[]): 收藏结果;
   结算对局(输入: 对局奖励输入): 收藏结果;
@@ -80,10 +83,10 @@ export type 音效编号 = string;
 
 export interface 音频服务 {
   设置暂停(暂停: boolean): void;
-  播放音乐(编号: string): void;
+  播放音乐(编号: string, 试听?: boolean): void;
   停止音乐(): void;
   播放音效(编号: 音效编号): void;
-  播放消行(消行数: number, 连击: number): void;
+  播放消行(消行数: number, 连击: number, 试听主题?: 主题名): void;
   设置音量(): void;
   /** 用户手势后解锁音频上下文（启动层在首次 pointerdown/keydown 调用）。 */
   解锁(): void;

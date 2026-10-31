@@ -1,6 +1,6 @@
-import { 像素规范 } from "../../主题/像素/像素规范";
-import { 对局像素规格 } from "../../主题/像素/对局像素规格";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 像素规范, type 像素视觉规范 } from "../../主题/像素/像素规范";
+import { 对局像素规格 } from "../../主题/像素/对局像素规格";
 import { 绘制像素图案 } from "../基础/装饰与蒙层/像素图案";
 import { 绘制像素面板 } from "../基础/面板/像素面板";
 
@@ -12,6 +12,7 @@ export function 绘制糖果方块(
   色: number,
   透明度 = 1,
   幽灵 = false,
+  规范: 像素视觉规范 = 像素规范,
 ): void {
   const 规 = 对局像素规格.方块;
   const p = Math.max(1, Math.round(格 * 规.边比例));
@@ -20,7 +21,7 @@ export function 绘制糖果方块(
   y = Math.round(y);
   图.save().setAlpha(透明度);
   if (幽灵) {
-    图.fillStyle(像素规范.色.暗);
+    图.fillStyle(规范.色.暗);
     for (const [左, 上] of [
       [x, y],
       [x + 宽 - p * 2, y],
@@ -31,11 +32,11 @@ export function 绘制糖果方块(
     图.restore();
     return;
   }
-  图.fillStyle(像素规范.色.壳).fillRect(x, y, 宽, 宽);
+  图.fillStyle(规范.色.壳).fillRect(x, y, 宽, 宽);
   图
-    .fillStyle(像素规范.方块填井 ? 像素规范.色.底 : 色)
+    .fillStyle(规范.方块填井 ? 规范.色.底 : 色)
     .fillRect(x + p, y + p, Math.max(0, 宽 - p * 2), Math.max(0, 宽 - p * 2));
-  const 序 = Object.values<number>(像素规范.方块).indexOf(色);
+  const 序 = Object.values<number>(规范.方块).indexOf(色);
   const 图案 = 规.图案[Math.max(0, 序) % 规.图案.length];
   const 单位 = Math.max(1, Math.floor(格 * 规.图案比例));
   const 图宽 = 图案[0].length * 单位;
@@ -45,7 +46,7 @@ export function 绘制糖果方块(
     x + Math.floor((宽 - 图宽) / 2),
     y + Math.floor((宽 - 图案.length * 单位) / 2),
     单位,
-    像素规范.方块填井 ? 色 : 像素规范.色.壳,
+    规范.方块填井 ? 色 : 规范.色.壳,
   );
   图.restore();
 }

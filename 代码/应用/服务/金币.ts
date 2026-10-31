@@ -15,6 +15,11 @@ export function 创建金币服务(存储: Storage = localStorage): 金币服务
       通知();
       return 结果;
     },
+    购买: (主题, 部位) => {
+      const 结果 = 读收藏().购买(主题, 部位);
+      通知();
+      return 结果;
+    },
     购买主题: (主题) => {
       const 结果 = 读收藏().购买主题(主题);
       通知();

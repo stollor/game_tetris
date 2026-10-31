@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { 夜空鎏金 } from "../../.gamemaker/依赖/框架/样式/夜空鎏金";
+import { 暖纸古典 } from "../../.gamemaker/依赖/框架/样式/暖纸古典";
+import { 获取游戏主题 } from "../../.gamemaker/依赖/框架/样式/样式";
+import { 青蓝未来 } from "../../.gamemaker/依赖/框架/样式/青蓝未来";
 import { 计算颜色对比度 } from "../../.gamemaker/依赖/框架/界面/颜色工具";
 import {
   查找默认主题,
@@ -8,19 +12,15 @@ import {
   诊断主题组合,
   读取可选主题,
 } from "../../.gamemaker/依赖/框架/设置/主题组合";
-import { 获取游戏主题 } from "../../.gamemaker/依赖/框架/样式/样式";
-import { 夜空鎏金 } from "../../.gamemaker/依赖/框架/样式/夜空鎏金";
-import { 暖纸古典 } from "../../.gamemaker/依赖/框架/样式/暖纸古典";
-import { 青蓝未来 } from "../../.gamemaker/依赖/框架/样式/青蓝未来";
-import { 默认主题, 主题列表, 是主题名, type 主题名 } from "../../代码/项目配置/主题目录";
-import { 默认设置, type 游戏设置 } from "../../代码/设置/游戏设置";
 import { 音乐库 } from "../../代码/框架配置/音乐";
+import { type 游戏设置, 默认设置 } from "../../代码/设置/游戏设置";
+import { 主题列表, type 主题名, 是主题名, 默认主题 } from "../../代码/项目配置/主题目录";
 import {
   主题结果转设置,
   解析游戏主题,
   读取当前主题选择,
-  读取游戏主题目录,
   读取有效游戏主题,
+  读取游戏主题目录,
   默认主题编号,
 } from "../../资源/主题/主题组合";
 import { 创建游戏主题 } from "../../资源/主题/游戏主题";
@@ -325,4 +325,80 @@ describe("设置入口", () => {
     expect(new TextDecoder().decode(执行.stderr)).toBe("");
     expect(执行.exitCode).toBe(0);
   });
+});
+
+describe("分部位自由搭配", () => {
+  test("背景、方块、界面、音效与音乐分别覆盖，缓存和显式整套预览正确", () => {
+    const 设置: 游戏设置 = {
+      ...默认设置,
+      外观搭配: {
+        静态背景: "街机彩砖",
+        动态背景: "砖机液晶",
+        方块外观: "立体晶格",
+        界面样式: "砖机液晶",
+        音效套装: "街机彩砖",
+        音乐: "砖机液晶",
+      },
+    };
+    const 结果 = 读取有效游戏主题(设置);
+    const 值 = (槽: string) => 结果.槽位.find((项) => 项.槽位.编号 === 槽)?.资源.值;
+    expect(值("静态背景")).toBe("街机彩砖");
+    expect(值("动态背景")).toBe("砖机液晶");
+    expect(值("方块外观")).toBe("立体晶格");
+    expect(值("棋盘表现")).toBe("透视");
+    expect(值("界面配色")).toBe("砖机液晶");
+    expect(值("音效套装")).toBe("街机彩砖");
+    expect(值("背景音乐")).toBe("砖机液晶");
+    expect(读取有效游戏主题(设置)).toBe(结果);
+    const 换 = 读取有效游戏主题({ ...设置, 外观搭配: { ...设置.外观搭配, 方块外观: "街机彩砖" } });
+    expect(换).not.toBe(结果);
+    expect(换.槽位.find((项) => 项.槽位.编号 === "静态背景")?.资源.值).toBe("街机彩砖");
+    const 预览 = 解析游戏主题(设置, "极光原野");
+    expect(预览.槽位.find((项) => 项.槽位.编号 === "方块外观")?.资源.值).toBe("极光原野");
+  });
+  test("真实设置拒绝未购部位，单件保留其它装备，刷新后保留，穿整套清空搭配", () => {
+    const 执行 = Bun.spawnSync(
+      [
+        "bun",
+        "-e",
+        String.raw`
+    import assert from 'node:assert/strict';
+    const 内容=new Map();
+    globalThis.localStorage={getItem:k=>内容.get(k)??null,setItem:(k,v)=>内容.set(k,v),removeItem:k=>内容.delete(k)};
+    globalThis.window=new EventTarget();
+    const {收藏}=await import('./代码/存档/收藏.ts');
+    const 模块=await import('./代码/设置/游戏设置.ts');
+    const {更新游戏设置,获取游戏设置}=模块;
+    assert.throws(()=>更新游戏设置({外观搭配:{方块外观:'砖机液晶'}}),/尚未拥有/);
+    const c=new 收藏(localStorage);c.增加测试金币(5000);
+    assert.equal(c.购买('砖机液晶','方块外观').成功,true);
+    assert.equal(c.购买('街机彩砖','静态背景').成功,true);
+    更新游戏设置({外观搭配:{方块外观:'砖机液晶'}});
+    更新游戏设置({外观搭配:{...获取游戏设置().外观搭配,静态背景:'街机彩砖'}});
+    assert.equal(获取游戏设置().主题选择,'极光原野');
+    assert.deepEqual(获取游戏设置().外观搭配,{方块外观:'砖机液晶',静态背景:'街机彩砖'});
+    const 刷新=await import('./代码/设置/游戏设置.ts?刷新=搭配');
+    assert.deepEqual(刷新.获取游戏设置().外观搭配,获取游戏设置().外观搭配);
+    assert.throws(()=>更新游戏设置({主题选择:'砖机液晶'}),/尚未拥有/);
+    更新游戏设置({主题选择:'极光原野'});
+    assert.deepEqual(获取游戏设置().外观搭配,{});
+  `,
+      ],
+      { cwd: 项目根路径, stdout: "pipe", stderr: "pipe" },
+    );
+    expect(new TextDecoder().decode(执行.stderr)).toBe("");
+    expect(执行.exitCode).toBe(0);
+  });
+});
+
+test("混搭音频分别读取音乐和音效装备，商店试听不被当前装备覆盖", async () => {
+  const { 读取主题音乐编号, 读取主题音效谱 } = await import("../../代码/音频/音频服务");
+  const { 消行谱 } = await import("../../代码/框架配置/音效");
+  const 设置: 游戏设置 = { ...默认设置, 外观搭配: { 音乐: "街机彩砖", 音效套装: "极光原野" } };
+  expect(读取主题音乐编号(设置, "再消一行.菜单")).toBe("街机彩砖.主题");
+  expect(读取主题音乐编号(设置, "砖机液晶.主题", true)).toBe("砖机液晶.主题");
+  expect(读取主题音乐编号(设置, "再消一行.菜单", true)).toBe("再消一行.菜单");
+  const 谱 = 消行谱(1);
+  expect(读取主题音效谱(设置, 谱)).toBe(谱);
+  expect(读取主题音效谱(设置, 谱, "砖机液晶")).not.toBe(谱);
 });

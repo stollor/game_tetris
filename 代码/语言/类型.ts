@@ -1,6 +1,12 @@
 import type { 游戏文案 as 通用游戏文案 } from "../../.gamemaker/依赖/框架/设置/语言/类型";
 
 export interface 再消一行文案 {
+  商店部位: Record<string, string>;
+  商店穿戴: string;
+  商店穿整套: string;
+  商店搭配说明: string;
+  商店包含静态: string;
+  商店穿戴说明: string;
   对局设置: string;
   落点影透明度: string;
   旋转180设置: string;

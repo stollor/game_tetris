@@ -38,7 +38,9 @@ async function 查找(名称: string, 超时毫秒 = 8000): Promise<界面按钮
   let 项 = (await 界面())?.按钮.find((项) => 项.名称 === 名称 && 项.可用 !== false);
   while (!项) {
     if (Date.now() - 起 > 超时毫秒)
-      throw new Error(`缺少可用按钮 ${名称}：${((await 界面())?.按钮 ?? []).map((项) => 项.名称).join("、")}`);
+      throw new Error(
+        `缺少可用按钮 ${名称}：${((await 界面())?.按钮 ?? []).map((项) => 项.名称).join("、")}`,
+      );
     await 页.waitForTimeout(80);
     项 = (await 界面())?.按钮.find((项) => 项.名称 === 名称 && 项.可用 !== false);
   }
@@ -81,13 +83,6 @@ async function 点行(名称: string) {
   await 页.mouse.click(项.左 + 项.宽 / 2, 项.上 + 项.高 / 2);
   await 页.waitForTimeout(160);
 }
-/** 主按钮名字随状态变化（使用中 / 使用 / 购买 · ▣ 价），按前缀点。 */
-async function 点主按钮() {
-  const 项 = (await 界面())?.按钮.find((项) => 项.名称.startsWith("商店:主按钮"));
-  assert.ok(项, "缺少商店主按钮");
-  await 页.mouse.click(项.左 + 项.宽 / 2, 项.上 + 项.高 / 2);
-  await 页.waitForTimeout(200);
-}
 async function 记录(名称: string) {
   await 页.screenshot({ path: join(输出, `${步骤.length + 1}-${名称}.png`) });
   步骤.push({ 名称, 界面: await 界面(), 状态: await 状态() });
@@ -104,8 +99,7 @@ async function 回菜单() {
   for (let 次 = 0; 次 < 4; 次++) {
     const 钮 = (await 界面())?.按钮 ?? [];
     if (钮.some((项) => 项.名称 === "开始游戏")) return;
-    const 出口 =
-      钮.find((项) => 项.名称 === "返回主菜单") ?? 钮.find((项) => 项.名称 === "返回");
+    const 出口 = 钮.find((项) => 项.名称 === "返回主菜单") ?? 钮.find((项) => 项.名称 === "返回");
     if (!出口) break;
     await 页.mouse.click(出口.左 + 出口.宽 / 2, 出口.上 + 出口.高 / 2);
     await 页.waitForTimeout(320);
@@ -126,13 +120,25 @@ try {
     "纯享左滑切到下一套主题",
   );
   await 滑动(80, 400, 300, 400);
-  assert.equal((await 文字()).find((项) => 项.startsWith("风景:")), 原主题, "纯享右滑切回");
+  assert.equal(
+    (await 文字()).find((项) => 项.startsWith("风景:")),
+    原主题,
+    "纯享右滑切回",
+  );
   // 纯享自带动态开关：初始跟随设置（本脚本开跑前已关），点一下翻转、再点回来。
   const 原动态 = (await 文字()).find((项) => 项.startsWith("动态:"));
   await 点("纯享:动态");
-  assert.notEqual((await 文字()).find((项) => 项.startsWith("动态:")), 原动态, "纯享动态开关可切");
+  assert.notEqual(
+    (await 文字()).find((项) => 项.startsWith("动态:")),
+    原动态,
+    "纯享动态开关可切",
+  );
   await 点("纯享:动态");
-  assert.equal((await 文字()).find((项) => 项.startsWith("动态:")), 原动态, "纯享动态开关可切回");
+  assert.equal(
+    (await 文字()).find((项) => 项.startsWith("动态:")),
+    原动态,
+    "纯享动态开关可切回",
+  );
   await 滑动(180, 320, 180, 530);
   await 查找("开始游戏");
   await 记录("纯享四套主题切换、动态开关与下滑返回");
@@ -142,10 +148,7 @@ try {
   await 查找("语言:English");
   // 点遮罩关闭语言菜单（不选语言、不改设置）。
   await 点("关闭语言菜单");
-  assert.ok(
-    !(await 界面())?.按钮.some((项) => 项.名称 === "语言:English"),
-    "点遮罩关闭语言菜单",
-  );
+  assert.ok(!(await 界面())?.按钮.some((项) => 项.名称 === "语言:English"), "点遮罩关闭语言菜单");
   assert.equal((await 设置())?.语言, "简体中文", "关闭菜单不改语言");
   await 点行("语言下拉框");
   await 点("语言:English");
@@ -170,13 +173,15 @@ try {
     `音效滑块点 75% 应写入 75，实际 ${音效点击值}（矩形 ${JSON.stringify(音效滑)}）`,
   );
   const 音效滑二 = await 滚到可见("音量:音效音量");
-  await 滑动(音效滑二.左 + 音效滑二.宽 * 0.75, 音效滑二.上 + 音效滑二.高 / 2, 音效滑二.左 + 音效滑二.宽 * 0.4, 音效滑二.上 + 音效滑二.高 / 2);
+  await 滑动(
+    音效滑二.左 + 音效滑二.宽 * 0.75,
+    音效滑二.上 + 音效滑二.高 / 2,
+    音效滑二.左 + 音效滑二.宽 * 0.4,
+    音效滑二.上 + 音效滑二.高 / 2,
+  );
   // 拖动会逐次写设置并重建内容节点，指针后续帧会落到新节点上，因此只断言「拖低了」。
   const 音效拖动值 = (await 设置())?.音效音量 ?? 0;
-  assert.ok(
-    音效拖动值 < 75 && 音效拖动值 >= 5,
-    `音效滑块拖动应把音量拖低（75 → ${音效拖动值}）`,
-  );
+  assert.ok(音效拖动值 < 75 && 音效拖动值 >= 5, `音效滑块拖动应把音量拖低（75 → ${音效拖动值}）`);
   // 音乐音量读写往返（专属设置曾把它覆盖回旧值，已由设置层修好）。
   const 音乐往返 = await 页.evaluate(() => {
     window.__three版__?.更新设置({ 音乐音量: 40 });
@@ -211,57 +216,67 @@ try {
   await 回菜单();
 
   await 点("商店");
-  assert.equal((await 文字()).includes("页面:商店"), true, "进入主题商店");
+  assert.equal((await 文字()).includes("页面:商店"), true, "进入旅行商店");
   await 页.evaluate(() => window.__three版__?.增加金币(5000));
   await 页.waitForTimeout(150);
-  await 点("商店主题:砖机液晶");
+  const 文本值 = async (前缀: string) =>
+    (await 文字()).find((项) => 项.startsWith(前缀))?.slice(前缀.length) ?? "";
+  await 点("商店地点:砖机液晶");
+  assert.equal(await 文本值("地点:"), "砖机液晶", "目录切到砖机液晶");
+  assert.equal(await 文本值("已购:"), "0", "砖机液晶初始没有部位");
+  assert.equal(await 文本值("单件价:"), "120", "砖机方块外观单件价 120");
   const 钱前 = await 金币数();
-  assert.ok(
-    ((await 界面())?.按钮.find((项) => 项.名称.startsWith("商店:主按钮"))?.名称 ?? "").includes(
-      "购买",
-    ),
-    "未拥有主题主按钮应是购买",
-  );
-  await 点主按钮();
+  // 单件购买：遮罩关闭、取消都不扣币，确认只扣 120 且只解锁一个部位。
+  await 点("购买:砖机液晶.方块外观");
   await 查找("确认交易");
-  // 点纸页外（遮罩）关纸页：不扣币、不切主题。
   await 页.mouse.click(195, 120);
   await 页.waitForTimeout(200);
-  assert.ok(
-    !(await 界面())?.按钮.some((项) => 项.名称 === "确认交易"),
-    "点遮罩关闭确认纸页",
-  );
+  assert.ok(!(await 界面())?.按钮.some((项) => 项.名称 === "确认交易"), "点遮罩关闭确认纸页");
   assert.equal(await 金币数(), 钱前, "点遮罩不扣币");
-  // 取消不扣币，确认才扣币并生效。
-  await 点主按钮();
+  await 点("购买:砖机液晶.方块外观");
   await 点("取消交易");
   assert.equal(await 金币数(), 钱前, "取消不扣币");
-  await 点主按钮();
+  await 点("购买:砖机液晶.方块外观");
+  assert.equal(await 文本值("确认:"), "方块外观:120");
   await 点("确认交易");
   await 页.waitForTimeout(320);
-  assert.ok((await 金币数()) < 钱前, "确认购买扣币");
-  assert.equal((await 设置())?.主题选择, "砖机液晶", "购买后主题立即生效");
-  const 买后主按钮 =
-    (await 界面())?.按钮.find((项) => 项.名称.startsWith("商店:主按钮"))?.名称 ?? "";
-  assert.ok(买后主按钮.endsWith("使用中"), `购买后主按钮应为使用中：${买后主按钮}`);
+  assert.equal(await 金币数(), 钱前 - 120, "购买方块外观扣 120");
+  assert.equal(await 文本值("已购:"), "1", "单件只解锁一个部位");
+  assert.deepEqual((await 设置())?.外观搭配, { 方块外观: "砖机液晶" });
+  assert.equal((await 设置())?.主题选择, "极光原野", "单件穿戴不改主题选择");
+  // 已拥有部位再穿戴也先开纸页，确认后不扣币。
+  const 穿戴前 = await 金币数();
+  await 点("穿戴:砖机液晶.方块外观");
+  assert.equal(await 文本值("确认:"), "方块外观:0");
+  await 点("确认交易");
+  assert.equal(await 金币数(), 穿戴前, "已拥有部位穿戴不扣币");
+  assert.deepEqual((await 设置())?.外观搭配, { 方块外观: "砖机液晶" });
+  // 剩余整套 420：确认后主题切砖机、清空单件搭配；再穿整套不扣币。
+  assert.equal(await 文本值("整套价:"), "420", "买过方块后整套只补未购 420");
+  await 点("购买:砖机液晶.整套");
+  await 点("确认交易");
+  await 页.waitForTimeout(320);
+  assert.equal(await 文本值("已购:"), "6", "整套购买后六个部位全解锁");
+  assert.equal(await 文本值("整套价:"), "0");
+  assert.deepEqual((await 设置())?.外观搭配, {}, "整套穿戴清空单件搭配");
+  assert.equal((await 设置())?.主题选择, "砖机液晶", "整套穿戴写主题选择");
+  const 整套钱前 = await 金币数();
+  await 点("穿戴:砖机液晶.整套");
+  assert.equal(await 文本值("确认:"), "整套:0");
+  await 点("确认交易");
+  assert.equal(await 金币数(), 整套钱前, "已购整套穿戴不扣币");
+  // 纯享返回后仍能操作商店。
+  await 点("商店:纯享");
+  await 查找("纯享:返回");
   assert.ok(
-    (await 文字()).some((项) => 项 === "已购主题:1"),
-    `购买后应记录一套已购主题：${(await 文字()).join(" | ")}`,
+    (await 文字()).some((项) => 项.startsWith("来源:商店")),
+    "商店纯享入口应进入纯享页",
   );
-  // 已拥有主题直接切换，不再扣币。
-  await 点("商店主题:街机彩砖");
-  const 未购主按钮 =
-    (await 界面())?.按钮.find((项) => 项.名称.startsWith("商店:主按钮"))?.名称 ?? "";
-  assert.ok(未购主按钮.includes("购买"), "未购买主题仍是购买");
-  const 钱前切换 = await 金币数();
-  await 点("商店主题:极光原野");
-  await 点主按钮();
-  assert.equal((await 设置())?.主题选择, "极光原野", "默认主题可直接使用");
-  await 点("商店主题:砖机液晶");
-  await 点主按钮();
-  assert.equal((await 设置())?.主题选择, "砖机液晶", "已购主题可直接切换");
-  assert.equal(await 金币数(), 钱前切换, "已拥有主题切换不扣币");
-  await 记录("主题商店购买、取消、遮罩关闭与已购切换");
+  await 点("纯享:返回");
+  await 查找("商店地点:极光原野");
+  await 点("商店地点:街机彩砖");
+  assert.equal(await 文本值("地点:"), "街机彩砖", "纯享返回后商店仍可切换地点");
+  await 记录("商店单件/整套购买、取消遮罩与纯享回归");
   await 回菜单();
 
   await 点("成就");
@@ -273,7 +288,10 @@ try {
   );
   assert.ok(
     成就文字.some((项) => /:(?:已|未)解锁:\d+\/\d+$/.test(项)),
-    `成就行应带解锁状态与进度：${成就文字.filter((项) => 项.includes("解锁")).slice(0, 3).join(" | ")}`,
+    `成就行应带解锁状态与进度：${成就文字
+      .filter((项) => 项.includes("解锁"))
+      .slice(0, 3)
+      .join(" | ")}`,
   );
   // 滚动状态变化只在真的能滚时比对（列表短时无可滚内容）。
   const 滚动前 = 成就文字.find((项) => 项.startsWith("滚动:"));

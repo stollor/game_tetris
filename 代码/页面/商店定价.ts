@@ -1,38 +1,41 @@
-import {
-  主题价格,
-  主题列表,
-  type 主题名,
-  可购主题,
-  是主题名,
-  默认主题,
-} from "../项目配置/主题目录";
-
-/**
- * 商店定价：价格只来自 `代码/项目配置/主题目录.ts`，已购状态只来自收藏存档的 `已购主题`。
- * 页面只把存档里的已购列表传进来，不直接读存档实现，也不另算折扣。
- */
-
-/** 主题是否已拥有：默认主题出厂即有，其余看在商店买过的整套主题。 */
-export function 已拥有(已购: readonly string[], 主题: 主题名): boolean {
-  return 主题 === 默认主题 || 已购.includes(主题);
+import { 主题列表, type 主题名, 可购主题, 是主题名, 默认主题 } from "../项目配置/主题目录";
+import { 外观编号, type 外观部位, 外观部位列表, 套装折扣, 部位原价 } from "../项目配置/外观部位";
+export function 已拥有(已购: readonly string[], 主题: 主题名, 部位?: 外观部位): boolean {
+  if (主题 === 默认主题) return true;
+  return 部位
+    ? 已购.includes(外观编号(主题, 部位))
+    : 外观部位列表.every((项) => 已拥有(已购, 主题, 项));
 }
-
-/** 当前报价；已拥有为 0（按钮改为「使用」），默认主题同样为 0 且不可购买。 */
-export function 计算报价(主题: 主题名, 已购: readonly string[]): number {
-  return 已拥有(已购, 主题) ? 0 : 主题价格[主题];
+/** 动态背景包含静态；整套只对尚未购买的部位打72折，向上取整到10。 */
+export function 计算报价(主题: 主题名, 部位: 外观部位 | "整套", 已购: readonly string[]): number {
+  if (主题 === 默认主题) return 0;
+  if (部位 === "整套")
+    return (
+      Math.ceil(
+        (外观部位列表
+          .filter((项) => 项 !== "静态背景")
+          .reduce((总, 项) => 总 + 计算报价(主题, 项, 已购), 0) *
+          套装折扣) /
+          10,
+      ) * 10
+    );
+  if (已拥有(已购, 主题, 部位)) return 0;
+  return 部位 === "动态背景" && 已拥有(已购, 主题, "静态背景")
+    ? 部位原价[部位] - 部位原价.静态背景
+    : 部位原价[部位];
 }
-
-/** 商店可展示的主题：默认主题展示但标「默认主题」，其余三套整套出售。 */
+export function 整套已拥有(已购: readonly string[], 主题: 主题名): boolean {
+  return 已拥有(已购, 主题);
+}
+export function 已购数量(已购: readonly string[], 主题: 主题名): number {
+  return 外观部位列表.filter((项) => 已拥有(已购, 主题, 项)).length;
+}
 export function 商店主题列表(): readonly 主题名[] {
   return 主题列表;
 }
-
-/** 商店在售主题（不含默认主题），供购买用例与预览统计使用。 */
 export function 在售主题列表(): readonly 主题名[] {
   return 可购主题;
 }
-
-/** 主题目录里的主题名才允许进入确认纸页，防止快照/参数注入未知商品。 */
 export function 是可购主题(值: unknown): 值 is 主题名 {
   return 是主题名(值) && 值 !== 默认主题;
 }
