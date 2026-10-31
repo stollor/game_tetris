@@ -1,0 +1,19 @@
+{
+  // 根目录只保留项目内容与运行入口；工程配置文件折叠到 package.json 下。
+  // 只影响编辑器显示，不改磁盘结构，Bun / Biome / tsc / Git / GM 打包都照旧从根读取。
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "bun.lock, bunfig.toml, tsconfig.json, biome.json, .gitignore, .gitattributes"
+  },
+  // 本机工作台与依赖不进视野（需要时可在「文件: 排除」里临时关掉）。
+  "files.exclude": {
+    "**/.gamemaker": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/.gamemaker": true,
+    "**/node_modules": true,
+    "**/bun.lock": true
+  }
+}
