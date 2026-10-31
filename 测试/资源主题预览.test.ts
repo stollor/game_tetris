@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { 界面资源样品 } from "../组件/预览/界面资源";
+import { 界面资源样品 } from "../预制体/预览/界面资源";
 
 test("独立样品的主题槽位由同一输入接管，保留有效的形状及播放输入", () => {
   const 背景 = 界面资源样品.find((项) => 项.编号 === "game-background");

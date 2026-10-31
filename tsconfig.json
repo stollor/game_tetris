@@ -18,5 +18,5 @@
     "skipLibCheck": true
   },
   "include": ["代码", "视效", "主题", "运行", "框架", "组件", "测试"],
-  "exclude": ["node_modules", "组件/草稿"]
+  "exclude": ["node_modules", "预制体/草稿"]
 }

@@ -1,5 +1,4 @@
 import { 读取霓虹调色板, 霓虹界面主题 } from "../../主题/配色/调色板";
-import { 项目界面资源 } from "../../组件/资源目录";
 
 export function 接入主题预览(
   读取当前: () => string,
@@ -32,10 +31,7 @@ export function 接入主题预览(
           正文: 配色.正文,
         };
       });
-      window.parent.postMessage(
-        { 类型: "gm-ui-themes", 主题, 当前: 读取当前(), 资源: 项目界面资源 },
-        事件.origin,
-      );
+      window.parent.postMessage({ 类型: "gm-ui-themes", 主题, 当前: 读取当前() }, 事件.origin);
     } else if (数据.类型 === "gm-ui-theme-preview") {
       if (数据.样式 === null) 设置预览(undefined);
       else {

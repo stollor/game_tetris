@@ -9,10 +9,10 @@ import { 绘制对局设置, 计算对局设置布局 } from "../代码/页面/�
 import { 计算对局布局 } from "../代码/页面/布局/对局布局";
 import { 配置控件规格 } from "../框架/样式/控件规格";
 import type { 图形对象, 矩形 } from "../框架/界面/绘制/协议";
-import { 绘制霓虹玻璃 } from "../组件/基础/面板/霓虹玻璃";
-import { 生成常规按钮内容, 绘制常规按钮, 绘制常规按钮图标 } from "../组件/基础/按钮/按钮配方";
-import { 绘制列表行 } from "../组件/基础/输入与选择/页面控件";
-import { 生成操作键轮廓, 绘制图标角键, 绘制操作键 } from "../组件/对局/操作键配方";
+import { 绘制霓虹玻璃 } from "../预制体/基础/面板/霓虹玻璃";
+import { 生成常规按钮内容, 绘制常规按钮, 绘制常规按钮图标 } from "../预制体/基础/按钮/按钮配方";
+import { 绘制列表行 } from "../预制体/基础/输入与选择/页面控件";
+import { 生成操作键轮廓, 绘制图标角键, 绘制操作键 } from "../预制体/对局/操作键配方";
 
 interface 调用 {
   方法: string;
@@ -44,7 +44,7 @@ const 列表行矩形: 矩形 = { 左: 24, 上: 72, 宽: 342, 高: 68 };
 
 test("metadata 只登记源码与状态，真实配方由准备资源惰性加载", async () => {
   const 构建 = await Bun.build({
-    entrypoints: [join(项目根, "组件/预览/控件规格样品.ts")],
+    entrypoints: [join(项目根, "预制体/预览/控件规格样品.ts")],
     target: "bun",
     metafile: true,
     // 当前 bun-types 的 BuildConfig 尚未声明 write；运行时仅在内存里取模块图。
@@ -52,30 +52,30 @@ test("metadata 只登记源码与状态，真实配方由准备资源惰性加�
   });
   expect(构建.success).toBe(true);
   const 入口 = Object.entries(构建.metafile?.inputs ?? {}).find(([路径]) =>
-    路径.endsWith("组件/预览/控件规格样品.ts"),
+    路径.endsWith("预制体/预览/控件规格样品.ts"),
   )?.[1];
   expect(入口).toBeDefined();
   const 静态导入 = (入口?.imports ?? [])
     .filter((项) => 项.kind === "import-statement")
     .map((项) => 项.path);
-  expect(静态导入).toEqual(["组件/预览/主题状态.ts"]);
+  expect(静态导入).toEqual(["预制体/预览/主题状态.ts"]);
   const 动态导入 = new Set(
     (入口?.imports ?? []).filter((项) => 项.kind === "dynamic-import").map((项) => 项.path),
   );
   for (const 路径 of [
-    "组件/基础/面板/霓虹玻璃.ts",
-    "组件/基础/输入与选择/页面控件.ts",
+    "预制体/基础/面板/霓虹玻璃.ts",
+    "预制体/基础/输入与选择/页面控件.ts",
     "代码/页面/对局/设置面板.ts",
     "代码/语言/文案.ts",
     "代码/成就/再消一行成就.ts",
     "主题/配色/主题读取.ts",
-    "组件/对局/操作键配方.ts",
-    "组件/对局/对局仪表.ts",
+    "预制体/对局/操作键配方.ts",
+    "预制体/对局/对局仪表.ts",
     "代码/页面/布局/对局布局.ts",
   ])
     expect(动态导入.has(路径)).toBe(true);
 
-  const 模块 = await import("../组件/预览/控件规格样品");
+  const 模块 = await import("../预制体/预览/控件规格样品");
   const 样品 = 模块.控件规格样品;
   expect(样品.map((项) => 项.编号)).toEqual([
     "spec-panel",
@@ -110,11 +110,11 @@ test("metadata 只登记源码与状态，真实配方由准备资源惰性加�
     expect(typeof 项.准备资源).toBe("function");
     expect(项.源码[0]).toEqual(
       项.编号 === "spec-meter"
-        ? { 路径: "组件/对局/对局仪表.ts", 导出: "绘制对局仪表" }
-        : { 路径: "组件/预览/控件规格样品.ts", 导出: "控件规格样品" },
+        ? { 路径: "预制体/对局/对局仪表.ts", 导出: "绘制对局仪表" }
+        : { 路径: "预制体/预览/控件规格样品.ts", 导出: "控件规格样品" },
     );
   }
-  const { 界面资源样品 } = await import("../组件/预览/界面资源");
+  const { 界面资源样品 } = await import("../预制体/预览/界面资源");
   const 按钮 = 界面资源样品.find((项) => 项.编号 === "neon-button");
   expect(按钮?.名称).toBe("常规按钮");
   expect(按钮?.控件规格?.分组).toBe("按钮");
@@ -122,7 +122,7 @@ test("metadata 只登记源码与状态，真实配方由准备资源惰性加�
     new Set(["圆角", "描边宽", "面板透明度", "描边透明度", "图标间距", "下沉"]),
   );
   expect(按钮?.状态.find((项) => 项.键 === "图标")?.默认).toBe("是");
-  expect(按钮?.源码.some((项) => 项.路径 === "组件/基础/按钮/按钮配方.ts")).toBe(true);
+  expect(按钮?.源码.some((项) => 项.路径 === "预制体/基础/按钮/按钮配方.ts")).toBe(true);
   const 操作键 = 界面资源样品.find((项) => 项.编号 === "key-face");
   expect(操作键?.名称).toBe("操作键");
   expect(操作键?.控件规格?.分组).toBe("操作键");
@@ -132,7 +132,7 @@ test("metadata 只登记源码与状态，真实配方由准备资源惰性加�
   expect(
     样品
       .find((项) => 项.编号 === "spec-panel")
-      ?.源码.some((项) => 项.路径 === "组件/基础/面板/霓虹玻璃.ts"),
+      ?.源码.some((项) => 项.路径 === "预制体/基础/面板/霓虹玻璃.ts"),
   ).toBe(true);
   expect(
     样品
@@ -142,7 +142,7 @@ test("metadata 只登记源码与状态，真实配方由准备资源惰性加�
   expect(
     样品
       .find((项) => 项.编号 === "spec-list")
-      ?.源码.some((项) => 项.路径 === "组件/基础/输入与选择/页面控件.ts"),
+      ?.源码.some((项) => 项.路径 === "预制体/基础/输入与选择/页面控件.ts"),
   ).toBe(true);
 });
 

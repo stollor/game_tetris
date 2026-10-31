@@ -13,7 +13,7 @@ test("外部包不携带测试、看板目录或默认主题，发布配置只�
   expect(结果.success).toBe(true);
   for (const 输出 of Object.values(结果.metafile!.outputs))
     for (const [路径, 输入] of Object.entries(输出.inputs))
-      if (/[/\\]测试[/\\]|组件[/\\]资源目录|样式[/\\](夜空鎏金|暖纸古典|青蓝未来)\.ts/.test(路径))
+      if (/[/\\]测试[/\\]|样式[/\\](夜空鎏金|暖纸古典|青蓝未来)\.ts/.test(路径))
         expect(输入.bytesInOutput, 路径).toBe(0);
   const 脚本 = (
     await Promise.all(结果.outputs.filter((项) => 项.path.endsWith(".js")).map((项) => 项.text()))

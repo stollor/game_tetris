@@ -146,7 +146,7 @@ export function 绘制常规按钮(
     透明度: 面板透明度,
     边透明度: 边框透明度,
   });
-  if (import.meta.env.GM_TEST === "1") 记录资源绘制("组件/基础/按钮/按钮配方.ts", "绘制常规按钮");
+  if (import.meta.env.GM_TEST === "1") 记录资源绘制("预制体/基础/按钮/按钮配方.ts", "绘制常规按钮");
 }
 
 export interface 常规按钮图标 {

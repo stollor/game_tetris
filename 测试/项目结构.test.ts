@@ -23,7 +23,7 @@ test("现行入口与职责归位，构建工具和独立预览不进入业务�
     for (const 文件 of await 源文件(join(根, 目录名))) {
       for (const 项 of 解析器.scanImports(await readFile(文件, "utf8"))) {
         expect(
-          /GM工具|(?:^|\/)源码\/|组件\/预览\/|^(node:|bun$|playwright$)/.test(项.path),
+          /GM工具|(?:^|\/)源码\/|预制体\/预览\/|^(node:|bun$|playwright$)/.test(项.path),
           文件 + " → " + 项.path,
         ).toBe(false);
         if (/^three(?:\/|$)/.test(项.path)) {
