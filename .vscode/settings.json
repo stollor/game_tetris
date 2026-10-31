@@ -6,11 +6,11 @@
   "explorer.fileNesting.patterns": {
     "package.json": "bun.lock, bunfig.toml, tsconfig.json, biome.json, .gitignore, .gitattributes"
   },
-  // 本机工作台与依赖不进视野（需要时可在「文件: 排除」里临时关掉）。
+  // 依赖不进视野；.gamemaker 是 GM 托管区，需要查看产物/报告时要在侧栏可见。
   "files.exclude": {
-    "**/.gamemaker": true,
     "**/node_modules": true
   },
+  // 搜索仍排除托管区与依赖，避免缓存文件淹没结果；需要时可在「搜索: 排除」里临时关掉。
   "search.exclude": {
     "**/.gamemaker": true,
     "**/node_modules": true,
