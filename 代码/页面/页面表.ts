@@ -1,11 +1,11 @@
 import type { 页面上下文, 页面注册表 } from "../应用/接口/上下文";
-import { 成就界面 } from "./成就界面";
 import { 商店界面 } from "./商店界面";
-import { 菜单页 } from "./菜单页";
-import { 设置界面 } from "./设置界面";
+import { 成就界面 } from "./成就界面";
 import { 排行榜界面 } from "./排行榜界面";
 import { 模式选择页 } from "./模式选择页";
 import { 纯享页 } from "./纯享页";
+import { 菜单页 } from "./菜单页";
+import { 设置界面 } from "./设置界面";
 
 /**
  * 页面表：启动层把这里返回的注册表与对局/暂停菜单/结算合并进页面宿主。

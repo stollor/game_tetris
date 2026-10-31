@@ -5,8 +5,8 @@ import { 是立体风格 } from "../../主题/立体/立体风格";
 import { 读取霓虹调色板 } from "../../主题/配色/调色板";
 import type { 图形对象, 矩形 } from "../../框架/界面/绘制/协议";
 import { 绘制像素面板 } from "../基础/面板/像素面板";
-import { 绘制霓虹玻璃 } from "../基础/面板/霓虹玻璃";
 import { 绘制金属板 } from "../基础/面板/金属板";
+import { 绘制霓虹玻璃 } from "../基础/面板/霓虹玻璃";
 export interface 霓虹侧栏几何 {
   左: number;
   顶: number;

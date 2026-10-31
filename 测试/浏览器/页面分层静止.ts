@@ -31,11 +31,10 @@ const 等页面 = (名: string) =>
     timeout: 8000,
   });
 const 等过渡结束 = () =>
-  页.waitForFunction(
-    () => !window.__three版__?.读取界面().文字?.includes("过渡:流转"),
-    undefined,
-    { polling: "raf", timeout: 8000 },
-  );
+  页.waitForFunction(() => !window.__three版__?.读取界面().文字?.includes("过渡:流转"), undefined, {
+    polling: "raf",
+    timeout: 8000,
+  });
 const 拍 = async (名: string) => {
   await 页.waitForTimeout(320);
   await 页.screenshot({ path: resolve(输出, `${名}.png`) });

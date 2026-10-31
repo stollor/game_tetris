@@ -2,9 +2,9 @@ import type { 图元合批 } from "../../../框架/界面/图元合批";
 import type { 文字服务 as 控件文字服务, 界面配色 } from "../../../框架/界面/控件/类型";
 import type { 画笔, 资源层, 资源统计 } from "../../../框架/界面/绘制/画笔";
 import type { 页面基类上下文 } from "../../../框架/界面/页面基类";
-import type { 页面过渡 } from "../../../框架/运行时/页面宿主";
 import type { 场景接口 } from "../../../框架/运行时/场景栈";
 import type { 命中分发 } from "../../../框架/运行时/输入路由";
+import type { 页面过渡 } from "../../../框架/运行时/页面宿主";
 import type { 游戏模式 } from "../../玩法/再消一行";
 import type { 对局结果, 应用服务, 游戏主题 } from "./服务";
 

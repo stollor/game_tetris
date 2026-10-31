@@ -39,11 +39,10 @@ const 等页面 = (名: string) =>
     timeout: 8000,
   });
 const 等过渡结束 = () =>
-  页.waitForFunction(
-    () => !window.__three版__?.读取界面().文字?.includes("过渡:流转"),
-    undefined,
-    { polling: "raf", timeout: 8000 },
-  );
+  页.waitForFunction(() => !window.__three版__?.读取界面().文字?.includes("过渡:流转"), undefined, {
+    polling: "raf",
+    timeout: 8000,
+  });
 
 /** 用 CDP screencast 连续收帧：触发切页后约 900ms 内的所有合成帧。 */
 async function 抓帧(目录: string, 触发: () => Promise<void>): Promise<void> {
@@ -95,7 +94,13 @@ const 三张 = ["01-菜单.png", "02-模式选择.png", "03-纯享.png"];
 const 图: string[] = [];
 for (const 名 of 三张) 图.push((await readFile(resolve(静止, 名))).toString("base64"));
 const 比对 = await 页.evaluate(
-  async ({ 图, 区域 }: { 图: string[]; 区域: { x: number; y: number; 宽: number; 高: number } }) => {
+  async ({
+    图,
+    区域,
+  }: {
+    图: string[];
+    区域: { x: number; y: number; 宽: number; 高: number };
+  }) => {
     const 解码 = async (base64: string) => {
       const 位图 = await createImageBitmap(
         await (await fetch(`data:image/png;base64,${base64}`)).blob(),

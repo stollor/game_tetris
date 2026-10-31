@@ -4,9 +4,9 @@ import { 读取霓虹文字样式 } from "../../主题/文字/文字样式";
 import type { 对局纪录 } from "../../代码/存档/对局纪录";
 import type { 游戏模式 } from "../../代码/玩法/再消一行";
 import { type 图形对象, type 文字项, 解析颜色数值 } from "../../框架/界面/绘制/协议";
-import { 绘制像素面板 } from "../基础/面板/像素面板";
 import type { 常规按钮状态 } from "../基础/按钮/按钮配方";
 import { 绘制常规按钮, 绘制常规按钮图标 } from "../基础/按钮/按钮配方";
+import { 绘制像素面板 } from "../基础/面板/像素面板";
 import { 绘制卡片厚度, 绘制悬浮影, 绘制模式插座, 计算模式插座 } from "./模式装置";
 
 export const 控件分类 = "业务" as const;
