@@ -1,11 +1,11 @@
 import { mkdir, rm } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
-import { 构建项目 } from "../GM工具/源码/游戏项目/构建/构建项目";
+import { 构建项目 } from "../GM工具/工具链/游戏项目/构建/构建项目";
 import {
   扫描资源文件,
   装配资源文件,
   读取项目资源计划,
-} from "../GM工具/源码/游戏项目/构建/资源装配";
+} from "../GM工具/工具链/游戏项目/构建/资源装配";
 
 // 资源夹具只进入隔离验收目录，不向正式产物复制测试图片。
 const 根 = resolve(".gamemaker"),

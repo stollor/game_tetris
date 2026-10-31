@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { 构建项目 } from "../../GM工具/源码/游戏项目/构建/构建项目";
+import { 构建项目 } from "../../GM工具/工具链/游戏项目/构建/构建项目";
 import { 项目根 as 项目根路径 } from "../接入/项目路径";
 
 test("外部包不携带测试、看板目录或默认主题，发布配置只保留客户端字段", async () => {
