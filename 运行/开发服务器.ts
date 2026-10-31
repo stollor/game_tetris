@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import { 构建项目 } from "../GM工具/工具链/游戏项目/构建/构建项目";
-import { 校验配置 } from "../游戏模块库/配置表/配置协议";
+import { 校验配置 } from "../游戏模块库/框架/配置表/配置协议";
 import { 读取服务地址 } from "./服务地址";
 
 /**
