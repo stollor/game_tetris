@@ -65,7 +65,9 @@ test("资源目录就是游戏视觉与素材，策划数据在配置内", async
     expect(existsSync(join(根, "资源", 名))).toBe(true);
   expect(existsSync(join(根, "资源/预制体/预览/界面资源.ts"))).toBe(true);
   expect(existsSync(join(根, "配置/策划/项目.json"))).toBe(true);
-  expect(existsSync(join(根, "测试/资源验收/资源验收.html"))).toBe(true);
+  // 资源视觉检查交给 GM 界面预览/UI交付，项目不再自建资源验收页与测试夹具。
+  expect(existsSync(join(根, "测试/资源验收"))).toBe(false);
+  expect(existsSync(join(根, "测试/资源"))).toBe(false);
 });
 
 test("现行入口与职责归位，构建工具和独立预览不进入业务依赖", async () => {

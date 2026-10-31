@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { Texture } from "three";
-import { 创建资源层, 读取默认散图 } from "../../../../代码/应用/资源/资源加载";
+import { 创建资源层 } from "../../../../代码/应用/资源/资源加载";
 
 /**
  * 资源层规则测试：清单 → 帧查询 / 散图键 / 统计 / 销毁，
@@ -86,10 +86,10 @@ function 测试环境(
   return { 创建, 请求, 登记, 纹理表 };
 }
 
-test("加载项目图集与默认验收散图：帧查询、纹理统计、请求来源顺序", async () => {
+test("加载项目图集：帧查询、纹理统计、请求来源顺序", async () => {
   const { 创建, 请求, 登记 } = 测试环境();
   const 资源 = await 创建;
-  expect(请求).toEqual(["./图集/清单.json", "./图集/页-1.webp", "./测试资源/裁剪.svg"]);
+  expect(请求).toEqual(["./图集/清单.json", "./图集/页-1.webp"]);
 
   const 帧 = 资源.读取帧("再消一行", "图标/游戏图标.png");
   expect(帧).toEqual({
@@ -105,22 +105,18 @@ test("加载项目图集与默认验收散图：帧查询、纹理统计、请�
   expect(资源.读取帧("不存在的图集", "x")).toBeUndefined();
   expect(资源.读取页纹理("再消一行", 9)).toBeUndefined();
 
-  const 裁剪图 = 资源.读取散图("测试/裁剪");
-  expect(裁剪图?.宽).toBe(256);
-  expect(裁剪图?.高).toBe(320);
-  expect(资源.读取散图("不存在")).toBeUndefined();
-
-  // 图集页 512²×4 + GM 验收样张 256×320×4。
+  // 未显式声明散图时不加载任何散图。
+  expect(资源.读取散图("测试/裁剪")).toBeUndefined();
   expect(资源.读取统计()).toEqual({
     图集数: 1,
     页数: 1,
     帧数: 1,
-    纹理字节: 512 * 512 * 4 + 256 * 320 * 4,
-    散图数: 1,
+    纹理字节: 512 * 512 * 4,
+    散图数: 0,
   });
   expect(资源.读取图集名列表()).toEqual(["再消一行"]);
-  expect(登记.map((项) => 项.键)).toEqual(["图集/再消一行/页-1.webp", "散图/测试/裁剪"]);
-  expect(登记.map((项) => 项.字节)).toEqual([512 * 512 * 4, 256 * 320 * 4]);
+  expect(登记.map((项) => 项.键)).toEqual(["图集/再消一行/页-1.webp"]);
+  expect(登记.map((项) => 项.字节)).toEqual([512 * 512 * 4]);
 
   资源.销毁();
   expect(登记.every((项) => 项.释放次数 === 1)).toBe(true);
@@ -157,7 +153,7 @@ test("空计划仍加载显式散图，缺失的显式图集仍报错", async ()
   纹理.image = { width: 2, height: 2 };
   const 资源 = await 创建资源层({
     资源文件: [],
-    散图: [{ 键: "样本", 来源: "资源", 路径: "样本.png" }],
+    散图: [{ 键: "样本", 路径: "样本.png" }],
     加载纹理: async (地址) => {
       请求.push(地址);
       return 纹理;
@@ -213,6 +209,7 @@ test("页图与散图加载失败给出明确中文错误并释放已加载资�
   const 创建 = 创建资源层({
     图集名: "再消一行",
     取JSON: async () => 测试清单(),
+    散图: [{ 键: "测试/裁剪", 路径: "裁剪.svg" }],
     加载纹理: async (地址) => {
       散图失败.push(地址);
       if (地址.includes("裁剪.svg")) throw new Error("HTTP 404");
@@ -223,19 +220,17 @@ test("页图与散图加载失败给出明确中文错误并释放已加载资�
     登记纹理: () => () => undefined,
   });
   await expect(创建).rejects.toThrow(/读取散图「测试\/裁剪」失败/);
-  await expect(创建).rejects.toThrow(/\.\/测试资源\/裁剪\.svg/);
-  expect(散图失败).toEqual(["./图集/页-1.webp", "./测试资源/裁剪.svg"]);
+  await expect(创建).rejects.toThrow(/\.\/资源\/裁剪\.svg/);
+  expect(散图失败).toEqual(["./图集/页-1.webp", "./资源/裁剪.svg"]);
 });
 
-test("散图键与清单名可配置，默认散图只包含项目测试图片", async () => {
-  expect(读取默认散图()).toEqual([{ 键: "测试/裁剪", 来源: "测试资源", 路径: "裁剪.svg" }]);
-
+test("散图键与清单名可配置", async () => {
   const 请求: string[] = [];
   const 资源 = await 创建资源层({
     图集名: "自定义",
     图集地址: "/自定义图集/",
     资源地址: "/自定义资源/",
-    散图: [{ 键: "图标", 来源: "资源", 路径: "图标.png" }],
+    散图: [{ 键: "图标", 路径: "图标.png" }],
     取JSON: async (地址) => {
       请求.push(地址);
       return { ...测试清单(), 名称: "自定义" };

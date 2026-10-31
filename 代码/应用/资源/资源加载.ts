@@ -21,8 +21,7 @@ import { 读取构建资源 } from "../../../.gamemaker/依赖/框架/运行时/
 export interface 散图来源 {
   /** 页面里 `绘制散图(键)` 用的键。 */
   键: string;
-  来源: "资源" | "测试资源";
-  /** 相对来源根目录的路径。 */
+  /** 相对资源根目录的路径。 */
   路径: string;
 }
 
@@ -35,16 +34,14 @@ export interface 资源层选项 {
   资源文件?: readonly string[];
   /** 游戏资源根地址，默认 "./资源/"。 */
   资源地址?: string;
-  /** GM 套件资源根地址，默认 "./测试资源/"。 */
-  测试资源地址?: string;
   登记纹理: (键: string, 纹理: Texture, 字节: number) => () => void;
-  /** 散图列表；默认 读取默认散图()。 */
+  /** 散图列表；默认不加载，游戏按需显式声明。 */
   散图?: readonly 散图来源[];
   /** 注入 JSON 读取（测试用）；默认 fetch。 */
   取JSON?: (地址: string) => Promise<unknown>;
   /** 注入纹理加载（测试用）；默认 TextureLoader。 */
   加载纹理?: (地址: string) => Promise<Texture>;
-  /** 记录每个真实请求地址（资源验收页展示请求来源）。 */
+  /** 记录每个真实请求地址（诊断用）。 */
   记录来源?: (地址: string) => void;
 }
 
@@ -58,12 +55,6 @@ export interface 资源层实例 extends 资源层 {
 const 默认图集名 = "再消一行";
 const 默认图集地址 = "./图集/";
 const 默认资源地址 = "./资源/";
-const 默认测试资源地址 = "./测试资源/";
-
-/** 默认散图只供资源验收页使用；游戏启动需显式声明实际运行资源。 */
-export function 读取默认散图(): readonly 散图来源[] {
-  return [{ 键: "测试/裁剪", 来源: "测试资源", 路径: "裁剪.svg" }];
-}
 
 function 拼接地址(前缀: string, 路径: string): string {
   const 规范路径 = 路径.replace(/^\/+/, "");
@@ -135,7 +126,7 @@ class 项目资源层 implements 资源层实例 {
     };
   }
 
-  /** 帧未入集/被跳过的明确原因，供验收页与报错使用。 */
+  /** 帧未入集/被跳过的明确原因，供报错与诊断使用。 */
   读取跳过原因(图集: string, 帧: string): string | undefined {
     return this.图集表.get(图集)?.读取跳过原因(帧);
   }
@@ -185,7 +176,6 @@ export async function 创建资源层(选项: 资源层选项): Promise<资源�
   const 图集名 = 选项.图集名 ?? 默认图集名;
   const 图集地址 = 选项.图集地址 ?? 默认图集地址;
   const 资源地址 = 选项.资源地址 ?? 默认资源地址;
-  const 测试资源地址 = 选项.测试资源地址 ?? 默认测试资源地址;
   const 取JSON = 选项.取JSON ?? 默认取JSON;
   const 加载纹理 = 选项.加载纹理 ?? 默认加载纹理;
   const 记录来源 = 选项.记录来源 ?? (() => undefined);
@@ -235,9 +225,8 @@ export async function 创建资源层(选项: 资源层选项): Promise<资源�
   }
 
   const 资源层 = new 项目资源层(项目图集, 图集名);
-  for (const 来源 of 选项.散图 ?? 读取默认散图()) {
-    const 前缀 = 来源.来源 === "测试资源" ? 测试资源地址 : 资源地址;
-    const 地址 = 拼接地址(前缀, 来源.路径);
+  for (const 来源 of 选项.散图 ?? []) {
+    const 地址 = 拼接地址(资源地址, 来源.路径);
     let 纹理: Texture;
     try {
       纹理 = await 记录并加载纹理(地址);
