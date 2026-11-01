@@ -1,12 +1,20 @@
-import { 像素规范 } from "../../主题/像素/像素规范";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 像素规范, type 像素视觉规范 } from "../../主题/像素/像素规范";
 import { 绘制街机彩砖背景, 绘制街机彩砖背景动态 } from "./街机彩砖背景";
 
-/** 掌机胶壳套液晶井。没有风景、没有极光。 */
-export function 绘制液晶背景(图: 图形对象, 宽: number, 高: number): void {
-  const { 壳, 暗, 底 } = 像素规范.色;
-  const 外 = 像素规范.外壳.外框;
-  const 内 = 像素规范.外壳.内框;
+/**
+ * 掌机胶壳套液晶井。没有风景、没有极光。
+ * 规范由调用方给出：商店目录/部位缩略图要画「别的主题」的液晶，不能借用当前主题的四色。
+ */
+export function 绘制液晶背景(
+  图: 图形对象,
+  宽: number,
+  高: number,
+  规范: 像素视觉规范 = 像素规范,
+): void {
+  const { 壳, 暗, 底 } = 规范.色;
+  const 外 = 规范.外壳.外框;
+  const 内 = 规范.外壳.内框;
   图.fillStyle(壳).fillRect(0, 0, 宽, 高);
   图.fillStyle(暗).fillRect(外, 外, Math.max(0, 宽 - 外 * 2), Math.max(0, 高 - 外 * 2));
   图
@@ -30,12 +38,13 @@ export function 绘制液晶背景动态(
   高: number,
   时间秒: number,
   亮度 = 1,
+  规范: 像素视觉规范 = 像素规范,
 ): void {
-  const 外 = 像素规范.外壳.外框 + 像素规范.外壳.内框;
-  const 井高 = Math.max(像素规范.网格, 高 - 外 * 2);
-  const 拍 = Math.floor(时间秒 * 像素规范.动画步频);
-  const y = 外 + ((拍 * 像素规范.网格) % 井高);
-  图.fillStyle(像素规范.色.亮, 亮度).fillRect(外, y, Math.max(0, 宽 - 外 * 2), 像素规范.网格);
+  const 外 = 规范.外壳.外框 + 规范.外壳.内框;
+  const 井高 = Math.max(规范.网格, 高 - 外 * 2);
+  const 拍 = Math.floor(时间秒 * 规范.动画步频);
+  const y = 外 + ((拍 * 规范.网格) % 井高);
+  图.fillStyle(规范.色.亮, 亮度).fillRect(外, y, Math.max(0, 宽 - 外 * 2), 规范.网格);
 }
 
 /** 像素主题共用的动态层；亮度乘子交给具体后景。 */
