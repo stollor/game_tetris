@@ -29,10 +29,12 @@ const 期望: Record<string, { 坞区: number | null; 按钮: number }> = {
   街机彩砖: { 坞区: 0x0e1220, 按钮: 0x243044 },
   // 立体金属板的坞区被受光面提亮，不比精确值；按钮面板是未提亮的 板 色。
   立体晶格: { 坞区: null, 按钮: 0x163a58 },
+  // 糖果坞区是巧克力深，单件按钮是巧克力浅糖体。
+  糖果超甜: { 坞区: 0x1b080e, 按钮: 0x4a1c28 },
 };
 const 液晶底 = 0x9bbc0f;
 const 极光坞区 = 0x102b4d;
-const 主题顺序 = ["极光原野", "砖机液晶", "街机彩砖", "立体晶格"] as const;
+const 主题顺序 = ["极光原野", "砖机液晶", "街机彩砖", "立体晶格", "糖果超甜"] as const;
 
 type 像素 = { r: number; g: number; b: number };
 const 色 = (值: number): 像素 => ({ r: (值 >> 16) & 0xff, g: (值 >> 8) & 0xff, b: 值 & 0xff });
@@ -79,9 +81,18 @@ async function 点(片段: string) {
   await 页.mouse.click(键.左 + 键.宽 / 2, 键.上 + 键.高 / 2);
   await 页.waitForTimeout(340);
 }
-/** 目录卡被横向裁剪视口夹住，贴边时把点击点夹回可视区。 */
+/** 目录卡是横向滚动的：目标卡不在视口内时先拖目录，再点可视区内的一点。 */
 async function 点目录卡(名称: string) {
-  const 键 = await 按钮(`商店地点:${名称}`);
+  let 键 = await 按钮(`商店地点:${名称}`);
+  if (键.左 + 键.宽 > 374) {
+    const 行Y = 键.上 + 键.高 / 2;
+    await 页.mouse.move(330, 行Y);
+    await 页.mouse.down();
+    await 页.mouse.move(60, 行Y, { steps: 14 });
+    await 页.mouse.up();
+    await 页.waitForTimeout(500);
+    键 = await 按钮(`商店地点:${名称}`);
+  }
   const 左 = Math.max(键.左 + 2, 20);
   const 右 = Math.min(键.左 + 键.宽 - 2, 370);
   await 页.mouse.click((左 + 右) / 2, 键.上 + 键.高 / 2);
