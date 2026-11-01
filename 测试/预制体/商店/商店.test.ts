@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 计算颜色对比度 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
 import { 主题列表, type 主题名 } from "../../../代码/项目配置/主题目录";
+import { 解析方块外观 } from "../../../资源/主题/外观/方块外观";
 import { 游戏外观 } from "../../../资源/主题/外观/游戏外观";
 import { 设置预览主题 } from "../../../资源/主题/配色/主题读取";
+import { 绘制主题缩略 } from "../../../资源/预制体/商店/主题缩略";
 import type { 商店外观 } from "../../../资源/预制体/商店/商店外观";
 import { 解析商店外观 } from "../../../资源/预制体/商店/商店外观";
 
@@ -85,5 +88,69 @@ describe("商店外观", () => {
     expect(解析商店外观().风格).toBe("立体");
     设置预览主题();
     expect(解析商店外观().风格).toBe("霓虹");
+  });
+});
+
+/** 记录调用序列的图形替身：缩略图判据看「画了什么颜色」。 */
+function 创建记录图形() {
+  const 调用: { 方法: string; 参数: unknown[] }[] = [];
+  let 图形: 图形对象;
+  图形 = new Proxy(
+    {},
+    {
+      get(_目标, 属性) {
+        return (...参数: unknown[]) => {
+          调用.push({ 方法: String(属性), 参数 });
+          return 图形;
+        };
+      },
+    },
+  ) as unknown as 图形对象;
+  return { 图形, 调用 };
+}
+
+describe("主题缩略", () => {
+  test("四套主题都画出自己那一格方块的颜色，不是只有背景", () => {
+    for (const 名称 of 主题列表) {
+      const 记录 = 创建记录图形();
+      绘制主题缩略(记录.图形, 88, 66, 名称);
+      expect(记录.调用.length).toBeGreaterThan(20);
+      const 方块色 = 解析方块外观(名称).颜色.T;
+      expect(
+        记录.调用.some((调) => 调.方法 === "fillStyle" && 调.参数[0] === 方块色),
+        `${名称} 缩略图里没有该主题的方块色`,
+      ).toBe(true);
+    }
+  });
+
+  test("目录卡与部位卡两种尺寸共用同一构图，格子不为零", () => {
+    for (const [宽, 高] of [
+      [88, 66],
+      [36, 34],
+    ] as const) {
+      const 记录 = 创建记录图形();
+      绘制主题缩略(记录.图形, 宽, 高, "立体晶格");
+      expect(记录.调用.length).toBeGreaterThan(10);
+      for (const 调 of 记录.调用)
+        for (const 参 of 调.参数)
+          if (typeof 参 === "number") expect(Number.isFinite(参)).toBe(true);
+    }
+  });
+
+  test("缩略图是静态帧：同一主题两次绘制指令完全一致", () => {
+    for (const 名称 of 主题列表) {
+      const 甲 = 创建记录图形();
+      const 乙 = 创建记录图形();
+      绘制主题缩略(甲.图形, 88, 66, 名称);
+      绘制主题缩略(乙.图形, 88, 66, 名称);
+      expect(甲.调用).toEqual(乙.调用);
+    }
+  });
+
+  test("尺寸非法时安全返回", () => {
+    const 记录 = 创建记录图形();
+    绘制主题缩略(记录.图形, 0, 66, "极光原野");
+    绘制主题缩略(记录.图形, 88, -1, "极光原野");
+    expect(记录.调用).toHaveLength(0);
   });
 });
