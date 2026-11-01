@@ -8,6 +8,7 @@ import { 设置预览主题 } from "../../../资源/主题/配色/主题读取";
 import { 绘制主题缩略 } from "../../../资源/预制体/商店/主题缩略";
 import type { 商店外观 } from "../../../资源/预制体/商店/商店外观";
 import { 解析商店外观 } from "../../../资源/预制体/商店/商店外观";
+import { 计算商店目录名牌, 计算商店目录名称位置 } from "../../../资源/预制体/商店/商店配方";
 
 /**
  * 商店主题适配：四套主题在商店里必须是各自的材质语言，而不是共用极光原野的玻璃与纸页。
@@ -124,6 +125,22 @@ function 创建记录图形() {
   ) as unknown as 图形对象;
   return { 图形, 调用 };
 }
+
+describe("目录卡名牌", () => {
+  test("名牌嵌在卡内、位于缩略图下方，名称落在名牌里", () => {
+    const 卡 = { 左: 16, 上: 0, 宽: 96, 高: 96 };
+    const 板 = 计算商店目录名牌(卡);
+    expect(板.左).toBeGreaterThan(卡.左);
+    expect(板.左 + 板.宽).toBeLessThan(卡.左 + 卡.宽);
+    expect(板.上 + 板.高).toBeLessThan(卡.上 + 卡.高 - 2);
+    const 名 = 计算商店目录名称位置(卡);
+    expect(名.x).toBeGreaterThan(板.左 + 4);
+    expect(名.x).toBeLessThan(板.左 + 板.宽 - 40);
+    // 文字锚点要在名牌内，且上下留白都不小于 2px（14px 字号，行高按 16 估）。
+    expect(名.y).toBeGreaterThan(板.上);
+    expect(名.y + 16).toBeLessThan(板.上 + 板.高);
+  });
+});
 
 describe("主题缩略", () => {
   test("四套主题都画出自己那一格方块的颜色，不是只有背景", () => {
