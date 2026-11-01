@@ -214,6 +214,11 @@ export interface 再消一行文案 {
   收藏购买成功: string;
   收藏成就奖励: string;
   收藏测试金币: string;
+  收藏测试设置金币: string;
+  收藏测试解锁: string;
+  收藏测试上锁: string;
+  收藏测试成就清空: string;
+  收藏测试重置: string;
   收藏对局奖励: string;
   收藏对局首局: string;
   收藏对局纪录: string;

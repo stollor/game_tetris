@@ -391,4 +391,45 @@ describe("金币与外观所有权", () => {
     expect(收藏变化事件).toBe("再消一行:收藏变化");
     expect(typeof 执行收藏操作).toBe("function");
   });
+
+  test("测试设置金币把余额改成指定值，并抬高累计获得维持存档约束", () => {
+    const { 收藏 } = 建档();
+    expect(收藏.测试设置金币(5000).成功).toBe(true);
+    expect(收藏.读取().金币).toBe(5000);
+    expect(收藏.读取().累计获得).toBe(5000);
+    收藏.测试设置金币(0);
+    expect(收藏.读取().金币).toBe(0);
+    expect(收藏.读取().累计获得).toBe(5000);
+    for (const 数量 of [-1, 1.5, Number.NaN, 1000001])
+      expect(收藏.测试设置金币(数量).成功).toBe(false);
+  });
+
+  test("测试解锁/上锁整套改写所有权且不扣金币，默认主题不可上锁", () => {
+    const { 收藏 } = 建档();
+    expect(收藏.测试设置拥有("砖机液晶", true).成功).toBe(true);
+    expect(收藏.拥有("砖机液晶")).toBe(true);
+    expect(收藏.读取().金币).toBe(120);
+    expect(收藏.测试设置拥有("砖机液晶", false).成功).toBe(true);
+    expect(收藏.拥有("砖机液晶")).toBe(false);
+    for (const 部位 of 外观部位列表) expect(收藏.拥有部位("砖机液晶", 部位)).toBe(false);
+    expect(收藏.测试设置拥有(默认主题, false).成功).toBe(false);
+    expect(收藏.测试设置拥有("不存在", true).成功).toBe(false);
+    expect(收藏.拥有(默认主题)).toBe(true);
+  });
+
+  test("测试清空成就只清领取记录，重置把收藏整档回到新档", () => {
+    const { 收藏 } = 建档();
+    收藏.领取成就(["first-lock"]);
+    expect(收藏.读取().已领成就).toEqual(["first-lock"]);
+    expect(收藏.测试清空成就().成功).toBe(true);
+    expect(收藏.读取().已领成就).toEqual([]);
+    收藏.增加测试金币(500);
+    收藏.测试设置拥有("街机彩砖", true);
+    expect(收藏.测试重置().成功).toBe(true);
+    expect(收藏.读取().金币).toBe(120);
+    expect(收藏.读取().累计获得).toBe(120);
+    expect(收藏.读取().已购).toEqual([]);
+    expect(收藏.读取().已购主题).toEqual([]);
+    expect(收藏.读取().已领成就).toEqual([]);
+  });
 });
