@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import type { 矩形 } from "../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type {} from "../../代码/应用/启动";
 import type { 界面按钮快照 } from "../../代码/应用/接口/上下文";
 
@@ -93,15 +94,22 @@ const 等落位 = () =>
     timeout: 8000,
   });
 
-/** 截当前视口，并在页内解回像素，供取色判据使用。 */
+/** 区域统计：平均亮度（0~1）与明显亮点像素数，用来判断缩略图「能不能看出东西」。 */
+export interface 区域统计 {
+  平均亮度: number;
+  亮点数: number;
+}
+
+/** 截当前视口，并在页内解回像素：点集取色、区域集取亮度分布。 */
 async function 截图并采样(
   名称: string,
   点集: Record<string, [number, number]>,
-): Promise<Record<string, 像素>> {
+  区域集: Record<string, 矩形> = {},
+): Promise<{ 点: Record<string, 像素>; 区域: Record<string, 区域统计> }> {
   const 路径 = join(输出, `${名称}.png`);
   const 缓冲 = await 页.screenshot({ path: 路径 });
   const 结果 = await 页.evaluate(
-    async ({ 基址, 点集 }) => {
+    async ({ 基址, 点集, 区域集 }) => {
       const 图 = new Image();
       图.src = 基址;
       await 图.decode();
@@ -111,17 +119,32 @@ async function 截图并采样(
       const 上 = 画.getContext("2d");
       if (!上) throw new Error("无 2d 上下文");
       上.drawImage(图, 0, 0);
-      const 出: Record<string, { r: number; g: number; b: number }> = {};
+      const 点: Record<string, { r: number; g: number; b: number }> = {};
       for (const [键, [x, y]] of Object.entries(点集)) {
         const 数据 = 上.getImageData(x, y, 1, 1).data as unknown as number[];
         const [r, g, b] = 数据;
-        出[键] = { r: r ?? 0, g: g ?? 0, b: b ?? 0 };
+        点[键] = { r: r ?? 0, g: g ?? 0, b: b ?? 0 };
       }
-      return 出;
+      const 区域: Record<string, { 平均亮度: number; 亮点数: number }> = {};
+      for (const [键, 区] of Object.entries(区域集)) {
+        const 数据 = 上.getImageData(区.左, 区.上, 区.宽, 区.高).data as unknown as number[];
+        let 合计 = 0;
+        let 亮点数 = 0;
+        for (let i = 0; i < 数据.length; i += 4) {
+          const 亮 =
+            ((数据[i] ?? 0) * 0.2126 + (数据[i + 1] ?? 0) * 0.7152 + (数据[i + 2] ?? 0) * 0.0722) /
+            255;
+          合计 += 亮;
+          if (亮 > 0.3) 亮点数 += 1;
+        }
+        区域[键] = { 平均亮度: 合计 / Math.max(1, 数据.length / 4), 亮点数 };
+      }
+      return { 点, 区域 };
     },
     {
       基址: `data:image/png;base64,${缓冲.toString("base64")}`,
       点集,
+      区域集,
     },
   );
   return 结果;
@@ -145,10 +168,14 @@ try {
 
     // 目录缩略图中心：用按钮矩形算，避免横向滚动偏移带来的硬编码坐标。
     const 目录卡 = await 按钮(`商店地点:${名称}`);
-    const 取样 = await 截图并采样(名称, {
-      坞区: [200, 504],
-      按钮: [40, 640],
-    });
+    const 缩略区 = {
+      左: Math.round(目录卡.左 + 4),
+      上: Math.round(目录卡.上 + 4),
+      宽: Math.round(目录卡.宽 - 8),
+      高: Math.round(目录卡.高 - 30),
+    };
+    const 主图 = await 截图并采样(名称, { 坞区: [200, 504], 按钮: [40, 640] }, { 缩略: 缩略区 });
+    const 取样 = 主图.点;
     // 主陈列图已存；再补界面示意与交易纸页两张。
     await 点("商店部位:界面样式");
     await 等落位();
@@ -176,15 +203,21 @@ try {
       );
     }
     // 目录缩略图按「被浏览主题的名字」画，不能借用当前主题的四色。
-    if (名称 !== "极光原野") {
+    if (名称 === "砖机液晶") {
       const 中心 = [Math.round(目录卡.左 + 目录卡.宽 / 2), Math.round(目录卡.上 + 33)] as const;
       const 取 = await 截图并采样(`${名称}-缩略`, { 缩略: [中心[0], 中心[1]] });
-      if (名称 === "砖机液晶") {
-        assert.ok(
-          同色(取样值(取, "缩略"), 液晶底),
-          `砖机液晶缩略图应为液晶底，实际 ${十六(取样值(取, "缩略"))}`,
-        );
-      }
+      assert.ok(
+        同色(取样值(取.点, "缩略"), 液晶底),
+        `砖机液晶缩略图应为液晶底，实际 ${十六(取样值(取.点, "缩略"))}`,
+      );
+    }
+    // 立体晶格的缩略图不能是「黑乎乎一块」：要有亮度、有亮点，看得出是 3D 厅里的立方。
+    if (名称 === "立体晶格") {
+      const 统计 = 主图.区域.缩略;
+      assert.ok(统计, "未取到立体晶格缩略图统计");
+      // 旧的黑缩略图在这个区域只有 7 个亮点，新构图过百：亮点数是「看得出东西」的直接判据。
+      assert.ok(统计.平均亮度 > 0.05, `立体晶格缩略图太黑：平均亮度 ${统计.平均亮度.toFixed(3)}`);
+      assert.ok(统计.亮点数 > 60, `立体晶格缩略图没有亮点：${统计.亮点数} 个`);
     }
     console.log(`✓ ${名称}`);
   }

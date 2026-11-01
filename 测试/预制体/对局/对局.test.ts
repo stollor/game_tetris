@@ -11,9 +11,12 @@ import type { 样式选择 } from "../../../.gamemaker/依赖/框架/设置/设�
 import { 操作键虚拟键 } from "../../../代码/页面/对局/对局绘制";
 import { type 对局布局操作键, 计算对局布局 } from "../../../代码/页面/布局/对局布局";
 import { 主题列表 } from "../../../代码/项目配置/主题目录";
+import { 解析方块外观 } from "../../../资源/主题/外观/方块外观";
 import { 颜色值 } from "../../../资源/主题/配色/主题读取";
 import { 设置预览界面样式, 读取霓虹调色板 } from "../../../资源/主题/配色/调色板";
 import { 生成操作键轮廓, 绘制操作键, 读取操作键配色 } from "../../../资源/预制体/对局/操作键配方";
+import { 绘制方块单元 } from "../../../资源/预制体/对局/方块单元";
+import { 绘制立方单元, 计算立方几何, 读取立方面色 } from "../../../资源/预制体/对局/立方方块单元";
 
 const 布局 = 计算对局布局(390, 844, { 模式: "马拉松", 阶段: "进行中" });
 
@@ -230,4 +233,82 @@ test("按钮绘制与配色函数同源，并随主题切换更新", () => {
   } finally {
     设置预览界面样式(undefined);
   }
+});
+
+/** 记录调用序列的图形替身：立方画法要靠几何与配色断言，光记颜色不够。 */
+function 创建调用记录() {
+  const 调用: { 方法: string; 参数: unknown[] }[] = [];
+  let 图形: 图形对象;
+  图形 = new Proxy(
+    {},
+    {
+      get(_目标, 属性) {
+        if (属性 === "fillStyle" || 属性 === "lineStyle")
+          return (...参数: unknown[]) => {
+            调用.push({ 方法: String(属性), 参数 });
+            return 图形;
+          };
+        return (...参数: unknown[]) => {
+          调用.push({ 方法: String(属性), 参数 });
+          return 图形;
+        };
+      },
+    },
+  ) as unknown as 图形对象;
+  return { 图形, 调用 };
+}
+
+test("立方几何填满格子：正面与进深拼成整格，顶点不出框", () => {
+  for (const 格子 of [6, 8, 12, 20, 36]) {
+    const 几何 = 计算立方几何(10, 20, 格子);
+    expect(几何.进深 + 几何.面).toBe(格子);
+    expect(几何.顶面).toHaveLength(4);
+    expect(几何.右侧面).toHaveLength(4);
+    for (const 点 of [...几何.顶面, ...几何.右侧面]) {
+      expect(点.x).toBeGreaterThanOrEqual(10);
+      expect(点.x).toBeLessThanOrEqual(10 + 格子);
+      expect(点.y).toBeGreaterThanOrEqual(20);
+      expect(点.y).toBeLessThanOrEqual(20 + 格子);
+    }
+    // 正面右下角必须正好落在格子右下角：三面才能拼成完整立方。
+    expect(几何.正面.左 + 几何.正面.宽).toBe(10 + 格子 - 几何.进深);
+    expect(几何.正面.上 + 几何.正面.高).toBe(20 + 格子);
+  }
+});
+
+test("立方三面明暗分明：顶亮、正本色、侧暗，轮廓更深", () => {
+  const 色 = 读取立方面色(0x12cefa);
+  expect(色.正).toBe(0x12cefa);
+  const 亮度 = (值: number) => ((值 >> 16) & 0xff) + ((值 >> 8) & 0xff) + (值 & 0xff);
+  expect(亮度(色.顶)).toBeGreaterThan(亮度(色.正));
+  expect(亮度(色.侧)).toBeLessThan(亮度(色.正));
+  expect(亮度(色.棱)).toBeLessThan(亮度(色.侧));
+});
+
+test("立体晶格的方块单元走立方画法，其它主题不走", () => {
+  const 立体 = 解析方块外观("立体晶格");
+  const 记录 = 创建调用记录();
+  绘制方块单元(记录.图形, 0, 0, { 方案: 立体, 格子: 20, 色值: 立体.颜色.T });
+  // 立方至少有 顶面/右侧面/正面 三次填充与一次描边路径。
+  expect(记录.调用.filter((项) => 项.方法 === "fillStyle").length).toBeGreaterThanOrEqual(3);
+  expect(记录.调用.some((项) => 项.方法 === "strokePath")).toBe(true);
+  const 宝石 = 解析方块外观("极光原野");
+  expect(宝石.质感).toBe("宝石");
+  const 平涂 = 创建调用记录();
+  绘制方块单元(平涂.图形, 0, 0, { 方案: 宝石, 格子: 20, 色值: 宝石.颜色.T });
+  expect(平涂.调用.some((项) => 项.方法 === "strokePath")).toBe(false);
+});
+
+test("立方单元对非法参数与极小格子安全", () => {
+  const 空 = 创建调用记录();
+  绘制立方单元(空.图形, 0, 0, 0, 0xffffff);
+  expect(空.调用).toHaveLength(0);
+  const 透明 = 创建调用记录();
+  绘制立方单元(透明.图形, 0, 0, 20, 0xffffff, 0);
+  expect(透明.调用).toHaveLength(0);
+  const 极小 = 创建调用记录();
+  绘制立方单元(极小.图形, 0, 0, 3, 0xffffff);
+  expect(极小.调用.length).toBeGreaterThan(0);
+  for (const 调 of 极小.调用)
+    for (const 参 of 调.参数) if (typeof 参 === "number") expect(Number.isFinite(参)).toBe(true);
 });
