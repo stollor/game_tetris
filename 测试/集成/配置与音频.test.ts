@@ -76,9 +76,9 @@ describe("框架配置音频表", () => {
     expect(new Set(谱).size).toBe(2);
   });
 
-  test("四套主题都有独立氛围谱", () => {
+  test("五套主题都有独立氛围谱", () => {
     expect(Object.keys(场景氛围表).sort()).toEqual(
-      ["极光原野", "砖机液晶", "街机彩砖", "立体晶格"].sort(),
+      ["极光原野", "砖机液晶", "街机彩砖", "立体晶格", "糖果超甜"].sort(),
     );
     expect(音效库.filter((项) => 项.id.startsWith("再消一行.氛围.")).map((项) => 项.id)).toEqual(
       Object.keys(场景氛围表).map((主题) => `再消一行.氛围.${主题}`),

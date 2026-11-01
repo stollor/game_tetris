@@ -288,8 +288,8 @@ describe("金币与外观所有权", () => {
     const 存档 = 收藏.读取();
     expect(存档.金币).toBe(320);
     expect(存档.最近首局日期).toBe("2026-10-18");
-    expect(存档.已购主题).toEqual(["砖机液晶", "街机彩砖", "立体晶格"]);
-    expect(存档.已购).toHaveLength(18);
+    expect(存档.已购主题).toEqual(["砖机液晶", "街机彩砖", "立体晶格", "糖果超甜"]);
+    expect(存档.已购).toHaveLength(24);
     expect(收藏.拥有("立体晶格")).toBe(true);
     expect(内容.get(旧收藏存档键)).toBe(原文);
   });

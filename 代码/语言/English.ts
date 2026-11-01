@@ -288,5 +288,6 @@ export const 文案: 再消一行文案 = {
     砖机液晶: "Four-color brick LCD, dot-matrix blocks, and segment meters.",
     街机彩砖: "A dark well, seven-color dot blocks, and high-contrast meters.",
     立体晶格: "A perspective board, crystal lattice, and metal frame HUD.",
+    糖果超甜: "Chocolate backdrop, piped cream borders, and jelly candy blocks.",
   },
 };
