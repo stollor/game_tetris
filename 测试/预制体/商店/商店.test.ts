@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
-import { 计算颜色对比度 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
+import { 混色, 计算颜色对比度 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
 import { 主题列表, type 主题名 } from "../../../代码/项目配置/主题目录";
 import { 解析方块外观 } from "../../../资源/主题/外观/方块外观";
 import { 游戏外观 } from "../../../资源/主题/外观/游戏外观";
@@ -72,6 +72,22 @@ describe("商店外观", () => {
         expect(对比(外观.纸页[角色], 色串(外观.纸页.填充))).toBeGreaterThanOrEqual(4.5);
       // 说明性小字按次要信息处理，仍要高于 3:1。
       expect(对比(外观.纸页.说明, 色串(外观.纸页.填充))).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  test("目录卡解封后名称与名牌底仍读得清", () => {
+    for (const 名称 of 主题列表) {
+      const 外观 = 取外观(名称);
+      // 霓虹的名牌底是半透明金色蒙层，实际底色要和卡底混一遍再算对比度。
+      const 名牌底 =
+        外观.目录.名牌底透明度 < 1
+          ? 混色(外观.目录.填充, 外观.目录.名牌底, 外观.目录.名牌底透明度)
+          : 外观.目录.名牌底;
+      expect(对比(外观.目录.名称点亮, 色串(名牌底))).toBeGreaterThanOrEqual(4.5);
+      // 未拥有状态沿用正文色，同样要达标。
+      expect(对比(外观.文字.目录, 色串(外观.目录.填充))).toBeGreaterThanOrEqual(4.5);
+      // 解封的氛围色不能和卡底撞成一片。
+      expect(外观.目录.缩略氛围).not.toBe(外观.目录.填充);
     }
   });
 

@@ -5,6 +5,8 @@ import {
   计算商店布局,
   计算商店方块陈列,
   计算商店界面示意,
+  计算商店目录封条,
+  计算商店目录缩略,
 } from "../../../../代码/页面/布局/商店布局";
 import { 计算信息栏内部, 计算对局布局 } from "../../../../代码/页面/布局/对局布局";
 import { 计算下拉展开区域 } from "../../../../资源/预制体/基础/输入与选择/页面控件";
@@ -27,6 +29,23 @@ describe("商店布局", () => {
     expect(页面.底板.上 + 页面.底板.高).toBe(844);
     expect(页面.目录.上).toBeGreaterThanOrEqual(页面.底板.上);
     expect(页面.目录.上 + 页面.目录.高).toBeLessThanOrEqual(844);
+  });
+
+  test("已拥有目录卡的缩略图比未拥有长，两者底边对齐到名牌上沿", () => {
+    const 卡 = { 左: 16, 上: 0, 宽: 96, 高: 96 };
+    const 未拥有 = 计算商店目录缩略(卡, false);
+    const 已拥有 = 计算商店目录缩略(卡, true);
+    expect(已拥有.高).toBeGreaterThan(未拥有.高);
+    expect(已拥有.上 + 已拥有.高).toBe(未拥有.上 + 未拥有.高);
+    expect(已拥有.上).toBe(卡.上 + 4);
+    // 未拥有要给封条让位：缩略图上沿低于封条下沿。
+    const 封条 = 计算商店目录封条(卡);
+    expect(未拥有.上).toBeGreaterThan(封条.上 + 封条.高);
+    for (const 区 of [未拥有, 已拥有, 封条]) {
+      expect(区.左).toBeGreaterThanOrEqual(卡.左);
+      expect(区.左 + 区.宽).toBeLessThanOrEqual(卡.左 + 卡.宽);
+      expect(区.上 + 区.高).toBeLessThanOrEqual(卡.上 + 卡.高);
+    }
   });
 
   test("三档商店的部位、购买、目录与退出按钮均在屏幕内", () => {
