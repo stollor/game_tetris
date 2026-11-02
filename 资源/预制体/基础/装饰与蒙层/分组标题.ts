@@ -1,5 +1,5 @@
-import { 派生霓虹文字样式 } from "../../../主题/文字/文字样式";
 import type { 文字项 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 派生霓虹文字样式 } from "../../../主题/文字/文字样式";
 
 export interface 分组标题布局 {
   左: number;

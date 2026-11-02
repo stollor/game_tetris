@@ -34,8 +34,12 @@ export interface 像素视觉规范 {
   网格: number;
   描边: number;
   阴影: number;
+  /**
+   * 像素主题的文字字体栈：用系统字体，靠框架文字服务的像素化（按字号网格二值化）出像素字，
+   * 所以不随包带专用像素字体文件。字体串同时是文字图集的键，必须与常规主题的栈区分开，
+   * 两套主题才能在切换时各自保留图集。
+   */
   字体: string;
-  字体文件: string;
   动画步频: number;
   深色: boolean;
   方块填井: boolean;
@@ -50,8 +54,7 @@ const 共用网格 = {
   网格: 4,
   描边: 4,
   阴影: 0,
-  字体: "Fusion Pixel",
-  字体文件: "./资源/字体/像素中文.woff2",
+  字体: '"Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif',
   动画步频: 8,
   外壳: { 外框: 8, 内框: 4 },
 } as const;

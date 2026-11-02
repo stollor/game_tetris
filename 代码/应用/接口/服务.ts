@@ -100,6 +100,8 @@ export interface 音频服务 {
   设置音量(): void;
   /** 用户手势后解锁音频上下文（启动层在首次 pointerdown/keydown 调用）。 */
   解锁(): void;
+  /** 分层音乐强度 0–100，越界抛错；当前曲目不是分层时安全无副作用。 */
+  设置音乐强度(值: number): void;
   /** 只读实际设置与播放器状态，验收用它核对静音与上下文。 */
   读取状态(): {
     背景音乐: boolean;
@@ -108,6 +110,7 @@ export interface 音频服务 {
     上下文: string;
     当前音乐: string | null;
     暂停: boolean;
+    音乐强度: number;
   };
   停止全部(): void;
 }

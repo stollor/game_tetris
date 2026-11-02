@@ -61,8 +61,11 @@ test("依赖联接、打包产物、验收报告都在 .gamemaker 托管区", as
 });
 
 test("资源目录就是游戏视觉与素材，策划数据在配置内", async () => {
-  for (const 名 of ["预制体", "视效", "主题", "字体", "宣发"])
+  for (const 名 of ["预制体", "视效", "主题", "宣发"])
     expect(existsSync(join(根, "资源", 名))).toBe(true);
+  // 像素主题的文字由框架按字号网格像素化系统字体产出，不再随包带字体文件；
+  // 资源/字体 一旦回来就等于包体凭空多出几百 KB。
+  expect(existsSync(join(根, "资源/字体"))).toBe(false);
   expect(existsSync(join(根, "资源/预制体/预览/界面资源.ts"))).toBe(true);
   expect(existsSync(join(根, "配置/策划/项目.json"))).toBe(true);
   // 资源视觉检查交给 GM 界面预览/UI交付，项目不再自建资源验收页与测试夹具。

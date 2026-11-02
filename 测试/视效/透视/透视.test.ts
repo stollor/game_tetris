@@ -228,9 +228,9 @@ describe("立体棋盘", () => {
     }
   });
 
-  test("蓝色灯带包含真实面光源，沿两侧灯芯分段照明", () => {
+  test("蓝色灯带包含真实光源，沿两侧灯芯分段照明", () => {
     const 装置 = 建房间装置(10, 20, 2.5, 10.3);
-    const 灯 = 装置.getObjectsByProperty("type", "RectAreaLight");
+    const 灯 = 装置.getObjectsByProperty("type", "PointLight");
     expect(灯).toHaveLength(立体规范.装置.灯段位置.length * 2 + 立体规范.装置.顶灯位置.length);
     const 墙 = 装置.getObjectByName("分段内壁");
     expect(墙).toBeInstanceOf(InstancedMesh);

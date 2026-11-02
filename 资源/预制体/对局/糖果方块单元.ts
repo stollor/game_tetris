@@ -231,17 +231,18 @@ function 绘制糖纹(绘图: 图形对象, 几何: 格几何, 糖面: 点[], �
   }
 }
 
-/** 受光：外露的顶边一条上亮下透的糖衣反光，外露的底边一条压暗，左缘一道细亮边。 */
+/** 受光：外露的顶边一叠渐亮糖衣反光，加左缘亮线、左上镜面与底部内阴影。 */
 function 绘制受光(绘图: 图形对象, 几何: 格几何, 格: number, 透明度: number): void {
   const 面 = 糖面边界(几何);
   const 邻 = 几何.邻;
-  const 缩 = 格 * 0.07;
+  const 缩 = 格 * 0.06;
   if (!邻.上) {
+    // 顶边糖衣：用几层实心带叠出渐变，比四角色渐变更稳、更像画出来的光。
     const 带 = {
       左: 面.左 + (邻.左 ? 0 : 缩),
-      上: 面.上 + 缩 * 0.6,
+      上: 面.上 + 缩 * 0.5,
       右: 面.右 - (邻.右 ? 0 : 缩),
-      下: 面.上 + 格 * 0.4,
+      下: 面.上 + 格 * 0.46,
     };
     const 角 = {
       左上: 几何.角.左上 > 0 ? Math.max(1, 几何.角.左上 - 缩) : 0,
@@ -249,51 +250,46 @@ function 绘制受光(绘图: 图形对象, 几何: 格几何, 格: number, 透�
       右下: 0,
       左下: 0,
     };
+    const 层 = 6;
+    for (let i = 0; i < 层; i += 1) {
+      const t = i / (层 - 1);
+      const 段 = {
+        左: 带.左,
+        上: 带.上 + (带.下 - 带.上) * t * 0.9,
+        右: 带.右,
+        下: 带.下 - (带.下 - 带.上) * (1 - t) * 0.22,
+      };
+      if (段.下 - 段.上 < 0.8) continue;
+      绘图.fillStyle(0xffffff, (0.5 - t * 0.42) * 透明度);
+      绘图.fillPoints(圆角多边形(段, 角), true);
+    }
+    // 顶棱一条实亮线，糖体边缘立起来。
     if (带.右 - 带.左 > 1)
       绘图
-        .fillGradientStyle(
-          0xffffff,
-          0xffffff,
-          0xffffff,
-          0xffffff,
-          规.高光透明 * 透明度,
-          规.高光透明 * 透明度,
-          0,
-          0,
-        )
-        .fillPoints(圆角多边形(带, 角), true);
+        .lineStyle(Math.max(1, 格 * 0.05), 0xffffff, 0.7 * 透明度)
+        .lineBetween(带.左 + 2, 带.上 + 0.6, 带.右 - 2, 带.上 + 0.6);
   }
   if (!邻.下) {
     const 高 = 格 * 0.3;
     const 带 = { 左: 面.左, 上: 面.下 - 高, 右: 面.右, 下: 面.下 };
     const 角 = { 左上: 0, 右上: 0, 右下: 几何.角.右下, 左下: 几何.角.左下 };
-    绘图
-      .fillGradientStyle(
-        0x000000,
-        0x000000,
-        0x000000,
-        0x000000,
-        0,
-        0,
-        规.内阴影透明 * 透明度,
-        规.内阴影透明 * 透明度,
-      )
-      .fillPoints(圆角多边形(带, 角), true);
+    for (let i = 0; i < 3; i += 1) {
+      绘图.fillStyle(0x000000, (0.08 + i * 0.06) * 透明度);
+      绘图.fillPoints(圆角多边形(带, 角), true);
+    }
   }
   if (!邻.左) {
     const 宽 = Math.max(1, 格 * 0.07);
     const 上 = 面.上 + (几何.角.左上 > 0 ? 几何.角.左上 * 0.9 : 0);
     const 下 = 面.下 - (几何.角.左下 > 0 ? 几何.角.左下 * 0.9 : 0);
     if (下 - 上 > 1)
-      绘图.fillStyle(0xffffff, 0.16 * 透明度).fillRect(面.左 + 格 * 0.04, 上, 宽, 下 - 上);
+      绘图.fillStyle(0xffffff, 0.32 * 透明度).fillRect(面.左 + 格 * 0.04, 上, 宽, 下 - 上);
   }
   if (!邻.上 && !邻.左) {
     绘图
-      .fillStyle(0xffffff, 0.82 * 透明度)
-      .fillEllipse(面.左 + 格 * 0.36, 面.上 + 格 * 0.2, 格 * 0.34, 格 * 0.13);
-    绘图
-      .fillStyle(0xffffff, 0.7 * 透明度)
-      .fillCircle(面.左 + 格 * 0.17, 面.上 + 格 * 0.3, 格 * 0.05);
+      .fillStyle(0xffffff, 0.9 * 透明度)
+      .fillEllipse(面.左 + 格 * 0.3, 面.上 + 格 * 0.17, 格 * 0.3, 格 * 0.11);
+    绘图.fillStyle(0xffffff, 0.75 * 透明度).fillCircle(面.左 + 格 * 0.14, 面.上 + 格 * 0.3, 格 * 0.05);
   }
 }
 
@@ -399,11 +395,13 @@ export function 绘制果冻幽灵(
   格: number,
   色值: number,
   透明度 = 1,
+  填充 = true,
 ): void {
   const r = Math.max(1.5, 格 * 规.幽灵圆角比);
   const 内缩 = Math.max(1.5, 格 * 0.12);
   const 宽 = 格 - 内缩 * 2;
-  绘图.fillStyle(色值, 0.12 * 透明度).fillRoundedRect(x + 内缩, y + 内缩, 宽, 宽, r);
+  if (填充)
+    绘图.fillStyle(色值, 0.12 * 透明度).fillRoundedRect(x + 内缩, y + 内缩, 宽, 宽, r);
   const 点色 = 亮色(色值, 0.55);
   const 点距 = Math.max(3, 格 * 0.16);
   const 数 = Math.max(2, Math.round((宽 - r * 2) / 点距));

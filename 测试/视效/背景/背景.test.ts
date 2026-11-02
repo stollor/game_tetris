@@ -113,6 +113,10 @@ describe("背景配方", () => {
     fillPoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("fillPoints", [点集, 闭合]);
     }
+
+    绘制画布(画布: unknown, 矩形: unknown, 透明度?: number): this {
+      return this.记("绘制画布", [画布, 矩形, 透明度]);
+    }
     strokePoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("strokePoints", [点集, 闭合]);
     }
@@ -563,6 +567,10 @@ describe("立体晶格背景", () => {
     fillPoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("fillPoints", [点集, 闭合]);
     }
+
+    绘制画布(画布: unknown, 矩形: unknown, 透明度?: number): this {
+      return this.记("绘制画布", [画布, 矩形, 透明度]);
+    }
     strokePoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("strokePoints", [点集, 闭合]);
     }
@@ -848,6 +856,10 @@ describe("街机彩砖背景", () => {
     }
     fillPoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("fillPoints", [点集, 闭合]);
+    }
+
+    绘制画布(画布: unknown, 矩形: unknown, 透明度?: number): this {
+      return this.记("绘制画布", [画布, 矩形, 透明度]);
     }
     strokePoints(点集: readonly { x: number; y: number }[], 闭合?: boolean): this {
       return this.记("strokePoints", [点集, 闭合]);

@@ -8,16 +8,38 @@ import {
   MeshStandardMaterial,
   Object3D,
   PlaneGeometry,
-  RectAreaLight,
+  PointLight,
   ShaderMaterial,
 } from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { 立体规范 } from "../../主题/立体/立体规范";
 import { 转颜色向量 } from "./直通颜色";
 
 const 规 = 立体规范.装置;
-let 面光已初始化 = false;
+
+/**
+ * 口沿灯带的实体光源参数（390×844 同机位像素对照标定，见 `测试/浏览器/排查/立体棋盘.ts`）。
+ *
+ * 灯带原来用 three 的 RectAreaLight，它必然引 `three/addons/lights/RectAreaLightUniformsLib.js`
+ * ——一张 64×64 RGBA float 的 LTC BRDF 查找表，base64 后占包体 271KB，比整个 3D 房间的代码还大。
+ * 这里的灯带是贴在口沿上的窄长条（灯宽 0.045 × 灯长 2.1），只照亮房间前半段的墙面与近口方块，
+ * 用「二次衰减 + 射程≈一个进深」的点光等效：实测左右内壁带亮度差 0.17/−0.17、
+ * 顶带 0.40、背墙 1.83、方块堆 1.60、房间静态区 1.65（原面光自身贡献 3.46），
+ * 全房间 |Δ| 均值 2.71/p90 6.2，1× 视图无可辨差异。
+ *
+ * 倍率是「主题里的面光强度 → 点光坎德拉」的换算；射程不设成一个进深时，顶面/地面/远墙
+ * 会被一起提亮（实测比原版高 3~4 倍），灯带就变成整间打光。
+ *
+ * 已知取舍：点光的灯带峰比原版的 RectAreaLight 窄一点（壁带纵向亮度残差 p90 ≈ 12/255），
+ * 均值已对齐；1× 视图看不出来，放大会看到 4 段亮带边缘更硬。要完全一致得回到 LTC 面光，
+ * 与「包体去掉 271KB」不可兼得。
+ *
+ * 标定口径：390×844 DPR1、同一固定方块序列与机位，逐区域比较改造前后的亮度差。
+ */
+const 灯带强度倍率 = 0.7;
+const 顶灯强度倍率 = 0.2;
+const 灯衰减 = 2;
+const 射程比 = 1.04;
 
 /** 局部光晕直接随实例绘制，不增加全屏后处理或第二个渲染器。 */
 export function 建辉光材质(颜色: number, 不透明: number, 衰减: number): ShaderMaterial {
@@ -68,12 +90,22 @@ interface 装置件 {
   侧转角?: number;
 }
 
+/**
+ * 一条灯带的等效点光：位置与灯芯重合，射程按房间进深收在房间前半段。
+ * 进深由取景给出，射程跟着房间尺寸走，不写死世界坐标。
+ */
+function 建灯带光(色: number, 强度: number, x: number, y: number, 深: number): PointLight {
+  const 光 = new PointLight();
+  光.intensity = 强度;
+  光.distance = 深 * 射程比;
+  光.decay = 灯衰减;
+  光.color.setRGB(...转颜色向量(色));
+  光.position.set(x, y, -规.灯离口);
+  return 光;
+}
+
 /** 口沿、内轨、壁肋与灯带共用格宽单位；全部静态合批。 */
 export function 建房间装置(宽: number, 高: number, 深: number, 开口宽 = 宽): Group {
-  if (!面光已初始化) {
-    RectAreaLightUniformsLib.init();
-    面光已初始化 = true;
-  }
   const 组 = new Group();
   const 金属: 装置件[] = [];
   const 灯: 装置件[] = [];
@@ -131,11 +163,7 @@ export function 建房间装置(宽: number, 高: number, 深: number, 开口宽
       }
       灯.push({ 位置: [x, y, -规.灯离口], 尺寸: [规.灯宽, 规.灯长, 规.灯宽], 色: 规.灯芯 });
       const 光规 = 立体规范.光.灯带;
-      const 面光 = new RectAreaLight(0xffffff, 光规.强度, 光规.宽, 规.灯长);
-      面光.color.setRGB(...转颜色向量(规.灯色));
-      面光.position.set(x - 向 * 光规.内移, y, -规.灯离口);
-      面光.lookAt(向 * 半宽, y, -深 * 光规.照向深度);
-      组.add(面光);
+      组.add(建灯带光(规.灯色, 光规.强度 * 灯带强度倍率, x - 向 * 光规.内移, y, 深));
       辉光.push({ 位置: [x, y, 规.框厚], 尺寸: [规.辉光宽, 规.灯长 + 规.辉光宽, 1], 色: 规.灯色 });
     }
     for (const 比 of 规.顶灯位置) {
@@ -151,11 +179,7 @@ export function 建房间装置(宽: number, 高: number, 深: number, 开口宽
       });
       if (向 > 0) {
         const 顶规 = 立体规范.光.顶灯;
-        const 面光 = new RectAreaLight(0xffffff, 顶规.强度, 规.顶灯长, 顶规.宽);
-        面光.color.setRGB(...转颜色向量(规.灯芯));
-        面光.position.set(比 * 宽, 半高 - 顶规.内移, -规.灯离口);
-        面光.lookAt(比 * 宽, 0, -深);
-        组.add(面光);
+        组.add(建灯带光(规.灯芯, 顶规.强度 * 顶灯强度倍率, 比 * 宽, 半高 - 顶规.内移, 深));
       }
     }
     // 壁肋接续格线，纵缝落在真实侧壁的不同进深上。

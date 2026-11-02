@@ -1,5 +1,5 @@
-import { 像素规范 } from "../../../主题/像素/像素规范";
 import type { 图形对象 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 像素规范 } from "../../../主题/像素/像素规范";
 
 export function 绘制像素图案(
   图: 图形对象,

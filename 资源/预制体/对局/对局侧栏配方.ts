@@ -1,6 +1,6 @@
 import type { 图形对象, 点, 矩形 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 画笔 } from "../../../.gamemaker/依赖/框架/界面/绘制/画笔";
-import { 混色 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
+import { 亮色, 暗色, 混色 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
 import { 读取对局文字样式 } from "../../../代码/页面/布局/对局布局";
 import { 像素规范 } from "../../主题/像素/像素规范";
 import { 是像素风格 } from "../../主题/像素/像素风格";
@@ -11,9 +11,11 @@ import { 是糖果风格 } from "../../主题/糖果/糖果风格";
 import { 读取霓虹调色板 } from "../../主题/配色/调色板";
 import { 同角, 圆角多边形, 裁进凸形 } from "../基础/装饰与蒙层/圆角裁剪";
 import { 绘制扇贝边, 绘制斜纹 } from "../基础/装饰与蒙层/糖果花纹";
+import { 绘制糖片 } from "../基础/装饰与蒙层/糖果质感";
 import { 绘制像素面板 } from "../基础/面板/像素面板";
 import { 绘制金属板 } from "../基础/面板/金属板";
 import { 绘制霓虹玻璃 } from "../基础/面板/霓虹玻璃";
+import { 是糖果底板 } from "./糖果底板";
 export interface 霓虹侧栏几何 {
   左: number;
   顶: number;
@@ -149,71 +151,137 @@ export function 绘制传输管道(图: 图形对象, 区域: 矩形): void {
  * 暂存位与队列位共用，内容（方块）由调用方画在井里。
  */
 export function 绘制糖果纸杯(图: 图形对象, 区域: 矩形): void {
+  // 底板已接管静态外观：纸杯由画布画在最底层，这里不再叠一层矢量杯。
+  if (是糖果底板()) return;
   const 色 = 糖果规范.色;
   const { 左: x, 上: y, 宽: w, 高: h } = 区域;
   const 圆 = 12;
-  图.fillStyle(0x12060a, 0.35).fillRoundedRect(x - 1, y + 4, w + 2, h, 圆 + 1);
-  绘制杯口扇贝(图, x + 4, y, w - 8, "上");
-  绘制杯口扇贝(图, x + 4, y + h, w - 8, "下");
-  图.fillStyle(色.莓暗, 1).fillRoundedRect(x - 1.5, y - 1.5, w + 3, h + 3, 圆 + 1.5);
+  // 玫瑰纸杯：杯壁莓亮→莓的竖向渐变，描边莓暗，内井仍是深巧克力。
+  const 面填 = 色.莓亮;
+  const 壁影 = 混色(暗色(面填, 0.3), 色.莓深, 0.3);
+  const 褶暗 = 色.莓暗;
+  // ①三层接触投影：纸杯压在糖墙上，近层实、远层淡。
+  for (const [下移, 外扩, 透明] of [
+    [2.6, 1, 0.36],
+    [6, 3, 0.2],
+    [10, 5.5, 0.1],
+  ] as const)
+    图.fillStyle(色.巧克力深, 透明).fillRoundedRect(x - 外扩, y + 下移, w + 外扩 * 2, h, 圆 + 外扩);
+  绘制杯口扇贝(图, x + 3, y + h, w - 6, "下");
+  // ②深色糖边 ⑥侧壁：莓暗外沿 + 下移一档的杯壁厚度。
+  图.fillStyle(色.莓暗, 1).fillRoundedRect(x - 2, y - 2, w + 4, h + 4, 圆 + 2);
+  图.fillStyle(壁影, 1).fillRoundedRect(x, y + 3.2, w, h, 圆);
   const 壁 = 圆角多边形({ 左: x, 上: y, 右: x + w, 下: y + h }, 同角(圆));
-  图.fillGradientStyle(色.莓亮, 色.莓亮, 色.莓, 色.莓, 1, 1, 1, 1).fillPoints(壁, true);
-  // 竖褶：每道褶一条亮棱一条暗缝，裁进杯壁圆角。
-  for (let 褶 = x + 1; 褶 < x + w - 1; 褶 += 5) {
+  // ③杯壁：左上受光、右下压暗的玫瑰木。
+  图
+    .fillGradientStyle(亮色(面填, 0.2), 面填, 色.莓, 暗色(色.莓, 0.34), 1, 1, 1, 1)
+    .fillPoints(壁, true);
+  const 左缘 = 裁进凸形(
+    [
+      { x, y },
+      { x: x + 4, y },
+      { x: x + 4, y: y + h },
+      { x, y: y + h },
+    ],
+    壁,
+  );
+  if (左缘.length >= 3) 图.fillStyle(色.莓浅, 0.45).fillPoints(左缘, true);
+  const 右缘 = 裁进凸形(
+    [
+      { x: x + w - 5, y },
+      { x: x + w, y },
+      { x: x + w, y: y + h },
+      { x: x + w - 5, y: y + h },
+    ],
+    壁,
+  );
+  if (右缘.length >= 3) 图.fillStyle(色.莓暗, 0.5).fillPoints(右缘, true);
+  // 竖棱（fluted）：约 7px 一条，亮棱夹暗沟，杯壁才像一圈折起来的纸。
+  const 棱距 = Math.max(6, Math.min(8, w / 9));
+  const 亮宽 = 棱距 * 0.34;
+  const 暗宽 = 棱距 * 0.4;
+  for (let 棱 = x + 2; 棱 < x + w - 2; 棱 += 棱距) {
     const 亮 = 裁进凸形(
       [
-        { x: 褶, y },
-        { x: 褶 + 2, y },
-        { x: 褶 + 2, y: y + h },
-        { x: 褶, y: y + h },
+        { x: 棱, y },
+        { x: 棱 + 亮宽, y },
+        { x: 棱 + 亮宽, y: y + h },
+        { x: 棱, y: y + h },
       ],
       壁,
     );
     if (亮.length >= 3) 图.fillStyle(色.莓浅, 0.55).fillPoints(亮, true);
     const 暗 = 裁进凸形(
       [
-        { x: 褶 + 3.4, y },
-        { x: 褶 + 4.6, y },
-        { x: 褶 + 4.6, y: y + h },
-        { x: 褶 + 3.4, y: y + h },
+        { x: 棱 + 棱距 - 暗宽, y },
+        { x: 棱 + 棱距, y },
+        { x: 棱 + 棱距, y: y + h },
+        { x: 棱 + 棱距 - 暗宽, y: y + h },
       ],
       壁,
     );
-    if (暗.length >= 3) 图.fillStyle(色.莓暗, 0.6).fillPoints(暗, true);
+    if (暗.length >= 3) 图.fillStyle(褶暗, 0.7).fillPoints(暗, true);
   }
-  图.lineStyle(1, 色.莓浅, 0.7).strokeRoundedRect(x + 1, y + 1, w - 2, h - 2, 圆 - 1);
-  const 缩 = 9;
+  // 棱条的顶棱高光：沿杯口一窄条，读作折纸的反光。
+  图
+    .fillGradientStyle(色.白, 色.白, 色.白, 色.白, 0.34, 0.2, 0, 0)
+    .fillRoundedRect(x + 5, y + 2.2, w - 10, 3.4, 1.7);
+  // ④杯口受光棱 ⑤杯底内阴影：纸杯上下各收一条边。
+  图.lineStyle(1.3, 色.莓浅, 0.7).strokeRoundedRect(x + 1, y + 1, w - 2, h - 2, 圆 - 1);
+  图
+    .fillGradientStyle(壁影, 壁影, 壁影, 壁影, 0, 0, 0.4, 0.4)
+    .fillRoundedRect(x + 4, y + h - 8, w - 8, 6, 3);
+  // 杯口外翻的一圈唇：莓浅→莓亮，压在最上面，读作纸杯口。
+  图
+    .fillGradientStyle(色.莓浅, 色.莓浅, 色.莓亮, 色.莓亮, 1, 1, 1, 1)
+    .fillRoundedRect(x + 1, y - 1, w - 2, 9, 4.5);
+  图
+    .fillGradientStyle(色.白, 色.白, 色.白, 色.白, 0.45, 0.28, 0, 0)
+    .fillRoundedRect(x + 4, y - 0.4, w - 8, 3.4, 1.7);
+  绘制杯口扇贝(图, x + 3, y + 2, w - 6, "上");
+  // 内井：上沿几乎全黑，向下透出一点莓色；井壁一圈暗边 + 底缘反光。
+  const 缩 = 8;
   const 井圆 = 圆 - 5;
   图
     .fillStyle(色.莓暗, 1)
-    .fillRoundedRect(x + 缩 - 1.5, y + 缩 - 1.5, w - 缩 * 2 + 3, h - 缩 * 2 + 3, 井圆 + 1.5);
+    .fillRoundedRect(x + 缩 - 2, y + 缩 - 2, w - 缩 * 2 + 4, h - 缩 * 2 + 4, 井圆 + 2);
   const 井亮 = 混色(色.井, 色.莓深, 0.5);
   图
     .fillGradientStyle(井亮, 井亮, 色.井, 色.井, 1, 1, 1, 1)
     .fillRoundedRect(x + 缩, y + 缩, w - 缩 * 2, h - 缩 * 2, 井圆);
   图
-    .fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.35, 0.35, 0, 0)
-    .fillRoundedRect(x + 缩, y + 缩, w - 缩 * 2, Math.min(18, h * 0.2), 井圆);
+    .fillGradientStyle(色.巧克力深, 色.巧克力深, 色.巧克力深, 色.巧克力深, 0.62, 0.62, 0, 0)
+    .fillRoundedRect(x + 缩, y + 缩, w - 缩 * 2, Math.min(20, h * 0.24), 井圆);
   图
-    .lineStyle(1, 色.莓浅, 0.4)
+    .fillGradientStyle(色.莓浅, 色.莓浅, 色.莓浅, 色.莓浅, 0, 0, 0.28, 0.28)
+    .fillRoundedRect(x + 缩 + 2, y + h - 缩 - 3.4, w - 缩 * 2 - 4, 1.6, 0.8);
+  图
+    .lineStyle(1, 色.莓浅, 0.42)
     .strokeRoundedRect(x + 缩 - 2.2, y + 缩 - 2.2, w - 缩 * 2 + 4.4, h - 缩 * 2 + 4.4, 井圆 + 2);
 }
 
-/** 纸杯口的一排扇贝：深色垫底、玫瑰面、顶上一点高光。 */
+/** 纸杯口的一排扇贝：投影、莓暗糖边、莓亮面、鼓起的圆顶与顶上一点高光。 */
 function 绘制杯口扇贝(图: 图形对象, 左: number, y: number, 宽: number, 朝向: "上" | "下"): void {
   const 色 = 糖果规范.色;
-  const 半径 = 4.6;
+  const 面 = 朝向 === "上" ? 色.莓浅 : 色.莓亮;
+  const 半径 = 5.4;
   const 数 = Math.max(3, Math.round(宽 / (半径 * 2)));
   const 步 = 宽 / 数;
   const 向 = 朝向 === "上" ? -1 : 1;
+  // ①投影：朝杯内落影，杯口才不是贴纸。
+  for (let 序 = 0; 序 < 数; 序 += 1)
+    图.fillStyle(色.巧克力深, 0.32).fillCircle(左 + 步 * (序 + 0.5) + 0.4, y + 1.8, 步 / 2 + 1.6);
+  // ②莓暗糖边
+  for (let 序 = 0; 序 < 数; 序 += 1)
+    图.fillStyle(色.莓暗, 1).fillCircle(左 + 步 * (序 + 0.5), y + 向 * 0.6, 步 / 2 + 1.4);
+  // ③糖面
+  for (let 序 = 0; 序 < 数; 序 += 1)
+    图.fillStyle(面, 1).fillCircle(左 + 步 * (序 + 0.5), y + 向 * 0.6, 步 / 2);
+  // ④圆顶受光：每颗扇贝朝外那半更亮。
   for (let 序 = 0; 序 < 数; 序 += 1) {
     const cx = 左 + 步 * (序 + 0.5);
-    图.fillStyle(色.莓暗, 1).fillCircle(cx, y + 向 * 0.6, 步 / 2 + 1.2);
-  }
-  for (let 序 = 0; 序 < 数; 序 += 1) {
-    const cx = 左 + 步 * (序 + 0.5);
-    图.fillStyle(朝向 === "上" ? 色.莓亮 : 色.莓, 1).fillCircle(cx, y + 向 * 0.6, 步 / 2);
-    图.fillStyle(色.莓浅, 0.45).fillCircle(cx - 步 * 0.12, y + 向 * 步 * 0.22, 步 * 0.16);
+    图.fillStyle(亮色(面, 0.22), 0.9).fillCircle(cx, y + 向 * 步 * 0.14, 步 * 0.36);
+    图.fillStyle(色.白, 0.45).fillCircle(cx - 步 * 0.1, y + 向 * 步 * 0.26, 步 * 0.15);
   }
 }
 
@@ -231,52 +299,69 @@ export function 绘制糖果侧栏标签(笔: 画笔, 文案: string, 中心X: n
   const 图 = 笔.图形;
   const 左 = 中心X - 宽 / 2;
   const 上 = 中心Y - 高 / 2;
-  图.fillStyle(0x12060a, 0.35).fillRoundedRect(左, 上 + 2.5, 宽, 高, 高 / 2);
-  图.fillStyle(色.莓浅, 1).fillRoundedRect(左 - 1.5, 上 - 1.5, 宽 + 3, 高 + 3, 高 / 2 + 1.5);
-  图
-    .fillGradientStyle(色.莓深, 色.莓深, 色.莓暗, 色.莓暗, 1, 1, 1, 1)
-    .fillRoundedRect(左, 上, 宽, 高, 高 / 2);
-  图.fillStyle(0xffffff, 0.12).fillRoundedRect(左 + 5, 上 + 1.5, 宽 - 10, 高 * 0.35, 高 * 0.17);
+  // 一小块玫瑰糖牌：投影/莓浅糖边/顶亮底暗糖面/顶棱高光，压在两片杯口之间。
+  // 底板生效时糖牌由画布画，这里只保留文字（位置与样式不变）。
+  if (!是糖果底板()) {
+    绘制糖片(图, 左, 上, 宽, 高, {
+      圆角: 高 / 2,
+      填色: 色.莓深,
+      边色: 色.莓浅,
+      描宽: 1.6,
+      厚度: 1.8,
+      高光: true,
+      内阴影: false,
+      顶亮: 0.22,
+      底暗: 0.28,
+    });
+    图
+      .fillGradientStyle(色.白, 色.白, 色.白, 色.白, 0.24, 0.14, 0, 0)
+      .fillRoundedRect(左 + 6, 上 + 1.8, 宽 - 12, 高 * 0.3, 高 * 0.15);
+  }
   笔.绘制文字({ 文案, 样式, 锚点: "中中", x: 中心X, y: 中心Y });
 }
 
-/** 纪录花章：十二瓣花形牌，背后两条缎带尾，象牙奖杯压在花心上方。中心定位。 */
+/**
+ * 纪录花章：十二瓣花形牌，背后两条缎带尾，象牙奖杯压在花心上方。中心定位。
+ * 底板生效时花形盘与缎带交给画布，这里只画奖杯，奖杯位置与花章中心的关系不变。
+ */
 export function 绘制糖果纪录花章(图: 图形对象, 中心X: number, 中心Y: number, 半径: number): void {
   const 色 = 糖果规范.色;
-  for (const 向 of [-1, 1]) {
-    const 尾 = [
-      { x: 中心X + 向 * 半径 * 0.25, y: 中心Y + 半径 * 0.4 },
-      { x: 中心X + 向 * 半径 * 0.85, y: 中心Y + 半径 * 0.65 },
-      { x: 中心X + 向 * 半径 * 0.95, y: 中心Y + 半径 * 1.42 },
-      { x: 中心X + 向 * 半径 * 0.68, y: 中心Y + 半径 * 1.2 },
-      { x: 中心X + 向 * 半径 * 0.45, y: 中心Y + 半径 * 1.42 },
-    ];
-    图.fillStyle(色.莓暗, 1).fillPoints(
-      尾.map((p) => ({ x: p.x + 向 * 1.2, y: p.y + 1.2 })),
+  if (!是糖果底板()) {
+    for (const 向 of [-1, 1]) {
+      const 尾 = [
+        { x: 中心X + 向 * 半径 * 0.25, y: 中心Y + 半径 * 0.4 },
+        { x: 中心X + 向 * 半径 * 0.85, y: 中心Y + 半径 * 0.65 },
+        { x: 中心X + 向 * 半径 * 0.95, y: 中心Y + 半径 * 1.42 },
+        { x: 中心X + 向 * 半径 * 0.68, y: 中心Y + 半径 * 1.2 },
+        { x: 中心X + 向 * 半径 * 0.45, y: 中心Y + 半径 * 1.42 },
+      ];
+      图.fillStyle(色.莓暗, 1).fillPoints(
+        尾.map((p) => ({ x: p.x + 向 * 1.2, y: p.y + 1.2 })),
+        true,
+      );
+      图.fillStyle(向 < 0 ? 色.莓 : 色.莓深, 1).fillPoints(尾, true);
+    }
+    const 花 = (r: number) => {
+      const 点集: 点[] = [];
+      for (let i = 0; i < 96; i += 1) {
+        const a = (i / 96) * Math.PI * 2;
+        const 瓣 = r * (1 + 0.075 * Math.cos(a * 12));
+        点集.push({ x: 中心X + Math.cos(a) * 瓣, y: 中心Y + Math.sin(a) * 瓣 });
+      }
+      return 点集;
+    };
+    图.fillStyle(0x12060a, 0.35).fillPoints(
+      花(半径).map((p) => ({ x: p.x, y: p.y + 3 })),
       true,
     );
-    图.fillStyle(向 < 0 ? 色.莓 : 色.莓深, 1).fillPoints(尾, true);
+    图.fillStyle(色.莓暗, 1).fillPoints(花(半径 + 1.5), true);
+    图.fillGradientStyle(色.莓亮, 色.莓亮, 色.莓, 色.莓, 1, 1, 1, 1).fillPoints(花(半径), true);
+    图.fillStyle(色.莓暗, 0.55).fillCircle(中心X, 中心Y + 0.5, 半径 * 0.74);
+    图.lineStyle(1.2, 色.象牙, 0.65).strokeCircle(中心X, 中心Y, 半径 * 0.8);
+    图
+      .fillGradientStyle(0xffffff, 0xffffff, 0xffffff, 0xffffff, 0.2, 0.2, 0, 0)
+      .fillEllipse(中心X, 中心Y - 半径 * 0.55, 半径 * 1.1, 半径 * 0.42);
   }
-  const 花 = (r: number) => {
-    const 点集: 点[] = [];
-    for (let i = 0; i < 96; i += 1) {
-      const a = (i / 96) * Math.PI * 2;
-      const 瓣 = r * (1 + 0.075 * Math.cos(a * 12));
-      点集.push({ x: 中心X + Math.cos(a) * 瓣, y: 中心Y + Math.sin(a) * 瓣 });
-    }
-    return 点集;
-  };
-  图.fillStyle(0x12060a, 0.35).fillPoints(
-    花(半径).map((p) => ({ x: p.x, y: p.y + 3 })),
-    true,
-  );
-  图.fillStyle(色.莓暗, 1).fillPoints(花(半径 + 1.5), true);
-  图.fillGradientStyle(色.莓亮, 色.莓亮, 色.莓, 色.莓, 1, 1, 1, 1).fillPoints(花(半径), true);
-  图.fillStyle(色.莓暗, 0.55).fillCircle(中心X, 中心Y + 0.5, 半径 * 0.74);
-  图.lineStyle(1.2, 色.象牙, 0.65).strokeCircle(中心X, 中心Y, 半径 * 0.8);
-  图
-    .fillGradientStyle(0xffffff, 0xffffff, 0xffffff, 0xffffff, 0.2, 0.2, 0, 0)
-    .fillEllipse(中心X, 中心Y - 半径 * 0.55, 半径 * 1.1, 半径 * 0.42);
   const 杯Y = 中心Y - 半径 * 0.42;
   图.fillStyle(色.象牙, 0.95);
   图.fillPoints(
