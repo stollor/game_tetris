@@ -362,23 +362,45 @@ export function 预览格子(类型: 方块类型): [number, number][] {
   const 最小行 = Math.min(...格子.map(([, 行]) => 行));
   return 格子.map(([列, 行]) => [列 - 最小列, 行 - 最小行]);
 }
-export function 可以放置(s: 再消一行状态, p: 活动方块): boolean {
-  return 读取格子(p).every(
-    ([x, y]) =>
-      Number.isInteger(x) &&
-      Number.isInteger(y) &&
-      x >= 0 &&
-      x < 10 &&
-      y >= -2 &&
-      y < 20 &&
-      s.棋盘[y + 2]?.[x] === null,
-  );
+/**
+ * 单格可放置判定：直接读 2 倍坐标，零分配。
+ * 影子/落地/重力每帧要调用几十次，走 `读取格子` 会每次摊出 4 个数组 + 4 个坐标对象。
+ */
+function 格可放置(s: 再消一行状态, 列2: number, 行2: number): boolean {
+  if (列2 % 2 !== 0 || 行2 % 2 !== 0) return false;
+  const x = 列2 / 2;
+  const y = 行2 / 2;
+  if (x < 0 || x >= 10 || y < -2 || y >= 20) return false;
+  return s.棋盘[y + 2]?.[x] === null;
 }
+export function 可以放置(s: 再消一行状态, p: 活动方块): boolean {
+  for (const 格 of p.格子) if (!格可放置(s, 格.列2, 格.行2)) return false;
+  return true;
+}
+/** 当前方块是否已经落地（任一格下移一行不可放）：与 `可以放置` 同一判据，不构造下移副本。 */
 function 落地(s: 再消一行状态): boolean {
-  return !可以放置(s, {
-    ...s.当前方块,
-    格子: s.当前方块.格子.map((c) => ({ ...c, 行2: c.行2 + 2 })),
-  });
+  for (const 格 of s.当前方块.格子) if (!格可放置(s, 格.列2, 格.行2 + 2)) return true;
+  return false;
+}
+/**
+ * 当前方块落到底后的可见格子（与页面 `计算影子` 同口径）：逐行下探只读 2 倍坐标，
+ * 不构造中间方块对象，供每帧重建的动态层直接取用。
+ */
+export function 读取影子格子(s: 再消一行状态): [number, number][] {
+  let 下移 = 0;
+  for (;;) {
+    let 可下 = true;
+    for (const 格 of s.当前方块.格子)
+      if (!格可放置(s, 格.列2, 格.行2 + (下移 + 1) * 2)) {
+        可下 = false;
+        break;
+      }
+    if (!可下) break;
+    下移++;
+  }
+  const 影子: [number, number][] = [];
+  for (const 格 of s.当前方块.格子) 影子.push([格.列2 / 2, 格.行2 / 2 + 下移]);
+  return 影子;
 }
 function 地面操作(s: 再消一行状态, rand: () => number, 可重置: boolean): void {
   if (落地(s)) {

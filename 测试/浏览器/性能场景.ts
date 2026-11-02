@@ -41,6 +41,33 @@ async function 验收(页: Page) {
   if (!快照?.sequence || 快照.diagnostics.errors.length) throw new Error("游戏标准桥不可用");
 }
 const 证据 = (页: Page) => 页.evaluate(() => window.__three版__?.读取统计());
+/** 压测场景的证据：既有统计快照 + 页内 1 秒窗口时间线。 */
+const 证据压测 = (页: Page) =>
+  页.evaluate(() => ({
+    统计: window.__three版__?.读取统计() ?? null,
+    压测: window.__three版__?.压测?.读取() ?? null,
+  }));
+/** 快进到指定消行数，并开始页内自动落子（间隔毫秒）。 */
+async function 开始后期压测(页: Page, 消行数: number, 间隔毫秒: number) {
+  await 页.evaluate(
+    (配置) => {
+      const 桥 = window.__three版__;
+      const 测试 = window.__再消一行测试__;
+      if (!桥?.压测) throw new Error("压测采样未挂载");
+      if (!测试?.快进后期 || !测试?.开始自动对战) throw new Error("压测控制未挂载");
+      桥.压测.重置();
+      测试.快进后期({
+        消行数: 配置.消行数,
+        分数: 配置.消行数 * 2000,
+        堆叠行: 8,
+        最长连击: 24,
+      });
+      测试.开始自动对战({ 间隔秒: 配置.间隔毫秒 / 1000 });
+    },
+    { 消行数, 间隔毫秒 },
+  );
+}
+const 停止自动对战 = (页: Page) => 页.evaluate(() => window.__再消一行测试__?.停止自动对战?.());
 export const 性能场景库 = [
   {
     名称: "菜单基准",
@@ -120,6 +147,58 @@ export const 性能场景库 = [
       const 恢复 = () => 页.waitForTimeout((负载?.恢复秒数 ?? 1) * 1000);
       if (记录) await 记录.阶段("释放恢复", 恢复);
       else await 恢复();
+    },
+  },
+  {
+    名称: "马拉松前期",
+    分组: "对局压力",
+    说明: "开局即自动落子，作为后期对照的基线窗口",
+    准备: (页: Page, 地址: string) => 准备(页, 地址, true),
+    验收,
+    证据: 证据压测,
+    操作: async (
+      页: Page,
+      秒数: number,
+      负载?: { 每秒次数: number },
+      记录?: { 阶段(名: string, 操作: () => Promise<void>): Promise<void> },
+    ) => {
+      const 间隔毫秒 = Math.round(1000 / (负载?.每秒次数 ?? 10));
+      const 快进 = async () => {
+        await 开始后期压测(页, 0, 间隔毫秒);
+        await 页.waitForTimeout(秒数 * 1000);
+      };
+      try {
+        if (记录) await 记录.阶段("前期自动落子", 快进);
+        else await 快进();
+      } finally {
+        await 停止自动对战(页);
+      }
+    },
+  },
+  {
+    名称: "马拉松后期",
+    分组: "对局压力",
+    说明: "快进到 300 行/等级 31 后自动落子，测后期帧节奏是否退化",
+    准备: (页: Page, 地址: string) => 准备(页, 地址, true),
+    验收,
+    证据: 证据压测,
+    操作: async (
+      页: Page,
+      秒数: number,
+      负载?: { 每秒次数: number },
+      记录?: { 阶段(名: string, 操作: () => Promise<void>): Promise<void> },
+    ) => {
+      const 间隔毫秒 = Math.round(1000 / (负载?.每秒次数 ?? 10));
+      const 快进 = async () => {
+        await 开始后期压测(页, 300, 间隔毫秒);
+        await 页.waitForTimeout(秒数 * 1000);
+      };
+      try {
+        if (记录) await 记录.阶段("后期自动落子", 快进);
+        else await 快进();
+      } finally {
+        await 停止自动对战(页);
+      }
     },
   },
 ];

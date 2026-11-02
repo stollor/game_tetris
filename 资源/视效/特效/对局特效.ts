@@ -152,12 +152,16 @@ export function 清空特效(特效: 特效状态): void {
   特效.庆祝 = 0;
 }
 
-/** 震屏偏移：以落块/四行为触发，指数衰减。 */
+/** 震屏偏移：以落块/四行为触发，指数衰减。返回复用缓冲：页面每帧读 2~3 次，只读当帧 x/y。 */
+const 无震动偏移 = { x: 0, y: 0 };
+const 震动偏移 = { x: 0, y: 0 };
 export function 读取震动偏移(特效: 特效状态): { x: number; y: number } {
   const 震动 = 特效.震动;
-  if (!震动) return { x: 0, y: 0 };
+  if (!震动) return 无震动偏移;
   const 镜头 = 读取对局震屏偏移(震动.经过秒, 震动.时长秒, 震动.强度);
-  return { x: -镜头.x, y: -镜头.y };
+  震动偏移.x = -镜头.x;
+  震动偏移.y = -镜头.y;
+  return 震动偏移;
 }
 
 export function 绘制特效(

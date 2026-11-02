@@ -1,5 +1,5 @@
-import { 是像素风格 } from "../../主题/像素/像素风格";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
+import { 是像素风格 } from "../../主题/像素/像素风格";
 import { 绘制像素四行庆祝, 绘制像素消行, 绘制像素落块拖尾, 绘制像素锁定闪光 } from "./像素特效";
 
 /**
@@ -161,12 +161,14 @@ export function 读取成就提示透明度(剩余秒: number): number {
   return Math.max(0, Math.min(1, 剩余秒 / 0.35));
 }
 
-/** Phaser 棋盘更新特效采用的主镜头 scroll 偏移。 */
+/** 震屏偏移缓冲：页面每帧要读 2~3 次，复用同一对象，调用方只读当帧 x/y。 */
+const 震屏偏移 = { x: 0, y: 0 };
+
+/** Phaser 棋盘更新特效采用的主镜头 scroll 偏移（返回复用缓冲，不要跨帧持有）。 */
 export function 读取对局震屏偏移(经过秒: number, 时长秒: number, 强度: number) {
   const 进度 = 时长秒 > 0 ? Math.min(1, Math.max(0, 经过秒 / 时长秒)) : 1;
   const 幅度 = (1 - 进度) ** 2 * 强度;
-  return {
-    x: Math.cos(进度 * Math.PI * 12) * 幅度 * 0.55,
-    y: Math.sin(进度 * Math.PI * 15 + Math.PI / 2) * 幅度,
-  };
+  震屏偏移.x = Math.cos(进度 * Math.PI * 12) * 幅度 * 0.55;
+  震屏偏移.y = Math.sin(进度 * Math.PI * 15 + Math.PI / 2) * 幅度;
+  return 震屏偏移;
 }
