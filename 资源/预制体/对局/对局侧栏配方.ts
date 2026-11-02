@@ -6,12 +6,12 @@ import { 像素规范 } from "../../主题/像素/像素规范";
 import { 是像素风格 } from "../../主题/像素/像素风格";
 import { 对局像素规格 } from "../../主题/像素/对局像素规格";
 import { 是立体风格 } from "../../主题/立体/立体风格";
+import { 扁平外观 } from "../../主题/糖果/扁平外观";
 import { 糖果规范 } from "../../主题/糖果/糖果规范";
 import { 是糖果风格 } from "../../主题/糖果/糖果风格";
 import { 读取霓虹调色板 } from "../../主题/配色/调色板";
 import { 同角, 圆角多边形, 裁进凸形 } from "../基础/装饰与蒙层/圆角裁剪";
 import { 绘制扇贝边, 绘制斜纹 } from "../基础/装饰与蒙层/糖果花纹";
-import { 绘制糖片 } from "../基础/装饰与蒙层/糖果质感";
 import { 绘制像素面板 } from "../基础/面板/像素面板";
 import { 绘制金属板 } from "../基础/面板/金属板";
 import { 绘制霓虹玻璃 } from "../基础/面板/霓虹玻璃";
@@ -285,13 +285,12 @@ function 绘制杯口扇贝(图: 图形对象, 左: number, y: number, 宽: numb
   }
 }
 
-/** 糖果侧栏页签：深酒红胶囊压在纸杯口上，象牙字，按标签中心定位。 */
+/** 糖果侧栏页签：玫瑰木胶囊压在罐口上，奶油字，按标签中心定位。 */
 export function 绘制糖果侧栏标签(笔: 画笔, 文案: string, 中心X: number, 中心Y: number): void {
-  const 色 = 糖果规范.色;
+  const 色 = 扁平外观.色;
   const 样式 = 读取对局文字样式("预览标题", {
     字号: 12,
     颜色: 色.象牙,
-    阴影: { 颜色: 色.井, 模糊: 0, 偏移X: 0, 偏移Y: 1 },
   });
   const 测 = 笔.测量文字(文案, 样式);
   const 宽 = Math.max(50, 测.宽 + 24);
@@ -299,85 +298,91 @@ export function 绘制糖果侧栏标签(笔: 画笔, 文案: string, 中心X: n
   const 图 = 笔.图形;
   const 左 = 中心X - 宽 / 2;
   const 上 = 中心Y - 高 / 2;
-  // 一小块玫瑰糖牌：投影/莓浅糖边/顶亮底暗糖面/顶棱高光，压在两片杯口之间。
-  // 底板生效时糖牌由画布画，这里只保留文字（位置与样式不变）。
+  // 底板生效时胶囊由画布画，这里只保留文字（位置与样式不变）；
+  // 兜底分支同一套扁平语言：奶油浅外框 + 玫瑰木浅底，无渐变高光。
   if (!是糖果底板()) {
-    绘制糖片(图, 左, 上, 宽, 高, {
-      圆角: 高 / 2,
-      填色: 色.莓深,
-      边色: 色.莓浅,
-      描宽: 1.6,
-      厚度: 1.8,
-      高光: true,
-      内阴影: false,
-      顶亮: 0.22,
-      底暗: 0.28,
-    });
+    图.fillStyle(色.奶油深, 0.9).fillRoundedRect(左 + 1, 上 + 2.2, 宽, 高, 高 / 2);
+    图.fillStyle(色.奶油浅, 1).fillRoundedRect(左, 上, 宽, 高, 高 / 2);
     图
-      .fillGradientStyle(色.白, 色.白, 色.白, 色.白, 0.24, 0.14, 0, 0)
-      .fillRoundedRect(左 + 6, 上 + 1.8, 宽 - 12, 高 * 0.3, 高 * 0.15);
+      .fillStyle(色.玫瑰木浅, 1)
+      .fillRoundedRect(左 + 2.6, 上 + 2.6, 宽 - 5.2, 高 - 5.2, 高 / 2 - 2.6);
   }
   笔.绘制文字({ 文案, 样式, 锚点: "中中", x: 中心X, y: 中心Y });
 }
 
 /**
- * 纪录花章：十二瓣花形牌，背后两条缎带尾，象牙奖杯压在花心上方。中心定位。
- * 底板生效时花形盘与缎带交给画布，这里只画奖杯，奖杯位置与花章中心的关系不变。
+ * 纪录花章：花边盘、缎带与金杯（中心定位），纪录数值仍由文字层压在同一中心。
+ * 底板生效时整块奖章都由画布画（画布才有平滑曲线与侧边），这里不再叠一层。
  */
 export function 绘制糖果纪录花章(图: 图形对象, 中心X: number, 中心Y: number, 半径: number): void {
-  const 色 = 糖果规范.色;
-  if (!是糖果底板()) {
-    for (const 向 of [-1, 1]) {
-      const 尾 = [
-        { x: 中心X + 向 * 半径 * 0.25, y: 中心Y + 半径 * 0.4 },
-        { x: 中心X + 向 * 半径 * 0.85, y: 中心Y + 半径 * 0.65 },
-        { x: 中心X + 向 * 半径 * 0.95, y: 中心Y + 半径 * 1.42 },
-        { x: 中心X + 向 * 半径 * 0.68, y: 中心Y + 半径 * 1.2 },
-        { x: 中心X + 向 * 半径 * 0.45, y: 中心Y + 半径 * 1.42 },
-      ];
-      图.fillStyle(色.莓暗, 1).fillPoints(
-        尾.map((p) => ({ x: p.x + 向 * 1.2, y: p.y + 1.2 })),
-        true,
-      );
-      图.fillStyle(向 < 0 ? 色.莓 : 色.莓深, 1).fillPoints(尾, true);
+  if (是糖果底板()) return;
+  const 色 = 扁平外观.色;
+  // 兜底：底板不可用时用矢量画一块同样的扁平奖章（粉瓣 + 玫瑰木心 + 缎带尾 + 金杯）。
+  const 花 = (r: number) => {
+    const 点集: 点[] = [];
+    for (let i = 0; i < 96; i += 1) {
+      const a = (i / 96) * Math.PI * 2;
+      const 瓣 = r * (1 + 0.06 * Math.cos(a * 12));
+      点集.push({ x: 中心X + Math.cos(a) * 瓣, y: 中心Y + Math.sin(a) * 瓣 });
     }
-    const 花 = (r: number) => {
-      const 点集: 点[] = [];
-      for (let i = 0; i < 96; i += 1) {
-        const a = (i / 96) * Math.PI * 2;
-        const 瓣 = r * (1 + 0.075 * Math.cos(a * 12));
-        点集.push({ x: 中心X + Math.cos(a) * 瓣, y: 中心Y + Math.sin(a) * 瓣 });
-      }
-      return 点集;
-    };
-    图.fillStyle(0x12060a, 0.35).fillPoints(
-      花(半径).map((p) => ({ x: p.x, y: p.y + 3 })),
+    return 点集;
+  };
+  for (const 向 of [-1, 1] as const) {
+    const 尾 = [
+      { x: 中心X + 向 * 半径 * 0.3, y: 中心Y + 半径 * 0.32 },
+      { x: 中心X + 向 * 半径 * 1.06, y: 中心Y + 半径 * 0.7 },
+      { x: 中心X + 向 * 半径 * 1.08, y: 中心Y + 半径 * 1.36 },
+      { x: 中心X + 向 * 半径 * 0.84, y: 中心Y + 半径 * 1.12 },
+      { x: 中心X + 向 * 半径 * 0.66, y: 中心Y + 半径 * 1.42 },
+      { x: 中心X + 向 * 半径 * 0.22, y: 中心Y + 半径 * 0.58 },
+    ];
+    图.fillStyle(色.粉深, 1).fillPoints(
+      尾.map((p) => ({ x: p.x, y: p.y + 2.2 })),
       true,
     );
-    图.fillStyle(色.莓暗, 1).fillPoints(花(半径 + 1.5), true);
-    图.fillGradientStyle(色.莓亮, 色.莓亮, 色.莓, 色.莓, 1, 1, 1, 1).fillPoints(花(半径), true);
-    图.fillStyle(色.莓暗, 0.55).fillCircle(中心X, 中心Y + 0.5, 半径 * 0.74);
-    图.lineStyle(1.2, 色.象牙, 0.65).strokeCircle(中心X, 中心Y, 半径 * 0.8);
-    图
-      .fillGradientStyle(0xffffff, 0xffffff, 0xffffff, 0xffffff, 0.2, 0.2, 0, 0)
-      .fillEllipse(中心X, 中心Y - 半径 * 0.55, 半径 * 1.1, 半径 * 0.42);
+    图.fillStyle(色.粉, 1).fillPoints(尾, true);
   }
-  const 杯Y = 中心Y - 半径 * 0.42;
-  图.fillStyle(色.象牙, 0.95);
-  图.fillPoints(
-    [
-      { x: 中心X - 6, y: 杯Y - 5 },
-      { x: 中心X + 6, y: 杯Y - 5 },
-      { x: 中心X + 4.5, y: 杯Y + 1.5 },
-      { x: 中心X + 1.2, y: 杯Y + 3.5 },
-      { x: 中心X - 1.2, y: 杯Y + 3.5 },
-      { x: 中心X - 4.5, y: 杯Y + 1.5 },
-    ],
+  图.fillStyle(色.粉深, 1).fillPoints(
+    花(半径).map((p) => ({ x: p.x, y: p.y + 2.4 })),
     true,
   );
-  图.fillRect(中心X - 1, 杯Y + 3, 2, 3).fillRoundedRect(中心X - 4, 杯Y + 5.5, 8, 2.2, 1);
-  图
-    .lineStyle(1.3, 色.象牙, 0.95)
-    .strokeCircle(中心X - 6, 杯Y - 2, 2.2)
-    .strokeCircle(中心X + 6, 杯Y - 2, 2.2);
+  图.fillStyle(色.粉, 1).fillPoints(花(半径), true);
+  图.fillStyle(色.奖章, 1).fillCircle(中心X, 中心Y, 半径 * 0.78);
+  图.lineStyle(1.2, 色.玫瑰木深, 1).strokeCircle(中心X, 中心Y, 半径 * 0.78);
+  // 金杯：金面 + 下移一档的金深侧边；杯口/杯身/杯柄/杯脚同一套粗笔画。
+  const 杯Y = 中心Y - 半径 * 0.42;
+  const 半宽 = 半径 * 0.33;
+  const 画杯 = (下移: number, 面: number) => {
+    图
+      .fillStyle(面, 1)
+      .fillRoundedRect(中心X - 半宽, 杯Y - 半径 * 0.26 + 下移, 半宽 * 2, 半径 * 0.1, 半径 * 0.05);
+    图.fillStyle(面, 1).fillPoints(
+      [
+        { x: 中心X - 半宽 * 0.82, y: 杯Y - 半径 * 0.16 + 下移 },
+        { x: 中心X + 半宽 * 0.82, y: 杯Y - 半径 * 0.16 + 下移 },
+        { x: 中心X + 半宽 * 0.27, y: 杯Y + 半径 * 0.07 + 下移 },
+        { x: 中心X, y: 杯Y + 半径 * 0.09 + 下移 },
+        { x: 中心X - 半宽 * 0.27, y: 杯Y + 半径 * 0.07 + 下移 },
+      ],
+      true,
+    );
+    for (const 向 of [-1, 1] as const)
+      图
+        .lineStyle(半径 * 0.07, 面, 1)
+        .strokeCircle(中心X + 向 * 半宽 * 0.9, 杯Y - 半径 * 0.1 + 下移, 半径 * 0.13);
+    图
+      .fillStyle(面, 1)
+      .fillRect(中心X - 半径 * 0.045, 杯Y + 半径 * 0.06 + 下移, 半径 * 0.09, 半径 * 0.15);
+    图
+      .fillStyle(面, 1)
+      .fillRoundedRect(
+        中心X - 半径 * 0.17,
+        杯Y + 半径 * 0.2 + 下移,
+        半径 * 0.34,
+        半径 * 0.09,
+        半径 * 0.045,
+      );
+  };
+  画杯(1.2, 色.金深);
+  画杯(0, 色.金);
 }

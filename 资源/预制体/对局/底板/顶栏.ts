@@ -1,27 +1,29 @@
 import type { 对局布局数据 } from "../../../../代码/页面/布局/对局布局";
-import { 亮色, 暗色, 混色 } from "../../../../.gamemaker/依赖/框架/界面/颜色工具";
-import { 糖果规范 } from "../../../主题/糖果/糖果规范";
-import { 串 } from "./工具";
-
-const 色 = 糖果规范.色;
+import { 扁平外观 } from "../../../主题/糖果/扁平外观";
+import {
+  串,
+  圆角矩形路径,
+  填充,
+  扇贝矩形路径,
+  描边,
+  画块,
+  设备倍率,
+  铺斜纹,
+} from "../../基础/装饰与蒙层/扁平笔法";
 
 /**
- * 底板·顶栏：标题糖（糖纸扭结 + 金箍）、LV / SCORE / LINES 三块玫瑰木名牌（金边、月桂枝）、
- * 糖绳与正中蝴蝶结。暂停键归操作区，这里不画。
+ * 底板·顶栏：标题糖纸横幅（深粉糖身 + 两端粉扭结 + 金箍）、LV / SCORE / LINES 三块
+ * 奶油花边名牌（玫瑰木牌面）、横贯全屏的斜纹糖绳与正中蝴蝶结。暂停键归操作区，这里不画。
  *
- * 牌位与 `计算对局仪表` 同源：舱位矩形只在内部收边，文字仍由矢量层画在原坐标上。
+ * 扁平规则：面只用一个纯色，立体感只靠「下移一档的暗侧边 + 大而柔的落影」；
+ * 旧版的径向高光、糖钉、麦穗、褶皱与闪星全部去掉。
+ *
+ * 牌位与 `计算对局仪表` 同源：舱位矩形只在内部收边，文字仍由矢量层画在原坐标上
+ * （标签落在 `定位.主.上 + 16`，读数底线落在 `数值底`），本文件不挪文字位置。
  */
 
-/* 玫瑰木牌面：比底板背景亮一档、比描边暗一档，全部由糖果规范混出。 */
-const 牌面顶 = 混色(色.奶油, 色.粉, 0.45);
-const 牌面中 = 混色(牌面顶, 暗色(牌面顶, 0.16), 0.35);
-const 牌面底 = 混色(牌面顶, 色.草莓浅, 0.5);
-const 牌边 = 混色(色.莓浅, 色.粉, 0.34);
-const 牌线 = 混色(色.粉, 色.奶油, 0.45);
-/* 金饰：金线、月桂枝、糖钉。 */
-const 金 = 混色(色.金, 色.金深, 0.3);
-const 金亮 = 亮色(色.金, 0.3);
-const 金暗 = 混色(色.金深, 色.巧克力, 0.25);
+const 色 = 扁平外观.色;
+const 寸 = 扁平外观.尺寸;
 
 interface 牌位 {
   左: number;
@@ -46,197 +48,15 @@ export function 计算糖果牌位(布局: 对局布局数据): { 主: 牌位; �
   };
 }
 
-/** 小名牌外形：上沿圆角、下沿一排扇贝，读作被糖纸包住的胶囊标签。 */
-function 小牌路径(
-  笔: CanvasRenderingContext2D,
-  左: number,
-  上: number,
-  宽: number,
-  高: number,
-  圆角: number,
-  瓣数 = 6,
-): void {
-  const 右 = 左 + 宽;
-  const 下 = 上 + 高;
-  const 圆 = Math.min(圆角, 宽 / 2, 高 / 2);
-  笔.beginPath();
-  笔.moveTo(左, 下 - 2.6);
-  笔.lineTo(左, 上 + 圆);
-  笔.quadraticCurveTo(左, 上, 左 + 圆, 上);
-  笔.lineTo(右 - 圆, 上);
-  笔.quadraticCurveTo(右, 上, 右, 上 + 圆);
-  笔.lineTo(右, 下 - 2.6);
-  for (let i = 瓣数; i >= 1; i -= 1) {
-    const x1 = 左 + (i * 宽) / 瓣数;
-    const x2 = 左 + ((i - 1) * 宽) / 瓣数;
-    笔.quadraticCurveTo((x1 + x2) / 2, 下 + 3.2, x2, 下 - 2.6);
-  }
-  笔.closePath();
-}
+/* ------------------------------------------------------------------ */
+/* 标题糖纸横幅                                                        */
+/* ------------------------------------------------------------------ */
 
-/** 主名牌外形：四角切角的长圆角票签。 */
-function 大牌路径(
-  笔: CanvasRenderingContext2D,
-  左: number,
-  上: number,
-  宽: number,
-  高: number,
-  切: number,
-): void {
-  const 右 = 左 + 宽;
-  const 下 = 上 + 高;
-  笔.beginPath();
-  笔.moveTo(左 + 切, 上);
-  笔.lineTo(右 - 切, 上);
-  笔.lineTo(右, 上 + 切);
-  笔.lineTo(右, 下 - 切);
-  笔.lineTo(右 - 切, 下);
-  笔.lineTo(左 + 切, 下);
-  笔.lineTo(左, 下 - 切);
-  笔.lineTo(左, 上 + 切);
-  笔.closePath();
-}
-
-/** 沿当前路径内缩一圈描边（用中心缩放近似，招牌面只有一层裱线，够用）。 */
-function 内缩描边(笔: CanvasRenderingContext2D, 牌: 牌位, 路径: () => void, 色串: string, 线宽: number): void {
-  const 中心X = 牌.左 + 牌.宽 / 2;
-  const 中心Y = 牌.上 + 牌.高 / 2;
-  笔.save();
-  笔.translate(中心X, 中心Y);
-  笔.scale(1 - 7 / 牌.宽, 1 - 7 / 牌.高);
-  笔.translate(-中心X, -中心Y);
-  路径();
-  笔.strokeStyle = 色串;
-  笔.lineWidth = 线宽;
-  笔.stroke();
-  笔.restore();
-}
-
-/** 牌面：落影 → 上亮下暗的玫瑰木 → 顶部内阴影 → 底沿反光 → 粉边；主牌再压一圈奶油裱线。 */
-function 填牌面(笔: CanvasRenderingContext2D, 牌: 牌位, 主: boolean, 路径: () => void): void {
-  笔.save();
-  笔.shadowColor = "rgba(0,0,0,0.5)";
-  笔.shadowBlur = 7;
-  笔.shadowOffsetY = 3.5;
-  路径();
-  笔.fillStyle = 串(牌面中);
-  笔.fill();
-  笔.restore();
-
-  const 渐 = 笔.createLinearGradient(0, 牌.上, 0, 牌.上 + 牌.高);
-  渐.addColorStop(0, 串(亮色(牌面顶, 0.1)));
-  渐.addColorStop(0.5, 串(牌面顶));
-  渐.addColorStop(1, 串(牌面底));
-  路径();
-  笔.fillStyle = 渐;
-  笔.fill();
-
-  笔.save();
-  路径();
-  笔.clip();
-  const 顶影 = 笔.createLinearGradient(0, 牌.上, 0, 牌.上 + 牌.高 * 0.34);
-  顶影.addColorStop(0, "rgba(20,6,10,0.16)");
-  顶影.addColorStop(1, "rgba(20,6,10,0)");
-  笔.fillStyle = 顶影;
-  笔.fillRect(牌.左, 牌.上, 牌.宽, 牌.高 * 0.5);
-  笔.fillStyle = 串(色.粉, 0.12);
-  笔.fillRect(牌.左, 牌.上 + 牌.高 - 7, 牌.宽, 7);
-  笔.restore();
-
-  路径();
-  笔.strokeStyle = 串(色.莓暗, 0.55);
-  笔.lineWidth = 4.2;
-  笔.stroke();
-  路径();
-  笔.strokeStyle = 串(牌边);
-  笔.lineWidth = 2.4;
-  笔.stroke();
-  内缩描边(笔, 牌, 路径, 串(色.莓暗, 0.5), 1.1);
-  if (主) 内缩描边(笔, 牌, 路径, 串(牌线, 0.34), 1);
-}
-
-/** 侧牌：两颗金糖钉把名牌咬在糖墙上。 */
-function 画糖钉(笔: CanvasRenderingContext2D, 牌: 牌位): void {
-  for (const x of [牌.左 + 9.5, 牌.左 + 牌.宽 - 9.5]) {
-    const y = 牌.上 + 牌.高 * 0.5;
-    笔.beginPath();
-    笔.arc(x, y, 2.2, 0, Math.PI * 2);
-    笔.fillStyle = 串(金暗, 0.85);
-    笔.fill();
-    笔.beginPath();
-    笔.arc(x, y - 0.2, 1.7, 0, Math.PI * 2);
-    笔.fillStyle = 串(金, 0.95);
-    笔.fill();
-    笔.beginPath();
-    笔.arc(x - 0.6, y - 0.8, 0.8, 0, Math.PI * 2);
-    笔.fillStyle = "rgba(255,248,228,0.9)";
-    笔.fill();
-  }
-}
-
-/** 月桂枝：一根上弯的茎，两侧交错六对尖叶，叶尖朝外上方，紧贴读数外侧。 */
-function 画月桂枝(笔: CanvasRenderingContext2D, x: number, y: number, 向: 1 | -1): void {
-  笔.save();
-  笔.translate(x, y);
-  笔.scale(向, 1);
-  笔.beginPath();
-  笔.moveTo(0, 11.5);
-  笔.quadraticCurveTo(5.6, 2, 2.2, -11.5);
-  笔.lineCap = "round";
-  笔.strokeStyle = 串(金暗, 0.95);
-  笔.lineWidth = 1.8;
-  笔.stroke();
-  笔.strokeStyle = 串(金亮, 0.9);
-  笔.lineWidth = 0.8;
-  笔.stroke();
-  for (let i = 0; i < 5; i += 1) {
-    const t = i / 4;
-    const 茎X = 1.4 + t * 3.6;
-    const 茎Y = 9.2 - t * 17.6;
-    const 长 = 6.2 - i * 0.55;
-    for (const 侧 of [-1, 1] as const) {
-      笔.save();
-      笔.translate(茎X, 茎Y);
-      笔.rotate(侧 < 0 ? -2.38 + t * 0.22 : -0.76 - t * 0.22);
-      笔.beginPath();
-      笔.moveTo(0, 0);
-      笔.quadraticCurveTo(长 * 0.5, -长 * 0.42, 长, 0);
-      笔.quadraticCurveTo(长 * 0.5, 长 * 0.42, 0, 0);
-      笔.closePath();
-      笔.fillStyle = 串(侧 < 0 ? 金 : 金亮, 0.95);
-      笔.fill();
-      笔.strokeStyle = 串(金暗, 0.55);
-      笔.lineWidth = 0.6;
-      笔.stroke();
-      笔.restore();
-    }
-  }
-  笔.restore();
-}
-
-/** 一块名牌：主牌带月桂枝，侧牌带糖钉。 */
-function 画名牌(笔: CanvasRenderingContext2D, 牌: 牌位, 主: boolean): void {
-  const 路径 = () =>
-    主 ? 大牌路径(笔, 牌.左, 牌.上, 牌.宽, 牌.高, 10) : 小牌路径(笔, 牌.左, 牌.上, 牌.宽, 牌.高, 12);
-  填牌面(笔, 牌, 主, 路径);
-  if (!主) {
-    画糖钉(笔, 牌);
-    return;
-  }
-  const y = 牌.上 + 牌.高 * 0.62;
-  画月桂枝(笔, 牌.左 + 19, y, 1);
-  画月桂枝(笔, 牌.左 + 牌.宽 - 19, y, -1);
-  // 牌面下沿一道奶油压线，把读数兜住。
-  笔.save();
-  路径();
-  笔.clip();
-  笔.fillStyle = 串(色.奶油, 0.16);
-  笔.fillRect(牌.左 + 10, 牌.上 + 牌.高 - 3.2, 牌.宽 - 20, 1.6);
-  笔.restore();
-}
-
-/** 糖纸扭结：从糖身端部向外张开的褶扇，褶线一深一浅。 */
-function 画扭结(
+/**
+ * 糖纸扭结：从糖身端部向外张开的三瓣褶，纯色面 + 下移一档的暗粉侧边。
+ * `伸` 是瓣往外伸的长度，`身高` 决定瓣张开的幅度。
+ */
+function 画糖纸扭结(
   笔: CanvasRenderingContext2D,
   颈X: number,
   中心Y: number,
@@ -244,106 +64,59 @@ function 画扭结(
   伸: number,
   身高: number,
 ): void {
-  const 颈 = 身高 * 0.3;
-  const 尖 = 身高 * 0.7;
-  // 外缘做成三个褶尖，读作拧起来的糖纸。
+  const 颈 = 身高 * 0.28;
+  const 尖 = 身高 * 0.56;
   const 路径 = () => {
     笔.beginPath();
     笔.moveTo(0, -颈);
-    笔.quadraticCurveTo(伸 * 0.55, -尖 * 1.02, 伸, -尖 * 0.62);
-    笔.quadraticCurveTo(伸 - 5, -尖 * 0.42, 伸 + 1.5, -尖 * 0.2);
-    笔.quadraticCurveTo(伸 - 5, 0, 伸 + 1.5, 尖 * 0.2);
-    笔.quadraticCurveTo(伸 - 5, 尖 * 0.42, 伸, 尖 * 0.62);
-    笔.quadraticCurveTo(伸 * 0.55, 尖 * 1.02, 0, 颈);
-    笔.quadraticCurveTo(-3.4, 0, 0, -颈);
+    笔.quadraticCurveTo(伸 * 0.55, -尖 * 1.06, 伸, -尖 * 0.62);
+    笔.quadraticCurveTo(伸 - 5.6, -尖 * 0.34, 伸 + 1.4, -尖 * 0.04);
+    笔.quadraticCurveTo(伸 - 5.6, 尖 * 0.34, 伸, 尖 * 0.62);
+    笔.quadraticCurveTo(伸 * 0.55, 尖 * 1.06, 0, 颈);
+    笔.quadraticCurveTo(-3.2, 0, 0, -颈);
     笔.closePath();
   };
   笔.save();
   笔.translate(颈X, 中心Y);
   笔.scale(向, 1);
-  路径();
-  const 渐 = 笔.createLinearGradient(0, 0, 伸, 0);
-  渐.addColorStop(0, 串(混色(色.草莓, 色.粉, 0.38)));
-  渐.addColorStop(0.5, 串(混色(色.草莓, 色.草莓深, 0.28)));
-  渐.addColorStop(1, 串(混色(色.草莓深, 色.莓, 0.3)));
-  笔.fillStyle = 渐;
-  笔.fill();
+  // 暗侧边：整片下移 2.6，读作折到后面的那层糖纸
   笔.save();
-  笔.clip();
-  笔.strokeStyle = 串(色.草莓深, 0.4);
-  笔.lineWidth = 1.1;
-  for (const k of [-0.62, 0.06, 0.68]) {
-    笔.beginPath();
-    笔.moveTo(1, k * 颈 * 0.9);
-    笔.lineTo(伸 - 0.5, k * 尖 * 0.94);
-    笔.stroke();
-  }
-  笔.strokeStyle = 串(色.草莓浅, 0.55);
-  笔.lineWidth = 1.3;
-  for (const k of [-0.32, 0.38]) {
-    笔.beginPath();
-    笔.moveTo(1, k * 颈 * 0.9);
-    笔.lineTo(伸 - 0.5, k * 尖 * 0.94);
-    笔.stroke();
-  }
-  // 端部尖角压一记暗，读作折过来的糖纸背面。
-  笔.fillStyle = 串(色.莓暗, 0.24);
-  笔.fillRect(伸 - 5, -尖, 6, 尖 * 2);
+  笔.translate(0, 2.6);
+  路径();
+  填充(笔, 色.糖纸深);
   笔.restore();
   路径();
-  笔.strokeStyle = 串(色.莓暗, 0.6);
-  笔.lineWidth = 1.1;
-  笔.stroke();
+  填充(笔, 色.粉);
+  // 三道褶线：只压一档深粉，不做渐变
+  笔.save();
+  路径();
+  笔.clip();
+  笔.strokeStyle = 串(色.粉深, 0.55);
+  笔.lineWidth = 1.2;
+  for (const k of [-0.58, 0.02, 0.62]) {
+    笔.beginPath();
+    笔.moveTo(2.4, k * 颈 * 0.9);
+    笔.lineTo(伸 - 1.4, k * 尖 * 0.95);
+    笔.stroke();
+  }
+  笔.restore();
   笔.restore();
 }
 
-/** 金箍：糖身两端各一道竖金环，左亮右暗，压住糖纸与糖身的接缝。 */
+/** 金箍：糖身两端一道竖金环，下移一档的暗金做侧边，压住糖纸与糖身的接缝。 */
 function 画金箍(笔: CanvasRenderingContext2D, x: number, 中心Y: number, 身高: number): void {
-  const 宽 = 10.5;
-  const 高 = 身高 * 0.86;
-  const 渐 = 笔.createLinearGradient(x - 宽 / 2, 0, x + 宽 / 2, 0);
-  渐.addColorStop(0, 串(色.金深));
-  渐.addColorStop(0.24, 串(金亮));
-  渐.addColorStop(0.6, 串(金));
-  渐.addColorStop(1, 串(色.金深));
-  笔.beginPath();
-  笔.roundRect(x - 宽 / 2, 中心Y - 高 / 2, 宽, 高, 3.4);
-  笔.fillStyle = 渐;
-  笔.fill();
-  笔.strokeStyle = 串(色.巧克力, 0.34);
-  笔.lineWidth = 1;
-  笔.stroke();
-  笔.strokeStyle = 串(色.巧克力, 0.16);
-  for (const t of [-0.26, 0.26]) {
-    笔.beginPath();
-    笔.moveTo(x - 宽 / 2 + 1, 中心Y + 高 * t);
-    笔.lineTo(x + 宽 / 2 - 1, 中心Y + 高 * t);
-    笔.stroke();
-  }
-  笔.fillStyle = "rgba(255,248,232,0.6)";
-  笔.beginPath();
-  笔.roundRect(x - 宽 / 2 + 1.6, 中心Y - 高 / 2 + 2.2, 2.2, 高 - 4.4, 1.1);
-  笔.fill();
+  const 宽 = 8.6;
+  const 高 = 身高 * 0.66;
+  画块(笔, 色.金, 色.金深, () => 圆角矩形路径(笔, x - 宽 / 2, 中心Y - 高 / 2, 宽, 高, 2.8), {
+    侧厚: 2,
+    影: false,
+  });
 }
 
-/** 四角闪星（糖纸上的装饰星）。 */
-function 画闪星(笔: CanvasRenderingContext2D, x: number, y: number, 尺寸: number): void {
-  const 腰 = 尺寸 * 0.28;
-  笔.beginPath();
-  笔.moveTo(x, y - 尺寸);
-  笔.lineTo(x + 腰, y - 腰);
-  笔.lineTo(x + 尺寸, y);
-  笔.lineTo(x + 腰, y + 腰);
-  笔.lineTo(x, y + 尺寸);
-  笔.lineTo(x - 腰, y + 腰);
-  笔.lineTo(x - 尺寸, y);
-  笔.lineTo(x - 腰, y - 腰);
-  笔.closePath();
-  笔.fillStyle = 串(色.象牙, 0.95);
-  笔.fill();
-}
-
-/** 标题糖：两端褶扇糖纸 + 金箍 + 上亮下暗的草莓糖身 + 顶部糖衣反光 + 两侧闪星。 */
+/**
+ * 标题糖纸横幅：浅粉糖纸外胶囊 + 深粉糖身 + 两端粉扭结 + 金箍。
+ * 糖身中心与标题文字对齐，文字（矢量层，奶油色）压在深粉面上。
+ */
 function 画标题糖(
   笔: CanvasRenderingContext2D,
   中心X: number,
@@ -352,242 +125,190 @@ function 画标题糖(
   身高: number,
 ): void {
   const 身左 = 中心X - 身宽 / 2;
-  const 身右 = 中心X + 身宽 / 2;
   const 身上 = 中心Y - 身高 / 2;
-  const 伸 = 30;
-  const 胶囊 = () => {
-    笔.beginPath();
-    笔.roundRect(身左, 身上, 身宽, 身高, 身高 / 2);
-  };
+  const 圆 = 身高 / 2;
+  const 内缩 = 6;
 
-  // ① 落影：糖体连同糖纸一起压在墙上。
+  // ① 柔影：糖纸与糖身一起压在墙上（canvas 影不吃 CTM，模糊与偏移先乘设备倍率）
+  const 倍 = 设备倍率(笔);
   笔.save();
-  笔.shadowColor = "rgba(0,0,0,0.5)";
-  笔.shadowBlur = 10;
-  笔.shadowOffsetY = 4;
-  胶囊();
-  笔.fillStyle = 串(混色(色.草莓深, 色.莓暗, 0.4));
-  笔.fill();
-  笔.restore();
-
-  // ② 糖纸扭结在糖身之后。
-  画扭结(笔, 身左, 中心Y, -1, 伸, 身高);
-  画扭结(笔, 身右, 中心Y, 1, 伸, 身高);
-
-  // ③ 糖身
-  胶囊();
-  const 体 = 笔.createLinearGradient(0, 身上, 0, 身上 + 身高);
-  体.addColorStop(0, 串(混色(色.草莓糖, 色.莓暗, 0.34)));
-  体.addColorStop(0.45, 串(混色(色.草莓糖, 色.莓暗, 0.46)));
-  体.addColorStop(1, 串(混色(色.草莓糖, 色.莓暗, 0.58)));
-  笔.fillStyle = 体;
-  笔.fill();
-
-  笔.save();
-  胶囊();
-  笔.clip();
-  // 顶部糖衣反光带
-  const 反光 = 笔.createLinearGradient(0, 身上 + 1, 0, 身上 + 身高 * 0.42);
-  反光.addColorStop(0, "rgba(255,238,232,0.2)");
-  反光.addColorStop(1, "rgba(255,238,232,0)");
-  笔.fillStyle = 反光;
-  笔.fillRect(身左, 身上, 身宽, 身高 * 0.5);
-  // 顶上一条宽糖衣亮带：横贯糖身，比椭圆镜面更像包装玻璃纸。
-  const 亮带 = 笔.createLinearGradient(0, 身上 + 2, 0, 身上 + 身高 * 0.42);
-  亮带.addColorStop(0, "rgba(255,244,238,0.34)");
-  亮带.addColorStop(0.5, "rgba(255,244,238,0.1)");
-  亮带.addColorStop(1, "rgba(255,244,238,0)");
-  笔.fillStyle = 亮带;
-  笔.fillRect(身左 + 身高 * 0.4, 身上 + 2, 身宽 - 身高 * 0.8, 身高 * 0.42);
-  // 底部内阴影
-  const 底影 = 笔.createLinearGradient(0, 身上 + 身高 * 0.6, 0, 身上 + 身高);
-  底影.addColorStop(0, "rgba(84,12,28,0)");
-  底影.addColorStop(1, "rgba(84,12,28,0.24)");
-  笔.fillStyle = 底影;
-  笔.fillRect(身左, 身上, 身宽, 身高);
-  // 两端被糖纸收紧的褶影
-  for (const 向 of [-1, 1] as const) {
-    const x = 向 < 0 ? 身左 + 3 : 身右 - 3;
-    const 褶影 = 笔.createLinearGradient(x, 0, x + 向 * 14, 0);
-    褶影.addColorStop(0, "rgba(84,12,28,0.3)");
-    褶影.addColorStop(1, "rgba(84,12,28,0)");
-    笔.fillStyle = 褶影;
-    笔.fillRect(向 < 0 ? 身左 : 身右 - 14, 身上, 14, 身高);
-  }
-  笔.restore();
-
-  胶囊();
-  笔.strokeStyle = 串(色.莓暗, 0.85);
-  笔.lineWidth = 1.6;
-  笔.stroke();
-  // 糖纸内沿的奶油裱线：糖身四周一圈浅唇，读作包住糖的糖纸边。
+  笔.shadowColor = 串(色.井, 0.42);
+  笔.shadowBlur = 寸.影.模糊 * 倍;
+  笔.shadowOffsetY = 寸.影.偏移Y * 倍;
   笔.beginPath();
-  笔.roundRect(身左 + 1.8, 身上 + 1.8, 身宽 - 3.6, 身高 - 3.6, (身高 - 3.6) / 2);
-  笔.strokeStyle = 串(色.象牙, 0.55);
-  笔.lineWidth = 1.8;
-  笔.stroke();
+  圆角矩形路径(笔, 身左, 身上, 身宽, 身高, 圆);
+  填充(笔, 色.糖纸深);
+  笔.restore();
 
-  // ④ 金箍压住糖身与糖纸的接缝。
+  // ② 两端扭结在糖身之后
+  画糖纸扭结(笔, 身左, 中心Y, -1, 24, 身高);
+  画糖纸扭结(笔, 身左 + 身宽, 中心Y, 1, 24, 身高);
+
+  // ③ 糖纸外胶囊（浅粉）+ 糖身（深粉内胶囊），各一档侧边
+  画块(笔, 色.糖纸浅, 色.糖纸深, () => 圆角矩形路径(笔, 身左, 身上, 身宽, 身高, 圆), {
+    侧厚: 2.2,
+    影: false,
+  });
+  笔.beginPath();
+  圆角矩形路径(
+    笔,
+    身左 + 内缩,
+    身上 + 内缩,
+    身宽 - 内缩 * 2,
+    身高 - 内缩 * 2,
+    (身高 - 内缩 * 2) / 2,
+  );
+  填充(笔, 色.幕粉深);
+
+  // ④ 金箍压住糖纸与糖身的接缝
   画金箍(笔, 身左 + 2, 中心Y, 身高);
-  画金箍(笔, 身右 - 2, 中心Y, 身高);
-
-  // ⑤ 闪星
-  画闪星(笔, 中心X - 身宽 / 2 + 22, 中心Y, 4.2);
-  画闪星(笔, 中心X + 身宽 / 2 - 22, 中心Y, 4.2);
+  画金箍(笔, 身左 + 身宽 - 2, 中心Y, 身高);
 }
 
-/** 糖绳：一条横贯全屏的粉白斜纹糖带，两端出画。 */
+/* ------------------------------------------------------------------ */
+/* 数据名牌                                                            */
+/* ------------------------------------------------------------------ */
+
+const 花边外扩 = 1.8;
+const 花边半径 = 4.5;
+
+/**
+ * 一块名牌：奶油花边外框（纯色面 + 下移侧边 + 柔影）包住玫瑰木牌面。
+ * 牌面严格等于 `计算糖果牌位` 的矩形，标签与读数就落在这块面里。
+ */
+function 画名牌(笔: CanvasRenderingContext2D, 牌: 牌位, 主: boolean): void {
+  const 外左 = 牌.左 - 花边外扩;
+  const 外上 = 牌.上 - 花边外扩;
+  const 外宽 = 牌.宽 + 花边外扩 * 2;
+  const 外高 = 牌.高 + 花边外扩 * 2;
+  画块(笔, 色.奶油, 色.奶油深, () => 扇贝矩形路径(笔, 外左, 外上, 外宽, 外高, 花边半径), {
+    侧厚: 寸.侧厚.面板,
+    影透明: 0.36,
+  });
+
+  const 圆 = 主 ? 寸.圆角.牌 : 寸.圆角.井;
+  笔.beginPath();
+  圆角矩形路径(笔, 牌.左, 牌.上, 牌.宽, 牌.高, 圆);
+  填充(笔, 色.玫瑰木);
+
+  // 牌面内沿压一圈更深的玫瑰木，读作糖纸包边，读数才不会浮在面上
+  笔.beginPath();
+  圆角矩形路径(笔, 牌.左 + 1.2, 牌.上 + 1.2, 牌.宽 - 2.4, 牌.高 - 2.4, Math.max(2, 圆 - 1.2));
+  描边(笔, 色.玫瑰木深, 1.4);
+}
+
+/* ------------------------------------------------------------------ */
+/* 糖绳与蝴蝶结                                                        */
+/* ------------------------------------------------------------------ */
+
+/** 糖绳：一条粉底斜纹糖带横贯全屏，两端出画。 */
 function 画糖绳(笔: CanvasRenderingContext2D, 左: number, 右: number, y: number): void {
   const 粗 = 14;
   const 上 = y - 粗 / 2;
   const 圆 = 粗 / 2;
-  const 条 = () => {
-    笔.beginPath();
-    笔.roundRect(左, 上, 右 - 左, 粗, 圆);
-  };
-  笔.save();
-  笔.shadowColor = "rgba(0,0,0,0.45)";
-  笔.shadowBlur = 6;
-  笔.shadowOffsetY = 3;
-  条();
-  笔.fillStyle = 串(混色(色.草莓深, 色.莓, 0.35));
-  笔.fill();
-  笔.restore();
+  const 条 = () => 圆角矩形路径(笔, 左, 上, 右 - 左, 粗, 圆);
 
-  条();
-  笔.fillStyle = 串(色.莓暗);
-  笔.fill();
+  // 糖绳离棋盘篷檐只有 4~5px，影再重就会把篷檐压成土黄；这里只留很淡的一层接触影。
+  画块(笔, 色.带粉浅, 色.粉深, 条, { 侧厚: 2, 影透明: 0.2 });
 
   笔.save();
   笔.beginPath();
-  笔.roundRect(左, 上 + 1, 右 - 左, 粗 - 2, 圆);
-  笔.clip();
-  笔.fillStyle = 串(色.草莓);
-  笔.fillRect(左, 上, 右 - 左, 粗);
-  for (let s = 左 - 粗; s < 右 + 粗; s += 22) {
-    笔.beginPath();
-    笔.moveTo(s, 上);
-    笔.lineTo(s + 9.5, 上);
-    笔.lineTo(s + 9.5 - 粗, 上 + 粗);
-    笔.lineTo(s - 粗, 上 + 粗);
-    笔.closePath();
-    笔.fillStyle = 串(混色(色.草莓浅, 色.粉, 0.4), 0.5);
-    笔.fill();
-  }
-  笔.fillStyle = "rgba(255,244,240,0.24)";
-  笔.fillRect(左, 上 + 0.8, 右 - 左, 2.2);
-  笔.fillStyle = "rgba(88,18,34,0.3)";
-  笔.fillRect(左, 上 + 粗 - 4, 右 - 左, 3);
-  笔.restore();
-
   条();
-  笔.strokeStyle = 串(色.草莓深, 0.85);
-  笔.lineWidth = 1.2;
-  笔.stroke();
+  笔.clip();
+  铺斜纹(笔, 左, 上, 右 - 左, 粗, 色.带粉, { 条宽: 6, 间距: 13, 角度: 寸.条纹.角度 });
+  笔.fillStyle = 串(色.带粉浅, 0.6);
+  笔.fillRect(左, 上 + 1.2, 右 - 左, 2);
+  笔.restore();
 }
 
-/** 蝴蝶结：两只绸环 + 结心 + 两条短飘带，压在糖绳正中。 */
-function 画蝴蝶结(笔: CanvasRenderingContext2D, 中心X: number, 中心Y: number, 宽: number, 高: number): void {
-  const 环宽 = 宽 / 2;
-  const 环高 = 高;
-  const 环渐 = () => {
-    const 渐 = 笔.createLinearGradient(0, -环高 * 0.8, 0, 环高 * 0.45);
-    渐.addColorStop(0, 串(混色(色.草莓, 色.草莓浅, 0.5)));
-    渐.addColorStop(0.5, 串(色.草莓));
-    渐.addColorStop(1, 串(混色(色.草莓深, 色.莓, 0.26)));
-    return 渐;
-  };
-  // ① 两条飘带先落在糖绳上。
+/** 蝴蝶结：两只圆角水滴绸环 + 结心 + 两条短飘带，压在糖绳正中。 */
+function 画蝴蝶结(
+  笔: CanvasRenderingContext2D,
+  中心X: number,
+  中心Y: number,
+  宽: number,
+  高: number,
+): void {
+  const 环跨 = 宽 * 0.44;
+  const 环高 = 高 * 0.52;
+
   for (const 向 of [-1, 1] as const) {
     笔.save();
     笔.translate(中心X, 中心Y);
     笔.scale(向, 1);
-    笔.beginPath();
-    笔.moveTo(2.5, 1.5);
-    笔.quadraticCurveTo(环宽 * 0.34, 环高 * 0.24, 环宽 * 0.5, 环高 * 0.62);
-    笔.lineTo(环宽 * 0.38, 环高 * 0.66);
-    笔.lineTo(环宽 * 0.3, 环高 * 0.56);
-    笔.lineTo(环宽 * 0.06, 环高 * 0.2);
-    笔.closePath();
-    笔.fillStyle = 环渐();
-    笔.fill();
-    笔.strokeStyle = 串(色.莓暗, 0.55);
-    笔.lineWidth = 1;
-    笔.stroke();
-    笔.restore();
-  }
-  // ② 两只绸环：外缘起拱、内侧收在结心，环内压一道折痕。
-  for (const 向 of [-1, 1] as const) {
+
+    // ① 飘带：从结心往外下方撇出的一条圆角带，压在糖绳上
+    const 带 = () => {
+      笔.beginPath();
+      笔.moveTo(2.5, 2);
+      笔.quadraticCurveTo(环跨 * 0.72, 环高 * 0.34, 环跨 * 0.66, 环高 * 1.28);
+      笔.quadraticCurveTo(环跨 * 0.34, 环高 * 1.34, 环跨 * 0.26, 环高 * 0.96);
+      笔.quadraticCurveTo(环跨 * 0.2, 环高 * 0.4, 2.5, 2);
+      笔.closePath();
+    };
     笔.save();
-    笔.translate(中心X, 中心Y);
-    笔.scale(向, 1);
+    笔.translate(0, 2.2);
+    带();
+    填充(笔, 色.粉深);
+    笔.restore();
+    带();
+    填充(笔, 色.粉);
+
+    // ② 绸环：外缘起拱、内侧收在结心
     笔.beginPath();
-    笔.moveTo(0.5, 1);
-    笔.bezierCurveTo(环宽 * 0.3, -环高 * 0.74, 环宽 * 0.88, -环高 * 0.82, 环宽, -环高 * 0.34);
-    笔.bezierCurveTo(环宽 * 1.03, 环高 * 0.06, 环宽 * 0.6, 环高 * 0.44, 环宽 * 0.3, 环高 * 0.3);
-    笔.bezierCurveTo(环宽 * 0.12, 环高 * 0.23, 0.5, 环高 * 0.12, 0.5, 1);
+    笔.moveTo(3, 2);
+    笔.bezierCurveTo(环跨 * 0.34, -环高 * 1.02, 环跨 * 0.92, -环高 * 0.9, 环跨, -环高 * 0.26);
+    笔.bezierCurveTo(环跨 * 1.02, 环高 * 0.28, 环跨 * 0.62, 环高 * 0.56, 环跨 * 0.34, 环高 * 0.34);
+    笔.quadraticCurveTo(环跨 * 0.12, 环高 * 0.16, 3, 2);
     笔.closePath();
-    笔.fillStyle = 环渐();
-    笔.fill();
-    笔.strokeStyle = 串(色.莓暗, 0.6);
-    笔.lineWidth = 1.2;
-    笔.stroke();
+    笔.save();
+    笔.translate(0, 2.2);
+    填充(笔, 色.粉深);
+    笔.restore();
     笔.beginPath();
-    笔.moveTo(环宽 * 0.16, -环高 * 0.02);
-    笔.quadraticCurveTo(环宽 * 0.56, -环高 * 0.16, 环宽 * 0.86, 环高 * 0.02);
-    笔.strokeStyle = 串(色.草莓深, 0.34);
-    笔.lineWidth = 1;
-    笔.stroke();
-    笔.beginPath();
-    笔.moveTo(环宽 * 0.34, -环高 * 0.4);
-    笔.quadraticCurveTo(环宽 * 0.64, -环高 * 0.66, 环宽 * 0.86, -环高 * 0.4);
-    笔.strokeStyle = "rgba(255,242,244,0.62)";
-    笔.lineWidth = 2;
-    笔.stroke();
-    // 环端折角：一块暗楔读作绸带折进去的那一面。
-    笔.beginPath();
-    笔.moveTo(环宽 * 0.86, -环高 * 0.4);
-    笔.lineTo(环宽 * 1.0, -环高 * 0.28);
-    笔.lineTo(环宽 * 0.9, -环高 * 0.1);
+    笔.moveTo(3, 2);
+    笔.bezierCurveTo(环跨 * 0.34, -环高 * 1.02, 环跨 * 0.92, -环高 * 0.9, 环跨, -环高 * 0.26);
+    笔.bezierCurveTo(环跨 * 1.02, 环高 * 0.28, 环跨 * 0.62, 环高 * 0.56, 环跨 * 0.34, 环高 * 0.34);
+    笔.quadraticCurveTo(环跨 * 0.12, 环高 * 0.16, 3, 2);
     笔.closePath();
-    笔.fillStyle = 串(色.草莓深, 0.5);
-    笔.fill();
+    填充(笔, 色.粉);
+    // 环内一道折痕：同色系深一档的线，不做渐变
+    笔.beginPath();
+    笔.moveTo(环跨 * 0.2, -环高 * 0.04);
+    笔.quadraticCurveTo(环跨 * 0.58, -环高 * 0.2, 环跨 * 0.88, -环高 * 0.02);
+    描边(笔, 色.粉深, 1.1, 0.6);
     笔.restore();
   }
+
   // ③ 结心
   笔.beginPath();
-  笔.roundRect(中心X - 6, 中心Y - 6, 12, 12, 3.4);
-  const 结 = 笔.createLinearGradient(中心X - 6, 中心Y - 6, 中心X + 6, 中心Y + 6);
-  结.addColorStop(0, 串(混色(色.草莓, 色.草莓浅, 0.46)));
-  结.addColorStop(0.6, 串(混色(色.草莓, 色.草莓深, 0.24)));
-  结.addColorStop(1, 串(混色(色.草莓深, 色.莓, 0.2)));
-  笔.fillStyle = 结;
-  笔.fill();
-  笔.strokeStyle = 串(色.莓暗, 0.55);
-  笔.lineWidth = 1;
-  笔.stroke();
+  圆角矩形路径(笔, 中心X - 5.6, 中心Y - 5.4, 11.2, 11.2, 3.2);
+  填充(笔, 色.粉);
   笔.beginPath();
-  笔.roundRect(中心X - 4.2, 中心Y - 4.6, 3.2, 6.4, 1.6);
-  笔.fillStyle = "rgba(255,248,244,0.55)";
-  笔.fill();
+  圆角矩形路径(笔, 中心X - 5.6, 中心Y - 5.4, 11.2, 11.2, 3.2);
+  描边(笔, 色.粉深, 1.2, 0.75);
 }
 
-export function 画糖果顶栏(笔: CanvasRenderingContext2D, 布局: 对局布局数据): void {
-  // ① 标题糖：糖身中心比标题文字低 4px，让 20 号字压在糖的正中偏上。
-  画标题糖(笔, 布局.标题.中心X, 布局.标题.中心Y + 4, Math.min(150, 布局.视口宽 - 200), 44);
+/* ------------------------------------------------------------------ */
+/* 整块顶栏                                                            */
+/* ------------------------------------------------------------------ */
 
-  // ② 三块名牌：侧牌先画，主牌压在中间。
+export function 画糖果顶栏(笔: CanvasRenderingContext2D, 布局: 对局布局数据): void {
+  // ① 标题糖纸横幅：糖身中心比标题锚点高 1.5px，让 20 号字的字面墨迹正好落在糖身正中
+  画标题糖(笔, 布局.标题.中心X, 布局.标题.中心Y - 1.5, Math.min(150, 布局.视口宽 - 200), 42);
+
+  // ② 三块名牌：侧牌先画，主牌压在中间
   const 位 = 计算糖果牌位(布局);
   画名牌(笔, 位.左, false);
   画名牌(笔, 位.右, false);
   画名牌(笔, 位.主, true);
 
-  // ③ 糖绳与蝴蝶结：只在与棋盘外框之间还留得下空档时画（与矢量版同一判据）。
+  // ③ 糖绳与蝴蝶结：只在与棋盘外框之间还留得下空档时画（与矢量版同一判据）
   const 牌底 = 位.主.上 + 位.主.高;
   const 框顶 = 布局.棋盘.上 - 16;
-  const 绳Y = Math.min(牌底 + 15, 框顶 - 8);
+  const 绳Y = Math.min(牌底 + 12, 框顶 - 11);
   if (绳Y - 牌底 >= 8) {
     画糖绳(笔, -8, 布局.视口宽 + 8, 绳Y);
-    画蝴蝶结(笔, 布局.视口宽 / 2, 绳Y - 2, 72, 27);
+    画蝴蝶结(笔, 布局.视口宽 / 2, 绳Y - 1, 52, 24);
   }
 }
