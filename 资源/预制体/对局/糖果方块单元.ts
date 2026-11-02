@@ -161,7 +161,20 @@ function 画一颗(
   透明度: number,
 ): void {
   const 几何 = 构建几何(原点X, 原点Y, 格, 格位, 类型, 透明度);
+  // 整颗糖按包围盒四周各收一道缝：相邻两颗糖之间留出 3px 左右的缝，
+  // 满盘时才不会糊成一片色块（同型相邻的两块也不会视觉粘连）。
+  const 缝 = Math.min(2, 格 * 0.06);
+  const 宽 = 几何.列数 * 格;
+  const 高 = 几何.行数 * 格;
+  // 上下限都收着：缩太多糖会从格子里浮起来，各轴缩放差太多会把圆糖压成椭圆。
+  const 缩X = Math.min(1, Math.max(0.9, (宽 - 缝 * 2) / 宽));
+  const 缩Y = Math.min(1, Math.max(0.9, (高 - 缝 * 2) / 高));
+  绘图.save();
+  绘图.translateCanvas(几何.中心X, 几何.中心Y);
+  绘图.scaleCanvas(缩X, 缩Y);
+  绘图.translateCanvas(-几何.中心X, -几何.中心Y);
   绘制表[类型](净化图形(绘图, 格), 几何);
+  绘图.restore();
 }
 
 /**
