@@ -848,15 +848,15 @@ if (import.meta.env.GM_TEST === "1" && 性能观测) {
       // 图集画布是透明底、白色字形：合成到深色底上才看得出内容，也方便直接当证据图。
       (文字.读取图集快照?.() ?? []).map((项) => {
         const 合成 = document.createElement("canvas");
-        合成.width = 项.边长;
-        合成.height = 项.边长;
+        合成.width = 项.宽;
+        合成.height = 项.高;
         const 上下文 = 合成.getContext("2d");
         if (上下文) {
           上下文.fillStyle = "#20202e";
-          上下文.fillRect(0, 0, 项.边长, 项.边长);
+          上下文.fillRect(0, 0, 项.宽, 项.高);
           上下文.drawImage(项.画布, 0, 0);
         }
-        return { 纹理键: 项.纹理键, 边长: 项.边长, 图片: 合成.toDataURL("image/png") };
+        return { 纹理键: 项.纹理键, 宽: 项.宽, 高: 项.高, 图片: 合成.toDataURL("image/png") };
       }),
     读取图层缓存统计: () => 缓存.读取统计(),
     读取背景调度统计: () => 背景调度.读取统计(),
@@ -941,7 +941,7 @@ export interface 调试接口 {
   读取原始状态: () => unknown;
   读取统计: () => 调试统计;
   /** 共享文字页的画布快照（调试/验收导出图集截图）。 */
-  读取文字图集快照?: () => { 纹理键: string; 边长: number; 图片: string }[];
+  读取文字图集快照?: () => { 纹理键: string; 宽: number; 高: number; 图片: string }[];
   读取界面: () => 界面快照;
   读取设置: () => ReturnType<设置服务["读取"]>;
   /** 跨页开合动画是否在播放。 */
