@@ -19,8 +19,13 @@ const DPR = Number(参数DPR?.split("=")[1] ?? 1);
 const 输出 = resolve(".gamemaker/报告/文字图集验收");
 await mkdir(输出, { recursive: true });
 
-const 主题列表 = ["极光原野", "砖机液晶", "街机彩砖", "立体晶格"] as const;
-const 语言列表 = ["简体中文", "English"] as const;
+/** 快速模式：1 主题 × 1 语言、只走关键界面、不截图不导图，用来几十秒内冒烟。 */
+const 快速 = process.argv.includes("--快速");
+const 主题列表 = (
+  快速 ? ["极光原野"] : ["极光原野", "砖机液晶", "街机彩砖", "立体晶格"]
+) as readonly string[];
+const 语言列表 = (快速 ? ["简体中文"] : ["简体中文", "English"]) as readonly string[];
+const 计时表: { 标签: string; 毫秒: number }[] = [];
 
 type 记录项 = {
   语言: string;
@@ -176,7 +181,8 @@ try {
   };
 
   const 遍历界面 = async (语言: string, 主题: string) => {
-    for (const 界面 of ["设置", "成就", "排行榜", "商店", "模式选择"] as const) {
+    const 界面列表 = 快速 ? ["设置", "模式选择"] : ["设置", "成就", "排行榜", "商店", "模式选择"];
+    for (const 界面 of 界面列表) {
       await 进入(界面, 主题);
       await 记录(语言, 主题, 界面);
     }
@@ -192,7 +198,8 @@ try {
     });
     await 页.waitForTimeout(400);
     // 落块：让棋盘、消行提示、分数位宽都真实出现过。
-    for (let 次 = 0; 次 < 14; 次++) {
+    const 落块次数 = 快速 ? 6 : 14;
+    for (let 次 = 0; 次 < 落块次数; 次++) {
       await 页.evaluate(() => window.__再消一行测试__?.硬降());
       await 页.waitForTimeout(110);
     }
@@ -201,19 +208,19 @@ try {
     );
     await 页.waitForTimeout(400);
     await 记录(语言, 主题, "对局:马拉松");
-    await 页.screenshot({ path: join(输出, `${语言}-${主题}-对局.png`) });
+    if (!快速) await 页.screenshot({ path: join(输出, `${语言}-${主题}-对局.png`) });
 
     await 页.evaluate(() => window.__再消一行测试__?.设置暂停(true));
     await 页.waitForTimeout(360);
     await 记录(语言, 主题, "暂停面板");
-    await 页.screenshot({ path: join(输出, `${语言}-${主题}-暂停.png`) });
+    if (!快速) await 页.screenshot({ path: join(输出, `${语言}-${主题}-暂停.png`) });
     await 页.evaluate(() => window.__再消一行测试__?.设置暂停(false));
     await 页.waitForTimeout(300);
 
     await 页.evaluate(() => window.__再消一行测试__?.结束当前对局());
     await 页.waitForTimeout(700);
     await 记录(语言, 主题, "结算");
-    await 页.screenshot({ path: join(输出, `${语言}-${主题}-结算.png`) });
+    if (!快速) await 页.screenshot({ path: join(输出, `${语言}-${主题}-结算.png`) });
 
     for (let 次 = 0; 次 < 3; 次++) {
       if ((await 读取状态()).页面 === "菜单") break;
@@ -225,15 +232,22 @@ try {
   };
 
   for (const 语言 of 语言列表) {
-    await 页.evaluate((值) => window.__three版__?.更新设置({ 语言: 值 }), 语言);
+    await 页.evaluate((值) => {
+      const 语言选择 = 值 === "English" ? "English" : "简体中文";
+      window.__three版__?.更新设置({ 语言: 语言选择 });
+    }, 语言);
     await 页.waitForTimeout(500);
     for (const 主题 of 主题列表) {
+      const 轮起点 = performance.now();
       await 进入("菜单", 主题);
       await 记录(语言, 主题, "主菜单");
       await 遍历界面(语言, 主题);
       await 打一局马拉松(语言, 主题);
-      const 页数 = await 导出图集(语言, 主题);
-      console.log(`  → 导出图集页 ${页数} 张（${语言}/${主题}）`);
+      if (!快速) {
+        const 页数 = await 导出图集(语言, 主题);
+        console.log(`  → 导出图集页 ${页数} 张（${语言}/${主题}）`);
+      }
+      计时表.push({ 标签: `轮次 ${语言}/${主题}`, 毫秒: Math.round(performance.now() - 轮起点) });
     }
   }
 
@@ -272,6 +286,23 @@ try {
   ];
   await writeFile(join(输出, "汇总.md"), 行.join("\n"), "utf8");
 
+  const 轮次计时 = 计时表.filter((项) => 项.标签.startsWith("轮次"));
+  const 轮次合计毫秒 = 轮次计时.reduce((总, 项) => 总 + 项.毫秒, 0);
+  console.log(
+    "耗时分布:",
+    JSON.stringify(
+      {
+        模式: 快速 ? "快速" : "完整",
+        轮次数: 轮次计时.length,
+        轮次合计毫秒,
+        单轮平均毫秒: Math.round(轮次合计毫秒 / Math.max(1, 轮次计时.length)),
+        记录步数: 记录表.length,
+        各轮: 轮次计时,
+      },
+      null,
+      2,
+    ),
+  );
   console.log("\n每轮峰值:", JSON.stringify(汇总.每轮峰值));
   console.log("页面错误:", JSON.stringify(页面错误));
   assert.equal(页面错误.length, 0, `页面报错：${页面错误.join("；")}`);
