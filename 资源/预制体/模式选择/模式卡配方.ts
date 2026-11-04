@@ -268,7 +268,7 @@ export function 生成模式卡文字项(布局: 模式卡布局, 数据: 模式
   ];
 }
 
-/** 「最佳 xxx」文案格式化：存档读取留在 Phaser/Three 各自的接口层，这里只管视觉文本。 */
+/** 「最佳 xxx」文案格式化：存档读取留在 旧版/Three 各自的接口层，这里只管视觉文本。 */
 export function 格式化模式纪录(模式: 游戏模式, 纪录: 对局纪录 | null, 英文: boolean): string {
   if (!纪录) return 英文 ? "NO RECORD YET" : "尚无纪录";
   if (模式 === "冲刺")

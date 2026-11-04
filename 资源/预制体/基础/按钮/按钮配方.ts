@@ -119,7 +119,7 @@ export function 读取常规按钮文字样式(
   });
 }
 
-/** 按钮底板：状态与配色规则集中在这里，Phaser/Three 两版画同一组像素指令。 */
+/** 按钮底板：状态与配色规则集中在这里，旧版/Three 两版画同一组像素指令。 */
 export function 绘制常规按钮(
   绘图: 图形对象,
   中心X: number,
@@ -226,7 +226,7 @@ export function 生成常规按钮内容(
   return { 文字项, 图标 };
 }
 
-/** 把程序化界面图标按 32×32 源尺寸缩放画到按钮内（与 Phaser generateTexture 同一套指令）。 */
+/** 把程序化界面图标按 32×32 源尺寸缩放画到按钮内（与 旧版 generateTexture 同一套指令）。 */
 export function 绘制常规按钮图标(绘图: 图形对象, 图标: 常规按钮图标): void {
   绘图.save();
   绘图.translateCanvas(图标.中心X - 图标.尺寸 / 2, 图标.中心Y - 图标.尺寸 / 2);

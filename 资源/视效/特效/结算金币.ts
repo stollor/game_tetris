@@ -10,7 +10,7 @@ import type { 霓虹结算布局 } from "../../预制体/结算/结算台配方"
 const 钳制 = (值: number) => Math.max(0, Math.min(1, 值));
 const 三次缓出 = (值: number) => 1 - (1 - 值) ** 3;
 
-/** 时长、缓动和数量与 Phaser 霓虹结算面板.播放金币动画 一致。 */
+/** 时长、缓动和数量与 旧版 霓虹结算面板.播放金币动画 一致。 */
 export function 读取结算金币动画(经过毫秒: number, 新增: number, 省电: boolean) {
   const 时间 = Math.max(0, 经过毫秒);
   const 数量 = Math.min(6, Math.max(3, Math.ceil(新增 / 15)));

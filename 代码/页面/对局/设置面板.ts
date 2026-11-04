@@ -14,7 +14,7 @@ import type { 游戏设置 } from "../../设置/游戏设置";
 import type { 游戏文案 } from "../../语言/类型";
 import { 适配文字色 } from "../布局/对局布局";
 
-/** 原点、尺寸、控件位置取自 Phaser 的 界面对局设置菜单.布局。 */
+/** 原点、尺寸、控件位置取自 原实现的 界面对局设置菜单.布局。 */
 export function 计算对局设置布局(宽: number, 高: number) {
   const 键盘说明 = 宽 > 高;
   const 面板高 = 键盘说明 ? 350 : 300;

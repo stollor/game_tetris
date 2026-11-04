@@ -117,7 +117,7 @@ const 画参考 = (名称: string, 行号: number, 缩放: number) => {
 画参考("参考3-8x超采样", 7, 8);
 
 
-// —— 像素统计：变体 vs 8x 超采样参考（GT）与 2x 降采样参考（Phaser 同口径）——
+// —— 像素统计：变体 vs 8x 超采样参考（GT）与 2x 降采样参考（旧版同口径）——
 type 墨块 = { 值: number[]; 宽: number; 高: number };
 const 取像素 = (元素: HTMLCanvasElement) => {
   const 临时 = document.createElement("canvas");
