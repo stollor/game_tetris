@@ -69,13 +69,36 @@ describe("框架配置音频表", () => {
     ]);
   });
 
-  test("自带曲目的三套主题各有一首主题曲，互不雷同", () => {
+  test("自带曲目的四套主题各有一首主题曲，互不雷同", () => {
     const 主题曲 = 音乐库.filter((项) => 项.id.endsWith(".主题") && 项.类型 === "曲谱");
     expect(主题曲.map((项) => 项.id).sort()).toEqual(
-      ["砖机液晶.主题", "街机彩砖.主题", "糖果超甜.主题"].sort(),
+      ["砖机液晶.主题", "街机彩砖.主题", "糖果超甜.主题", "立体晶格.主题"].sort(),
     );
     const 谱 = 主题曲.map((项) => (项.类型 === "曲谱" ? JSON.stringify(项.曲谱) : ""));
-    expect(new Set(谱).size).toBe(3);
+    expect(new Set(谱).size).toBe(4);
+  });
+
+  test("立体晶格主题曲是空五度冷色五声，排程不削波", async () => {
+    const { 展开曲谱 } = await import("../../.gamemaker/依赖/框架/音频/音乐编排");
+    const { 立体曲谱 } = await import("../../代码/框架配置/音乐");
+    const 乐段 = 展开曲谱(立体曲谱);
+    expect(乐段.时长).toBeCloseTo(14.4, 3);
+    expect(乐段.音符.length).toBeGreaterThan(40);
+    // 史诗气质是 F 小调色：宫/角/商/羽 的空五度根音落在 0 3 5 7 10 上，
+    // 羽和弦的根再补一个 8（降六级），所以音级集合是 0/3/5/7/8/10。
+    const 五声 = new Set([0, 3, 5, 7, 8, 10]);
+    for (const 音 of 乐段.音符) {
+      const 半音 = Math.round(12 * Math.log2(音.频率 / 立体曲谱.主音频率));
+      expect(五声.has(((半音 % 12) + 12) % 12)).toBe(true);
+    }
+    const 事件 = 乐段.音符.map((音) => ({ 起: 音.延迟, 止: 音.延迟 + 音.时长, 量: 音.音量 }));
+    let 峰 = 0;
+    for (const 项 of 事件) {
+      let 和 = 0;
+      for (const 他 of 事件) if (他.起 <= 项.起 && 他.止 > 项.起) 和 += 他.量;
+      峰 = Math.max(峰, 和);
+    }
+    expect(峰).toBeLessThan(0.5);
   });
 
   test("糖果主题曲能排程：8.8 秒循环、全落 D 五声、音量叠加不削波", async () => {
