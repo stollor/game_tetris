@@ -140,9 +140,28 @@ function 读取专属设置(默认专属设置: 再消一行专属设置): 再�
   }
 }
 
+/**
+ * 合并后的设置缓存：绘制路径一帧要读很多次设置，每次都新建对象会成为热开销。
+ * 设置变化（含跨标签页 storage 事件）时清空，下次读取重建。
+ */
+let 设置缓存: 游戏设置 | null = null;
+
 export function 获取游戏设置(): 游戏设置 {
-  const 专属 = 读取当前专属设置();
-  return { ...获取通用设置(), ...专属 };
+  if (设置缓存) return 设置缓存;
+  设置缓存 = { ...获取通用设置(), ...读取当前专属设置() };
+  return 设置缓存;
+}
+
+function 清设置缓存(): void {
+  设置缓存 = null;
+}
+
+if (typeof window !== "undefined") {
+  // 设置变更走事件推送：消费方不需要每帧重读，缓存只在变更时失效。
+  window.addEventListener("gamemaker:settings-change", 清设置缓存);
+  window.addEventListener("storage", (事件) => {
+    if (!事件.key || 事件.key === 专属设置键 || 事件.key === "gamemaker:settings") 清设置缓存();
+  });
 }
 
 export function 更新游戏设置(变化: Partial<游戏设置>): 游戏设置 {
@@ -207,6 +226,7 @@ export function 更新游戏设置(变化: Partial<游戏设置>): 游戏设置 
     }
   }
 
+  清设置缓存();
   const 设置 = 获取游戏设置();
   window.dispatchEvent(new CustomEvent<游戏设置>("gamemaker:settings-change", { detail: 设置 }));
   return 设置;
