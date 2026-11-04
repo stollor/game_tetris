@@ -38,6 +38,8 @@ function 创建记录图形() {
   图形 = new Proxy({} as 图形对象, {
     get(_目标, 属性) {
       if (typeof 属性 !== "string") return undefined;
+      // 记录图形不实现几何缓存：绘制方走直接路径，才能逐条记到绘制调用。
+      if (属性 === "缓存绘制") return undefined;
       return (...参数: unknown[]) => {
         调用.push({ 方法: 属性, 参数 });
         return 图形;
