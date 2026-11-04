@@ -47,14 +47,18 @@ const 证据压测 = (页: Page) =>
     统计: window.__three版__?.读取统计() ?? null,
     压测: window.__three版__?.压测?.读取() ?? null,
   }));
-/** 快进到指定消行数，并开始页内自动落子（间隔毫秒）。 */
-async function 开始后期压测(页: Page, 消行数: number, 间隔毫秒: number) {
+/**
+ * 快进到指定消行数，然后用「固定输入」持续落子。
+ * 不用页内的演示落点 AI：它的搜索开销会混进压测口径，让每次采样波动 ±20%。
+ * 左右交替 + 硬降是确定性输入，盘面演化只受游戏自身随机块影响。
+ */
+async function 开始后期压测(页: Page, 消行数: number, 间隔毫秒: number, 秒数: number) {
   await 页.evaluate(
     (配置) => {
       const 桥 = window.__three版__;
       const 测试 = window.__再消一行测试__;
       if (!桥?.压测) throw new Error("压测采样未挂载");
-      if (!测试?.快进后期 || !测试?.开始自动对战) throw new Error("压测控制未挂载");
+      if (!测试?.快进后期) throw new Error("压测控制未挂载");
       桥.压测.重置();
       测试.快进后期({
         消行数: 配置.消行数,
@@ -62,10 +66,18 @@ async function 开始后期压测(页: Page, 消行数: number, 间隔毫秒: nu
         堆叠行: 8,
         最长连击: 24,
       });
-      测试.开始自动对战({ 间隔秒: 配置.间隔毫秒 / 1000 });
     },
-    { 消行数, 间隔毫秒 },
+    { 消行数 },
   );
+  const 半拍 = Math.max(1, Math.round(间隔毫秒 / 2));
+  const 结束 = Date.now() + 秒数 * 1000;
+  let 序 = 0;
+  while (Date.now() < 结束) {
+    await 页.keyboard.press(序++ % 2 ? "ArrowLeft" : "ArrowRight");
+    await 页.waitForTimeout(半拍);
+    await 页.keyboard.press("ArrowDown");
+    await 页.waitForTimeout(半拍);
+  }
 }
 const 停止自动对战 = (页: Page) => 页.evaluate(() => window.__再消一行测试__?.停止自动对战?.());
 export const 性能场景库 = [
@@ -164,8 +176,7 @@ export const 性能场景库 = [
     ) => {
       const 间隔毫秒 = Math.round(1000 / (负载?.每秒次数 ?? 10));
       const 快进 = async () => {
-        await 开始后期压测(页, 0, 间隔毫秒);
-        await 页.waitForTimeout(秒数 * 1000);
+        await 开始后期压测(页, 0, 间隔毫秒, 秒数);
       };
       try {
         if (记录) await 记录.阶段("前期自动落子", 快进);
@@ -190,8 +201,7 @@ export const 性能场景库 = [
     ) => {
       const 间隔毫秒 = Math.round(1000 / (负载?.每秒次数 ?? 10));
       const 快进 = async () => {
-        await 开始后期压测(页, 300, 间隔毫秒);
-        await 页.waitForTimeout(秒数 * 1000);
+        await 开始后期压测(页, 300, 间隔毫秒, 秒数);
       };
       try {
         if (记录) await 记录.阶段("后期自动落子", 快进);
