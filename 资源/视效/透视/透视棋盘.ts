@@ -519,10 +519,10 @@ function 更新取景(宽高比: number, 列: number, 行: number): void {
  * setViewport/setScissor 收 CSS 逻辑像素，渲染器内部会再乘一次 pixelRatio。
  * 传后备缓冲像素会把视口放大一倍并偏出画布，房间只剩左上角可见。
  */
-export function 绘制透视棋盘(上下文: 渲染前置上下文): void {
-  if (!快照 || 快照.棋盘.宽 <= 0 || 快照.棋盘.高 <= 0) return;
+export function 绘制透视棋盘(上下文: 渲染前置上下文): boolean {
+  if (!快照 || 快照.棋盘.宽 <= 0 || 快照.棋盘.高 <= 0) return false;
   const 体 = 确保房间(快照.列, 快照.行);
-  if (!相机) return;
+  if (!相机) return false;
   同步(体.尺寸);
   const { 渲染器, 逻辑高 } = 上下文;
   const 格 = 快照.棋盘.宽 / 快照.列;
@@ -532,7 +532,7 @@ export function 绘制透视棋盘(上下文: 渲染前置上下文): void {
   const 视口高 = 快照.棋盘.高 + 纵扩 * 2;
   const 视口左 = 快照.棋盘.左 - 横扩;
   const 视口下 = 逻辑高 - (快照.棋盘.上 + 快照.棋盘.高 + 纵扩);
-  if (视口宽 < 1 || 视口高 < 1) return;
+  if (视口宽 < 1 || 视口高 < 1) return false;
   更新取景(视口宽 / 视口高, 快照.列, 快照.行);
 
   渲染器.getViewport(视口缓存);
@@ -543,4 +543,5 @@ export function 绘制透视棋盘(上下文: 渲染前置上下文): void {
   渲染器.render(体.根节点, 相机);
   渲染器.setScissorTest(false);
   渲染器.setViewport(视口缓存.x, 视口缓存.y, 视口缓存.z, 视口缓存.w);
+  return true;
 }
