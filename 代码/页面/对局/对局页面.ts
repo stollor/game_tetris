@@ -66,6 +66,7 @@ import type { 游戏设置 } from "../../设置/游戏设置";
 import type { 游戏文案 } from "../../语言/类型";
 import { 填充文案 } from "../../语言/类型";
 import { 模式配置 } from "../../项目配置/模式";
+import type { 主题名 } from "../../项目配置/主题目录";
 import { type 对局布局数据, 计算对局布局, 计算对局附属布局 } from "../布局/对局布局";
 import { 记录最近结算 } from "../结算/最近对局";
 import {
@@ -213,6 +214,9 @@ export class 对局页面 extends 页面基类<页面上下文> {
     已落: number;
     极限收尾: boolean;
     极限倍率: number;
+    /** 全主题巡演：非空时同一局里按消行进度依次切主题，不重开。 */
+    主题序列: readonly 主题名[];
+    已切换: number;
     /** 压测用：不因目标达成/通关自动结束，一直落到玩家停止。 */
     不自动结束?: boolean;
   } | null = null;
@@ -339,6 +343,8 @@ export class 对局页面 extends 页面基类<页面上下文> {
             已落: 0,
             极限收尾: this.模式 === "极限" && 选项.目标 === "成功",
             极限倍率: 模式配置.极限毫秒 / (预算 * 1000),
+            主题序列: 选项.主题序列 ?? [],
+            已切换: 0,
           };
           this.上下文.资源.设置玩法进行中(true);
           this.标记全部();
@@ -386,6 +392,8 @@ export class 对局页面 extends 页面基类<页面上下文> {
             已落: 0,
             极限收尾: false,
             极限倍率: 1,
+            主题序列: [],
+            已切换: 0,
             不自动结束: true,
           };
           this.上下文.资源.设置玩法进行中(true);
@@ -399,8 +407,32 @@ export class 对局页面 extends 页面基类<页面上下文> {
           this.预览画面 = true;
           this.跳过结算存档 = true;
           this.素材演示 = null;
-          for (let i = 0; i < 8 && this.状态.阶段 === "进行中"; i++) this.落一子("成功");
+          // 先正常落几手，让棋盘有真实形状；再把底部补成中盘堆叠（每行留一个错位空洞，
+          // 不留整行，避免截图瞬间被消掉）。宣传图要看见「正在进行的对局」而不是空盘。
+          for (let i = 0; i < 6 && this.状态.阶段 === "进行中"; i++) this.落一子("成功");
+          const 类型表: 方块类型[] = ["I", "O", "T", "S", "Z", "J", "L"];
+          const 堆叠行 = Math.min(9, this.状态.棋盘.length - 2);
+          for (let 行 = 0; 行 < 堆叠行; 行++) {
+            const 行格子 = this.状态.棋盘[this.状态.棋盘.length - 1 - 行];
+            if (!行格子) continue;
+            const 空列 = Math.floor(this.随机源() * 行格子.length);
+            for (let 列 = 0; 列 < 行格子.length; 列++) {
+              if (列 === 空列 || 行格子[列]) continue;
+              行格子[列] = 类型表[Math.floor(this.随机源() * 类型表.length)] ?? "I";
+            }
+          }
+          this.状态.消行数 = Math.max(this.状态.消行数, 12);
+          this.状态.等级 = 1 + Math.floor(this.状态.消行数 / 10);
+          this.状态.分数 = Math.max(this.状态.分数, 2400);
+          this.状态.连击 = 0;
+          this.状态.最长连击 = Math.max(this.状态.最长连击, 4);
+          // 成就弹窗与消行飘字会盖住棋盘，也不是这张图要说明的内容；计分直接落到真实分数。
+          this.对局提示.技巧 = null;
+          this.对局提示.成就 = null;
+          this.对局提示.目标剩余秒 = 0;
+          this.计分.重置(this.状态.分数);
           this.设置暂停(false);
+          this.标记全部();
         },
         标记不写存档: () => {
           this.跳过结算存档 = true;
@@ -582,6 +614,7 @@ export class 对局页面 extends 页面基类<页面上下文> {
             if (this.素材演示.累计 >= this.素材演示.间隔) {
               this.素材演示.累计 = 0;
               this.落一子(this.素材演示.目标);
+              this.切换演示主题();
             }
             if (
               !this.素材演示.不自动结束 &&
@@ -1056,6 +1089,25 @@ export class 对局页面 extends 页面基类<页面上下文> {
     for (let i = 0; i < Math.abs(选择.平移); i++) 移动方块(this.状态, 方向, 0, this.随机源);
     if (this.素材演示) this.素材演示.已落 += 1;
     this.执行硬降();
+  }
+
+  /**
+   * 全主题巡演：同一局里按消行进度切主题，方块、分数、棋盘和计时都不重置。
+   * 素材录制用「全主题巡演」皮肤时由 开始素材演示 传入序列；单主题录像不传，不会切。
+   */
+  private 切换演示主题(): void {
+    const 演示 = this.素材演示;
+    if (!演示 || 演示.主题序列.length < 2) return;
+    const 目标行 = this.模式 === "冲刺" ? 模式配置.冲刺目标行数 : 模式配置.马拉松目标行数;
+    const 每段 = Math.max(1, Math.floor(目标行 / 演示.主题序列.length));
+    const 序号 = Math.min(演示.主题序列.length - 1, Math.floor(this.状态.消行数 / 每段));
+    if (序号 <= 演示.已切换) return;
+    const 主题 = 演示.主题序列[序号];
+    演示.已切换 = 序号;
+    if (!主题 || 主题 === this.设置.主题选择) return;
+    // 素材会话不写玩家存档：只给本次浏览器会话临时解锁，再走正式设置写入让全应用换肤。
+    this.上下文.服务.金币.设置主题拥有(主题, true);
+    this.上下文.服务.设置.更新({ 主题选择: 主题 });
   }
 
   private 执行硬降(): void {
