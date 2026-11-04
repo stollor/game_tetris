@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 混色, 计算颜色对比度 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
+import { 计算商店布局 } from "../../../代码/页面/布局/商店布局";
 import { 主题列表, type 主题名 } from "../../../代码/项目配置/主题目录";
 import { 解析方块外观 } from "../../../资源/主题/外观/方块外观";
 import { 游戏外观 } from "../../../资源/主题/外观/游戏外观";
@@ -195,6 +196,41 @@ describe("糖果商店材质", () => {
     expect(记录.调用.some((调) => 调.方法 === "fillRoundedRect")).toBe(true);
     for (const 调 of 记录.调用)
       for (const 参 of 调.参数) if (typeof 参 === "number") expect(Number.isFinite(参)).toBe(true);
+  });
+
+  test("并排购买按钮的糖纸只朝外端长，接缝侧不越界压住邻居", () => {
+    设置预览主题("糖果超甜");
+    const 页 = 计算商店布局(390, 844);
+    // 布局认定单件在左、整套在右；糖纸朝向必须跟着屏幕外缘走。
+    expect(页.单件.左 + 页.单件.宽).toBeLessThan(页.整套.左);
+    expect(页.购买糖纸侧).toEqual({ 单件: "左", 整套: "右" });
+    // 糖身与糖纸扭结都走 fillPoints：填充点探出胶囊边缘，就会压到 10px 外的邻居身上。
+    const 画购买 = (
+      矩形: { 左: number; 上: number; 宽: number; 高: number },
+      侧: "两端" | "左" | "右",
+    ) => {
+      const 记录 = 创建记录图形();
+      绘制收藏按钮底板(
+        记录.图形,
+        矩形.左 + 矩形.宽 / 2,
+        矩形.上 + 矩形.高 / 2,
+        矩形.宽,
+        矩形.高,
+        { 糖纸侧: 侧 },
+      );
+      const 点 = 记录.调用
+        .filter((调) => 调.方法 === "fillPoints")
+        .flatMap((调) => (调.参数[0] as { x: number }[] | undefined) ?? []);
+      expect(点.length).toBeGreaterThan(0);
+      return 点.map((项) => 项.x);
+    };
+    // 接缝侧收掉：左钮的填充收在右沿以内，右钮的填充收在左沿以内。
+    const 单件 = 画购买(页.单件, 页.购买糖纸侧.单件);
+    expect(Math.max(...单件)).toBeLessThanOrEqual(页.单件.左 + 页.单件.宽);
+    const 整套 = 画购买(页.整套, 页.购买糖纸侧.整套);
+    expect(Math.min(...整套)).toBeGreaterThanOrEqual(页.整套.左);
+    // 两端都画时会探出右沿一个扭结长度——这正是接缝相撞的成因。
+    expect(Math.max(...画购买(页.单件, "两端"))).toBeGreaterThan(页.单件.左 + 页.单件.宽 + 10);
   });
 });
 

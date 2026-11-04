@@ -16,6 +16,7 @@ import { 解析商店外观 } from "../../资源/预制体/商店/商店外观";
 import {
   商店像素对齐描边,
   应用商店文字补偿,
+  type 收藏按钮数据,
   生成商店按钮文字项,
   生成商店标题文字项,
   生成商店目录名称文字项,
@@ -708,7 +709,10 @@ export class 商店界面 extends 页面基类 {
     const 价格 = 计算报价(this.主题, 部位, this.上下文.服务.金币.读取().已购);
     const 名称 = this.文案().商店部位[部位] ?? 部位;
     return {
-      数据: 哪边 === "整套" ? { 金色: true } : {},
+      数据:
+        哪边 === "整套"
+          ? { 金色: true, 糖纸侧: this.商店布局.购买糖纸侧.整套 }
+          : { 糖纸侧: this.商店布局.购买糖纸侧.单件 },
       状态: {},
       文案: 价格
         ? 名称 + " ▣ " + 价格
@@ -723,7 +727,7 @@ export class 商店界面 extends 页面基类 {
     环境: 节点绘制环境,
     矩形: 矩形,
     读取配置: () => {
-      数据: { 金色?: boolean; 纸面?: boolean };
+      数据: 收藏按钮数据;
       状态: { 可用?: boolean; 按下?: boolean };
       文案: string;
       字号: number;
@@ -935,7 +939,7 @@ export class 商店界面 extends 页面基类 {
     画笔: ReturnType<typeof 画法画笔>,
     矩形: 矩形,
     读取配置: () => {
-      数据: { 金色?: boolean; 纸面?: boolean };
+      数据: 收藏按钮数据;
       状态: { 可用?: boolean; 按下?: boolean };
       文案: string;
       字号: number;
