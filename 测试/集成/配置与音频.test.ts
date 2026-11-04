@@ -3,7 +3,7 @@ import { 校验音乐库 } from "../../.gamemaker/依赖/框架/音频/音乐目
 import { 校验音效库 } from "../../.gamemaker/依赖/框架/音频/音效目录";
 import { 场景氛围表 } from "../../代码/框架配置/场景氛围";
 import { 音乐库 } from "../../代码/框架配置/音乐";
-import { 消行谱, 连击谱, 音效库 } from "../../代码/框架配置/音效";
+import { 应用糖果音效, 消行谱, 连击谱, 音效库 } from "../../代码/框架配置/音效";
 import { 结算音效名称 } from "../../代码/音频/结算音效";
 import { 模式配置, 节奏配置, 速度表 } from "../../代码/项目配置/模式";
 
@@ -69,11 +69,48 @@ describe("框架配置音频表", () => {
     ]);
   });
 
-  test("像素主题各有一首主题曲，互不雷同", () => {
+  test("自带曲目的三套主题各有一首主题曲，互不雷同", () => {
     const 主题曲 = 音乐库.filter((项) => 项.id.endsWith(".主题") && 项.类型 === "曲谱");
-    expect(主题曲.map((项) => 项.id).sort()).toEqual(["砖机液晶.主题", "街机彩砖.主题"]);
+    expect(主题曲.map((项) => 项.id).sort()).toEqual(
+      ["砖机液晶.主题", "街机彩砖.主题", "糖果超甜.主题"].sort(),
+    );
     const 谱 = 主题曲.map((项) => (项.类型 === "曲谱" ? JSON.stringify(项.曲谱) : ""));
-    expect(new Set(谱).size).toBe(2);
+    expect(new Set(谱).size).toBe(3);
+  });
+
+  test("糖果主题曲能排程：8.8 秒循环、全落 D 五声、音量叠加不削波", async () => {
+    const { 展开曲谱 } = await import("../../.gamemaker/依赖/框架/音频/音乐编排");
+    const { 糖果曲谱 } = await import("../../代码/框架配置/音乐");
+    const 乐段 = 展开曲谱(糖果曲谱);
+    expect(乐段.时长).toBeCloseTo(8.8, 3);
+    expect(乐段.音符.length).toBeGreaterThan(30);
+    expect(乐段.噪声.length).toBe(0);
+    // 主音 293.66（D）上的五声：宫商角徵羽 = D E F# A B，任何八度的和弦/旋律音都只能落在这五个音级上。
+    const 五声 = new Set([0, 2, 4, 7, 9]);
+    for (const 音 of 乐段.音符) {
+      const 半音 = Math.round(12 * Math.log2(音.频率 / 糖果曲谱.主音频率));
+      expect(五声.has(((半音 % 12) + 12) % 12)).toBe(true);
+      expect(音.音量).toBeGreaterThan(0);
+      expect(Number.isFinite(音.延迟)).toBe(true);
+    }
+    // 同时响的音量总和留足余量，满盘落块音效叠上去也不会削波。
+    const 事件 = 乐段.音符.map((音) => ({ 起: 音.延迟, 止: 音.延迟 + 音.时长, 量: 音.音量 }));
+    let 峰 = 0;
+    for (const 项 of 事件) {
+      let 和 = 0;
+      for (const 他 of 事件) if (他.起 <= 项.起 && 他.止 > 项.起) 和 += 他.量;
+      峰 = Math.max(峰, 和);
+    }
+    expect(峰).toBeLessThan(0.5);
+  });
+
+  test("糖果音效套装把刺耳波形与噪声换成圆润甜味", () => {
+    const 原 = 消行谱(3);
+    const 糖 = 应用糖果音效(原);
+    expect(糖.音符?.length).toBe(原.音符?.length);
+    expect(糖.音符?.[0]?.起频).toBeGreaterThan(原.音符?.[0]?.起频 ?? 0);
+    expect(糖.音符?.some((音) => 音.波形 === "square" || 音.波形 === "sawtooth")).toBe(false);
+    expect(糖.噪声?.[0]?.音量 ?? 1).toBeLessThan(原.噪声?.[0]?.音量 ?? 0);
   });
 
   test("五套主题都有独立氛围谱", () => {
