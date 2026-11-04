@@ -7,6 +7,7 @@ import {
   计算商店界面示意,
   计算商店目录封条,
   计算商店目录缩略,
+  计算商店部位对勾,
 } from "../../../../代码/页面/布局/商店布局";
 import { 计算信息栏内部, 计算对局布局 } from "../../../../代码/页面/布局/对局布局";
 import { 计算下拉展开区域 } from "../../../../资源/预制体/基础/输入与选择/页面控件";
@@ -45,6 +46,19 @@ describe("商店布局", () => {
       expect(区.左).toBeGreaterThanOrEqual(卡.左);
       expect(区.左 + 区.宽).toBeLessThanOrEqual(卡.左 + 卡.宽);
       expect(区.上 + 区.高).toBeLessThanOrEqual(卡.上 + 卡.高);
+    }
+  });
+
+  test("已拥有部位卡的对勾落在名字之下、卡片之内", () => {
+    const 页面 = 计算商店布局(390, 844);
+    for (const 卡 of 页面.部位卡) {
+      const 对勾 = 计算商店部位对勾(卡);
+      // 名字行 14px 从卡顶 +6 起：对勾上沿要在名字之下。
+      expect(对勾.上).toBeGreaterThan(卡.上 + 6 + 14);
+      expect(对勾.左).toBeGreaterThanOrEqual(卡.左);
+      expect(对勾.左 + 对勾.宽).toBeLessThanOrEqual(卡.左 + 卡.宽);
+      expect(对勾.上 + 对勾.高).toBeLessThanOrEqual(卡.上 + 卡.高);
+      expect(对勾.宽).toBeGreaterThanOrEqual(10);
     }
   });
 
