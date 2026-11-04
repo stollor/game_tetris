@@ -19,8 +19,29 @@ export const 主题卡常量 = {
   卡宽: 96,
   卡高: 104,
   间距: 8,
-  列表高: 120,
 } as const;
+
+export interface 主题卡排布 {
+  列数: number;
+  行数: number;
+  卡宽: number;
+  /** 换行后整块（所有行）的高度，给外观页算行高与滚动内容高用。 */
+  总高: number;
+}
+
+/**
+ * 主题卡换行：张数多了往下排，不再均分可用宽把卡挤扁。
+ * 优先保持标准卡宽；可用宽连一列标准卡都放不下时才收窄到可用宽。
+ */
+export function 计算主题卡排布(可用宽: number, 数量: number): 主题卡排布 {
+  const { 卡宽: 标准宽, 卡高, 间距 } = 主题卡常量;
+  const 张数 = Math.max(1, Math.floor(数量));
+  const 宽 = Math.max(0, 可用宽);
+  const 列数 = Math.max(1, Math.min(张数, Math.floor((宽 + 间距) / (标准宽 + 间距))));
+  const 卡宽 = Math.min(标准宽, (宽 - (列数 - 1) * 间距) / 列数);
+  const 行数 = Math.ceil(张数 / 列数);
+  return { 列数, 行数, 卡宽, 总高: 行数 * 卡高 + (行数 - 1) * 间距 };
+}
 
 /** 主题卡面的真实视觉参数：配色来自主题界面配色，方块来自主题方块外观方案。 */
 export interface 主题卡外观 {

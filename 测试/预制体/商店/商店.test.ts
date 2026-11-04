@@ -6,6 +6,7 @@ import { 解析方块外观 } from "../../../资源/主题/外观/方块外观";
 import { 游戏外观 } from "../../../资源/主题/外观/游戏外观";
 import { 糖果规范 } from "../../../资源/主题/糖果/糖果规范";
 import { 设置预览主题 } from "../../../资源/主题/配色/主题读取";
+import { 主题卡常量, 计算主题卡排布 } from "../../../资源/预制体/商店/主题卡配方";
 import { 绘制主题缩略 } from "../../../资源/预制体/商店/主题缩略";
 import type { 商店外观 } from "../../../资源/预制体/商店/商店外观";
 import { 解析商店外观 } from "../../../资源/预制体/商店/商店外观";
@@ -190,6 +191,41 @@ describe("糖果商店材质", () => {
     expect(记录.调用.some((调) => 调.方法 === "fillRoundedRect")).toBe(true);
     for (const 调 of 记录.调用)
       for (const 参 of 调.参数) if (typeof 参 === "number") expect(Number.isFinite(参)).toBe(true);
+  });
+});
+
+describe("主题卡排布", () => {
+  /** 手机 390 宽：面板 358、内容宽 330，列表可用宽 322。 */
+  const 手机可用宽 = 330 - 8;
+
+  test("手机上五套主题排成 3+2 两行，卡宽保持标准值不被挤扁", () => {
+    const 排布 = 计算主题卡排布(手机可用宽, 主题列表.length);
+    expect(排布.列数).toBe(3);
+    expect(排布.行数).toBe(2);
+    expect(排布.卡宽).toBe(主题卡常量.卡宽);
+    // 换行后整块高度 = 两行卡 + 一行间距。
+    expect(排布.总高).toBe(2 * 主题卡常量.卡高 + 主题卡常量.间距);
+  });
+
+  test("宽屏一排放得下就不换行", () => {
+    const 排布 = 计算主题卡排布(712 - 8, 主题列表.length);
+    expect(排布.列数).toBe(主题列表.length);
+    expect(排布.行数).toBe(1);
+    expect(排布.卡宽).toBe(主题卡常量.卡宽);
+    expect(排布.总高).toBe(主题卡常量.卡高);
+  });
+
+  test("可用宽连一列标准卡都放不下时才收窄，且永不横向溢出", () => {
+    const 排布 = 计算主题卡排布(60, 3);
+    expect(排布.列数).toBe(1);
+    expect(排布.行数).toBe(3);
+    expect(排布.卡宽).toBe(60);
+    for (const 宽 of [0, 60, 104, 200, 322, 712]) {
+      const 结果 = 计算主题卡排布(宽, 5);
+      const 整行宽 = 结果.列数 * 结果.卡宽 + (结果.列数 - 1) * 主题卡常量.间距;
+      expect(整行宽).toBeLessThanOrEqual(Math.max(宽, 结果.卡宽) + 1e-6);
+      expect(结果.行数).toBeGreaterThan(0);
+    }
   });
 });
 
