@@ -39,7 +39,7 @@ function 创建记录图形() {
     get(_目标, 属性) {
       if (typeof 属性 !== "string") return undefined;
       // 记录图形不实现几何缓存：绘制方走直接路径，才能逐条记到绘制调用。
-      if (属性 === "缓存绘制") return undefined;
+      if (属性 === "缓存绘制" || 属性 === "缓存图案") return undefined;
       return (...参数: unknown[]) => {
         调用.push({ 方法: 属性, 参数 });
         return 图形;
@@ -59,6 +59,7 @@ function 创建记录画笔() {
     绘制纹理帧: () => false,
     绘制散图: () => false,
     绘制图片四边形: () => false,
+    读取动态图集: () => ({}) as never,
     读取纯色紫外线: () => ({ u: 0, v: 0, 宽: 1, 高: 1 }),
     重置: () => undefined,
     压入裁剪: () => undefined,
