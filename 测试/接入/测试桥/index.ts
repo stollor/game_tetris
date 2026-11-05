@@ -242,6 +242,24 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
     读取状态,
     读取界面,
     读取音频: () => 选项.服务.音频.读取状态(),
+    /** 当前页节点树的「名称 → 绘制带」，供层级验收断言浮层压在内容之上/之下。 */
+    读取节点带: () => {
+      const 页 = 读取当前页();
+      const 根 = 页?.读取节点根?.();
+      if (!根) return [];
+      const 结果: { 名称: string; 带: number; 可见: boolean }[] = [];
+      const 走 = (节点: {
+        名称: string;
+        读取绘制带(): number;
+        读取实际可见(): boolean;
+        子: readonly unknown[];
+      }) => {
+        结果.push({ 名称: 节点.名称, 带: 节点.读取绘制带(), 可见: 节点.读取实际可见() });
+        for (const 子 of 节点.子) 走(子 as typeof 节点);
+      };
+      走(根);
+      return 结果;
+    },
     设置序列: (序列: readonly string[]) => {
       const 控制 = 测试控制();
       if (控制?.设置序列) {
