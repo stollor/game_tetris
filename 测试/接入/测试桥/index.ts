@@ -316,7 +316,9 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
       测试控制()?.开始素材演示({
         目标: 参数.目标,
         秒数: 参数.秒数,
-        主题节奏: 巡演 ? 宣发节奏 : undefined,
+        // 速通片：每消除一次换下一套主题，固定 0.09 秒落子，40 行落在 10 秒上下。
+        消行换肤: 巡演 ? 主题列表 : undefined,
+        落子间隔秒: 巡演 ? 0.1 : undefined,
         收尾间隔秒: 0.1,
       });
       选项.请求渲染();
@@ -325,6 +327,15 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
       场景: 选项.栈.读取栈().at(-1)?.名称 ?? 选项.读取页面编号(),
       ...素材演示状态,
     }),
+    /** 宣发片预热：逐套应用主题并各等两帧，把背景/底板/图集的首次构建成本付在录制之前。 */
+    预热素材主题: async (名单: readonly string[]) => {
+      for (const 名 of 名单) {
+        应用素材主题(选项, 名);
+        await new Promise((完成) => requestAnimationFrame(() => requestAnimationFrame(完成)));
+      }
+      应用素材主题(选项, 默认主题);
+      await new Promise((完成) => requestAnimationFrame(() => requestAnimationFrame(完成)));
+    },
     /**
      * 宣发录像：画布画面 + 游戏音频合成一条流交给 MediaRecorder，音画同源天然同步。
      * 停止后回 base64 webm；录制脚本落盘后再用 ffmpeg 转 H.264/AAC 的 mp4。

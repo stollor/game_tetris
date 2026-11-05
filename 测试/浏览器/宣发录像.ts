@@ -3,20 +3,22 @@ import { dirname, join } from "node:path";
 import { chromium } from "playwright";
 
 /**
- * 宣发录像：一局冲刺里按「快闪五主题 → 每套 3 秒 → 收尾打完 40 行」录成带游戏原声的 mp4。
+ * 速通宣发录像：一局冲刺 10 秒左右打完 40 行，**每消除一次就换一套主题**
+ * （多行一起消也只算一次），换皮只改渲染、不碰棋盘/分数/计时。
+ * 音频只留游戏音效：录制前关掉背景音乐，音乐与音效总线仍然照常出声。
  *
  * 用法：`bun ./测试/浏览器/宣发录像.ts [地址] [--输出=路径]`
  * 地址默认 http://127.0.0.1:3002（`gm 运行游戏 --端口=3002`）。
  *
  * 画面走画布 captureStream、声音走音频服务的录音分流，两条轨交给同一个 MediaRecorder，
- * 音画同源天然同步；再用 ffmpeg 转 H.264/AAC。GM 的素材录制只出无声画面，这里补音效。
+ * 音画同源天然同步；再用 ffmpeg 转 H.264/AAC（并裁掉进对局前的导航画面）。
  *
  * 断言（退出码非 0 即失败）：
- * 1. 五套主题都在前 3.2 秒内出现过（快闪段）；
- * 2. 第二轮每套主题各停留 2.4–3.6 秒（3 秒节奏 ±20%）；
- * 3. 消行数与分数单调不减（切主题不重开）；
- * 4. 一局自然完赛，消行数达到冲刺目标；
- * 5. 成片含音频流、时长在 15–120 秒之间。
+ * 1. 40 行完赛，整局竞速时长在 8–14 秒；
+ * 2. 换肤次数与消行事件数一致，每次采样到的消行都伴随主题变化；
+ * 3. 消行数与分数单调不减（换皮不重开）；
+ * 4. 录制期间背景音乐为关、音轨有实际音量；
+ * 5. 成片含音频流、总时长 ≥15 秒（TapTap 实机录屏下限）。
  *
  * 产物：视频写 `--输出`（默认素材目录），时间线与校验写 `.gamemaker/报告/宣发录像/`。
  */
@@ -36,6 +38,7 @@ interface 采样 {
   消行数: number;
   分数: number;
   阶段: string;
+  换肤次数: number;
 }
 
 await mkdir(报告目录, { recursive: true });
@@ -55,13 +58,17 @@ await 页.goto(地址, { waitUntil: "networkidle" });
 await 页.waitForFunction(() => Boolean(window.__再消一行测试__), undefined, { timeout: 20000 });
 await 页.waitForTimeout(700);
 
-// 浏览器要求用户手势后才出声：真点一下画布解锁音频上下文，再开始录。
-// 点右下角空白，别点画面中央——那里是「纯享」入口，会挂上试穿主题污染对局界面。
+// 浏览器要求用户手势后才出声：点右下角空白（画面中央是纯享入口，会挂试穿主题污染界面）。
 await 页.mouse.click(1040, 1860);
-await 页.waitForTimeout(400);
+await 页.waitForTimeout(300);
+// 只要音效：关背景音乐；再把五套主题各应用一遍，把背景/图集首次构建成本付在录制之前。
+await 页.evaluate(() => window.__three版__?.更新设置?.({ 背景音乐: false }));
+await 页.evaluate(
+  (名单) => window.__再消一行测试__?.预热素材主题(名单),
+  [...主题顺序],
+);
 
-// 先开录再进对局：导航与首帧着色的时间不算内容，录完按「进对局那一刻」精确裁头，
-// 视频第 0 帧就是可玩画面，前 3 秒的快闪不会被页面切换吃掉。
+// 先开录再进对局：导航与首帧着色的时间不算内容，录完按「进对局那一刻」精确裁头。
 const 启录时刻 = Date.now();
 const 已开录 = await 页.evaluate(() => window.__再消一行测试__?.开始素材录像(30) === true);
 if (!已开录) throw new Error("开始素材录像失败");
@@ -73,7 +80,6 @@ await 页.evaluate(() =>
     秒数: 70,
     宽: 1080,
     高: 1920,
-    // 宣发片直接从可玩画面开始：不播 Ready/Go，前 3 秒才装得下五套主题快闪。
     跳过入场: true,
   }),
 );
@@ -93,11 +99,13 @@ const 前导秒 = Math.max(0, (Date.now() - 启录时刻) / 1000 - 0.05);
 const 采样: 采样[] = [];
 const 起点 = Date.now();
 let 结束 = false;
-while (Date.now() - 起点 < 90000) {
+let 音频状态: { 背景音乐?: boolean; 音乐音量?: number; 音效音量?: number } = {};
+while (Date.now() - 起点 < 60000) {
   const 一帧 = await 页.evaluate(() => ({
     主题: window.__three版__?.读取设置?.()?.主题选择 ?? "",
     状态: window.__three版__?.读取状态?.() ?? null,
     演示: window.__再消一行测试__?.读取素材演示?.() ?? null,
+    音频: window.__three版__?.读取统计?.()?.音频 ?? null,
   }));
   const 状态 = 一帧.状态 as { 消行数?: number; 分数?: number; 阶段?: string } | null;
   采样.push({
@@ -106,20 +114,22 @@ while (Date.now() - 起点 < 90000) {
     消行数: Number(状态?.消行数 ?? 0),
     分数: Number(状态?.分数 ?? 0),
     阶段: String(状态?.阶段 ?? ""),
+    换肤次数: Number(一帧.演示?.换肤次数 ?? 0),
   });
+  if (一帧.音频) 音频状态 = 一帧.音频 as typeof 音频状态;
   if (一帧.演示?.结束 === true) {
     结束 = true;
     break;
   }
-  await 页.waitForTimeout(150);
+  await 页.waitForTimeout(90);
 }
-// 结算页多留一会儿，片尾不戛然而止。
-await 页.waitForTimeout(1600);
+// 结算页按缺口补时：成片必须过 TapTap 的 15 秒下限，又不想无脑拖长结算。
+const 已录秒 = (Date.now() - 启录时刻) / 1000 - 前导秒;
+await 页.waitForTimeout(Math.max(1200, (15.8 - 已录秒) * 1000));
 const 数据地址 = await 页.evaluate(() => window.__再消一行测试__?.停止素材录像());
 await 上下文.close();
 await 浏览器.close();
-if (!数据地址 || !数据地址.startsWith("data:video/webm;base64,"))
-  throw new Error("没有拿到录像数据");
+if (!数据地址?.startsWith("data:video/webm;base64,")) throw new Error("没有拿到录像数据");
 const 原始 = join(报告目录, "原始.webm");
 await writeFile(原始, Buffer.from(数据地址.slice("data:video/webm;base64,".length), "base64"));
 
@@ -151,8 +161,7 @@ const 运行 = (命令: string[]) => {
   "160k",
   "-movflags",
   "+faststart",
-  // 不要 -shortest：MediaRecorder 的 webm 没有时长元数据，音轨会被判成更短，
-  // 结算画面会被截掉一截；按视频轨的实际长度收尾。
+  // 不要 -shortest：MediaRecorder 的 webm 没有时长元数据，音轨会被判成更短，结算会被截掉。
   输出,
 ]);
 
@@ -162,7 +171,7 @@ const 探测 = JSON.parse(
     "-v",
     "error",
     "-show_entries",
-    "format=duration,size:stream=codec_name,codec_type,width,height,channels,sample_rate",
+    "format=duration,size:stream=codec_name,codec_type,width,height,channels",
     "-of",
     "json",
     输出,
@@ -175,30 +184,26 @@ const 时长秒 = Number(探测.format.duration);
 const 有音频 = 探测.streams.some((项) => 项.codec_type === "audio");
 const 视频流 = 探测.streams.find((项) => 项.codec_type === "video");
 
-// 主题时间线：按采样把每个主题的连续区间求出来。结构约定是
-// 前 5 段快闪（每套约 0.6 秒）→ 后 5 段停留（每套约 3 秒，最后一段一直延续到完赛）。
-const 区间: { 主题: string; 起: number; 止: number }[] = [];
-for (const 项 of 采样) {
-  const 末 = 区间.at(-1);
-  if (末 && 末.主题 === 项.主题) 末.止 = 项.毫秒;
-  else 区间.push({ 主题: 项.主题, 起: 项.毫秒, 止: 项.毫秒 });
+// 竞速段时长：从第一次落子到结算出现（采样里的「阶段=结束」时刻）。
+const 结束帧 = 采样.find((项) => 项.阶段 === "结束");
+const 竞速秒 = 结束帧 ? Math.round(结束帧.毫秒 / 100) / 10 : null;
+const 末帧 = 采样.at(-1);
+const 换肤次数 = 末帧?.换肤次数 ?? 0;
+// 采样到的消行事件：相邻两次采样消行数变大就算一次（多行一起消也只算一次）。
+let 消行事件 = 0;
+let 每次消除都换肤 = true;
+for (let 序 = 1; 序 < 采样.length; 序 += 1) {
+  const 前 = 采样[序 - 1];
+  const 后 = 采样[序];
+  if (!前 || !后 || 后.消行数 <= 前.消行数) continue;
+  消行事件 += 1;
+  if (后.主题 === 前.主题) 每次消除都换肤 = false;
 }
-const 段长 = (项: { 起: number; 止: number }) => 项.止 - 项.起;
-const 快闪段 = 区间.slice(0, 5);
-const 停留段 = 区间.slice(5, 10);
-const 快闪齐全 = 主题顺序.every((名, 序) => 快闪段[序]?.主题 === 名);
-const 快闪短促 = 快闪段.length === 5 && 快闪段.every((项) => 段长(项) <= 1100);
-const 停留齐全 = 主题顺序.every((名, 序) => 停留段[序]?.主题 === 名);
-const 停留时长 = 停留段.map((项) => Math.round(段长(项) / 100) / 10);
-// 前四套必须各停 3 秒上下；第五套从 3 秒段直接接完赛，只能判「至少 3 秒」。
-const 每套三秒 =
-  停留段.length === 5 &&
-  停留时长.slice(0, 4).every((秒) => 秒 >= 2.4 && 秒 <= 3.8) &&
-  (停留时长[4] ?? 0) >= 2.4;
 const 消行单调 = 采样.every((项, 序) => 序 === 0 || 项.消行数 >= (采样[序 - 1]?.消行数 ?? 0));
 const 分数单调 = 采样.every((项, 序) => 序 === 0 || 项.分数 >= (采样[序 - 1]?.分数 ?? 0));
-const 末帧 = 采样.at(-1);
-// 音轨不能只有一条空流：实测平均音量要高于 -45 dB，避免「有音轨但全静音」。
+// 换肤次数应覆盖所有换肤（事件数可能被采样漏掉，只允许换肤次数 ≥ 事件数）。
+const 换肤覆盖 = 换肤次数 >= 消行事件 && 换肤次数 >= 8;
+
 const 音量输出 = Bun.spawnSync([
   "ffmpeg",
   "-i",
@@ -210,47 +215,47 @@ const 音量输出 = Bun.spawnSync([
   "-",
 ]).stderr.toString();
 const 平均音量 = Number(/mean_volume:\s*(-?[\d.]+) dB/.exec(音量输出)?.[1] ?? -Infinity);
-const 有声音 = Number.isFinite(平均音量) && 平均音量 > -45;
+const 有声音 = Number.isFinite(平均音量) && 平均音量 > -50;
+
 const 结果 = {
   地址,
   输出,
   时长秒,
+  竞速秒,
   有音频,
   平均音量,
   有声音,
+  背景音乐: 音频状态.背景音乐,
+  音效音量: 音频状态.音效音量,
   视频: 视频流 ? `${视频流.width}x${视频流.height} ${视频流.codec_name}` : null,
   字节: Number(探测.format.size),
   结束,
   完赛: 末帧?.阶段 === "结束" && (末帧?.消行数 ?? 0) >= 40,
   最终消行数: 末帧?.消行数 ?? 0,
   最终分数: 末帧?.分数 ?? 0,
-  区间: 区间.map((项) => `${项.主题} ${Math.round(段长(项) / 100) / 10}s`),
-  快闪齐全,
-  快闪短促,
-  停留齐全,
-  停留时长,
-  每套三秒,
+  换肤次数,
+  采样到的消行事件: 消行事件,
+  每次消除都换肤,
+  换肤覆盖,
   消行单调,
   分数单调,
   页面错误,
   通过:
     结束 &&
     (末帧?.消行数 ?? 0) >= 40 &&
-    快闪齐全 &&
-    快闪短促 &&
-    停留齐全 &&
-    每套三秒 &&
+    每次消除都换肤 &&
+    换肤覆盖 &&
     消行单调 &&
     分数单调 &&
+    (竞速秒 ?? 99) <= 12 &&
+    (竞速秒 ?? 0) >= 6 &&
     有音频 &&
     有声音 &&
+    音频状态.背景音乐 === false &&
     时长秒 >= 15 &&
-    时长秒 <= 120 &&
+    时长秒 <= 30 &&
     页面错误.length === 0,
 };
-await writeFile(
-  join(报告目录, "校验.json"),
-  JSON.stringify({ ...结果, 区间, 采样 }, null, 2),
-);
+await writeFile(join(报告目录, "校验.json"), JSON.stringify({ ...结果, 采样 }, null, 2));
 console.log(JSON.stringify(结果, null, 2));
 process.exit(结果.通过 ? 0 : 1);

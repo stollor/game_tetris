@@ -30,7 +30,15 @@ declare global {
         高: number;
         跳过入场?: boolean;
       }): void;
-      读取素材演示(): { 场景: string; 结束: boolean; 完赛: boolean; 消行数: number };
+      读取素材演示(): {
+        场景: string;
+        结束: boolean;
+        完赛: boolean;
+        消行数: number;
+        换肤次数: number;
+      };
+      /** 宣发片预热：逐套应用主题并各等两帧，把首次构建成本付在录制之前。 */
+      预热素材主题(名单: readonly string[]): Promise<void>;
       /** 宣发录像：画布 + 游戏音频合成一条流；停止后回 base64 webm。 */
       开始素材录像(帧率?: number): boolean;
       停止素材录像(): Promise<string>;
