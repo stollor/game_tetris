@@ -56,9 +56,15 @@ await 页.waitForFunction(() => Boolean(window.__再消一行测试__), undefine
 await 页.waitForTimeout(700);
 
 // 浏览器要求用户手势后才出声：真点一下画布解锁音频上下文，再开始录。
-await 页.mouse.click(540, 960);
+// 点右下角空白，别点画面中央——那里是「纯享」入口，会挂上试穿主题污染对局界面。
+await 页.mouse.click(1040, 1860);
 await 页.waitForTimeout(400);
 
+// 先开录再进对局：导航与首帧着色的时间不算内容，录完按「进对局那一刻」精确裁头，
+// 视频第 0 帧就是可玩画面，前 3 秒的快闪不会被页面切换吃掉。
+const 启录时刻 = Date.now();
+const 已开录 = await 页.evaluate(() => window.__再消一行测试__?.开始素材录像(30) === true);
+if (!已开录) throw new Error("开始素材录像失败");
 await 页.evaluate(() =>
   window.__再消一行测试__?.开始素材演示({
     模式: "冲刺",
@@ -67,9 +73,10 @@ await 页.evaluate(() =>
     秒数: 70,
     宽: 1080,
     高: 1920,
+    // 宣发片直接从可玩画面开始：不播 Ready/Go，前 3 秒才装得下五套主题快闪。
+    跳过入场: true,
   }),
 );
-// 入场演出（Ready/Go）不算内容：等真正可玩再开录，视频第一帧就是游戏画面、第一秒就进快闪。
 await 页.waitForFunction(
   () => {
     const 状态 = window.__three版__?.读取状态?.() as
@@ -80,8 +87,8 @@ await 页.waitForFunction(
   undefined,
   { timeout: 20000 },
 );
-const 已开录 = await 页.evaluate(() => window.__再消一行测试__?.开始素材录像(30) === true);
-if (!已开录) throw new Error("开始素材录像失败");
+// 裁剪点：从起录到「对局可玩」的耗时，再让出 0.05 秒，避免切掉首帧。
+const 前导秒 = Math.max(0, (Date.now() - 启录时刻) / 1000 - 0.05);
 
 const 采样: 采样[] = [];
 const 起点 = Date.now();
@@ -122,12 +129,14 @@ const 运行 = (命令: string[]) => {
     throw new Error(`${命令[0]} 失败：${结果.stderr.toString().slice(-500)}`);
   return 结果.stdout.toString();
 };
-// 转码：H.264 + AAC、yuv420p、faststart，宽高取偶数（1080/1920 本来就偶数）。
+// 转码：先按前导秒裁掉进对局前的画面，再转 H.264 + AAC、yuv420p、faststart。
 运行([
   "ffmpeg",
   "-y",
   "-i",
   原始,
+  "-ss",
+  前导秒.toFixed(3),
   "-c:v",
   "libx264",
   "-preset",

@@ -28,6 +28,7 @@ declare global {
         秒数: number;
         宽: number;
         高: number;
+        跳过入场?: boolean;
       }): void;
       读取素材演示(): { 场景: string; 结束: boolean; 完赛: boolean; 消行数: number };
       /** 宣发录像：画布 + 游戏音频合成一条流；停止后回 base64 webm。 */
