@@ -29,6 +29,7 @@ declare global {
         宽: number;
         高: number;
         跳过入场?: boolean;
+        就地?: boolean;
       }): void;
       读取素材演示(): {
         场景: string;

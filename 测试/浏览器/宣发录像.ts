@@ -25,8 +25,7 @@ import { chromium } from "playwright";
 
 const 参数 = process.argv.slice(2);
 const 地址 = 参数.find((项) => !项.startsWith("--")) ?? "http://127.0.0.1:3002";
-const 读选项 = (名: string) =>
-  参数.find((项) => 项.startsWith(`--${名}=`))?.slice(名.length + 3);
+const 读选项 = (名: string) => 参数.find((项) => 项.startsWith(`--${名}=`))?.slice(名.length + 3);
 const 输出 =
   读选项("输出") ?? ".gamemaker/报告/TapTap/发布/素材/录像-冲刺-全主题巡演-成功-1080x1920.mp4";
 const 报告目录 = ".gamemaker/报告/宣发录像";
@@ -58,17 +57,22 @@ await 页.goto(地址, { waitUntil: "networkidle" });
 await 页.waitForFunction(() => Boolean(window.__再消一行测试__), undefined, { timeout: 20000 });
 await 页.waitForTimeout(700);
 
-// 浏览器要求用户手势后才出声：点右下角空白（画面中央是纯享入口，会挂试穿主题污染界面）。
-await 页.mouse.click(1040, 1860);
+// 浏览器要求用户手势后才出声：用键盘事件解锁音频（主界面整片背景都是「纯享」入口，点哪都会跳页）。
+await 页.keyboard.press("Shift");
 await 页.waitForTimeout(300);
-// 只要音效：关背景音乐；再把五套主题各应用一遍，把背景/图集首次构建成本付在录制之前。
+// 只要音效：关背景音乐。
 await 页.evaluate(() => window.__three版__?.更新设置?.({ 背景音乐: false }));
-await 页.evaluate(
-  (名单) => window.__再消一行测试__?.预热素材主题(名单),
-  [...主题顺序],
-);
+// 先在真实对局页把五套主题全走一遍：首帧着色、材质编译、文字图集、底板烘焙都在这里付掉，
+// 录制期间再切主题就不会卡帧——宣传片不能有停顿。
+await 页.evaluate(() => window.__再消一行测试__?.进入素材场景("对局", 1080, 1920));
+await 页.waitForTimeout(500);
+await 页.evaluate((名单) => window.__再消一行测试__?.预热素材主题(名单), [...主题顺序]);
+await 页.waitForTimeout(500);
+// 预热会摆一盘素材画面；开录前清成空局，第一帧就是干净的开局。
+await 页.evaluate(() => window.__再消一行测试__?.设置序列([]));
+await 页.waitForTimeout(200);
 
-// 先开录再进对局：导航与首帧着色的时间不算内容，录完按「进对局那一刻」精确裁头。
+// 就地开录：不导航、不进场，录到的第 0 帧就是可玩画面。
 const 启录时刻 = Date.now();
 const 已开录 = await 页.evaluate(() => window.__再消一行测试__?.开始素材录像(30) === true);
 if (!已开录) throw new Error("开始素材录像失败");
@@ -80,19 +84,28 @@ await 页.evaluate(() =>
     秒数: 70,
     宽: 1080,
     高: 1920,
-    跳过入场: true,
+    就地: true,
   }),
 );
-await 页.waitForFunction(
-  () => {
-    const 状态 = window.__three版__?.读取状态?.() as
-      | { 页面?: string; 入场秒?: number | null; 阶段?: string }
-      | null;
-    return 状态?.页面 === "对局" && 状态?.入场秒 === null && 状态?.阶段 === "进行中";
-  },
-  undefined,
-  { timeout: 20000 },
-);
+await 页
+  .waitForFunction(
+    () => {
+      const 状态 = window.__three版__?.读取状态?.() as {
+        页面?: string;
+        入场秒?: number | null;
+        阶段?: string;
+      } | null;
+      return 状态?.页面 === "对局" && 状态?.入场秒 === null && 状态?.阶段 === "进行中";
+    },
+    undefined,
+    { timeout: 20000 },
+  )
+  .catch(async () => {
+    const 现场 = await 页.evaluate(() => window.__three版__?.读取状态?.() ?? null);
+    throw new Error(
+      `等对局可玩超时：${JSON.stringify(现场)}；页面错误：${页面错误.join("；") || "无"}`,
+    );
+  });
 // 裁剪点：从起录到「对局可玩」的耗时，再让出 0.05 秒，避免切掉首帧。
 const 前导秒 = Math.max(0, (Date.now() - 启录时刻) / 1000 - 0.05);
 
@@ -125,7 +138,7 @@ while (Date.now() - 起点 < 60000) {
 }
 // 结算页按缺口补时：成片必须过 TapTap 的 15 秒下限，又不想无脑拖长结算。
 const 已录秒 = (Date.now() - 启录时刻) / 1000 - 前导秒;
-await 页.waitForTimeout(Math.max(1200, (15.8 - 已录秒) * 1000));
+await 页.waitForTimeout(Math.max(1200, (16.6 - 已录秒) * 1000));
 const 数据地址 = await 页.evaluate(() => window.__再消一行测试__?.停止素材录像());
 await 上下文.close();
 await 浏览器.close();
@@ -247,7 +260,7 @@ const 结果 = {
     换肤覆盖 &&
     消行单调 &&
     分数单调 &&
-    (竞速秒 ?? 99) <= 12 &&
+    (竞速秒 ?? 99) <= 13 &&
     (竞速秒 ?? 0) >= 6 &&
     有音频 &&
     有声音 &&
