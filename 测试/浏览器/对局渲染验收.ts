@@ -119,10 +119,20 @@ try {
   // 1.2.0 的拆带重构正是在这里漏了门控，2D 不透明底板把 3D 盖死，下落方块与落点影不可见。
   if (!是包体) {
     await 页.evaluate(() =>
-      (window as any).__再消一行测试__.进入素材场景("对局", 390, 844, "立体晶格"),
+      (
+        window as unknown as {
+          __再消一行测试__: { 进入素材场景(...参数: unknown[]): void; 重置棋盘2D计数(): void };
+        }
+      ).__再消一行测试__.进入素材场景("对局", 390, 844, "立体晶格"),
     );
     await 页.waitForTimeout(1600);
-    await 页.evaluate(() => (window as any).__再消一行测试__.重置棋盘2D计数());
+    await 页.evaluate(() =>
+      (
+        window as unknown as {
+          __再消一行测试__: { 进入素材场景(...参数: unknown[]): void; 重置棋盘2D计数(): void };
+        }
+      ).__再消一行测试__.重置棋盘2D计数(),
+    );
     await 页.waitForTimeout(1200);
     const 统计 = await 页.evaluate(() => window.__three版__!.读取统计());
     const 棋盘2D = (统计 as unknown as { 棋盘2D: { 棋盘: number; 已落: number; 底: number } })
@@ -140,10 +150,20 @@ try {
 
     // 回到默认主题，确认 2D 棋盘照常落笔（防止门控写成全局跳过）。
     await 页.evaluate(() =>
-      (window as any).__再消一行测试__.进入素材场景("对局", 390, 844, "极光原野"),
+      (
+        window as unknown as {
+          __再消一行测试__: { 进入素材场景(...参数: unknown[]): void; 重置棋盘2D计数(): void };
+        }
+      ).__再消一行测试__.进入素材场景("对局", 390, 844, "极光原野"),
     );
     await 页.waitForTimeout(2200);
-    await 页.evaluate(() => (window as any).__再消一行测试__.重置棋盘2D计数());
+    await 页.evaluate(() =>
+      (
+        window as unknown as {
+          __再消一行测试__: { 进入素材场景(...参数: unknown[]): void; 重置棋盘2D计数(): void };
+        }
+      ).__再消一行测试__.重置棋盘2D计数(),
+    );
     await 页.waitForTimeout(3500);
     const 平面 = (await 页.evaluate(() => window.__three版__!.读取统计())) as unknown as {
       棋盘2D: { 棋盘: number; 已落: number; 底: number };

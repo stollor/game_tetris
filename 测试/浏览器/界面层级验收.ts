@@ -122,11 +122,17 @@ try {
     `部位名称节点 ${名称节点.length} 个，带 ${[...new Set(名称节点.map((项) => 项.带))].join("/")}`,
   );
   // —— 暂停菜单里的「对局设置」是嵌套浮层：遮罩压暂停按钮，纸页与文字再压遮罩 ——
-  await 页.evaluate(() => (window as any).__再消一行测试__.进入素材场景("对局", 390, 844, "极光原野"));
+  await 页.evaluate(() =>
+    (
+      window as unknown as {
+        __再消一行测试__: { 进入素材场景(...参数: unknown[]): void; 重置棋盘2D计数(): void };
+      }
+    ).__再消一行测试__.进入素材场景("对局", 390, 844, "极光原野"),
+  );
   await 页.waitForTimeout(2000);
-  const 对局按钮 = (await 页.evaluate(() => window.__GAMEMAKER_TEST__!.getSnapshot!())).interactives.map(
-    (项: { name: string }) => 项.name,
-  ) as string[];
+  const 对局按钮 = (
+    await 页.evaluate(() => window.__GAMEMAKER_TEST__!.getSnapshot!())
+  ).interactives.map((项: { name: string }) => 项.name) as string[];
   const 暂停键 = 对局按钮.find((名) => 名 === "暂停") ?? 对局按钮.find((名) => 名.includes("暂停"));
   if (暂停键) await 点(暂停键);
   await 页.waitForTimeout(1600);
@@ -139,12 +145,20 @@ try {
     const 设置遮罩 = 节点.find((项) => 项.名称 === "关闭对局设置:遮罩");
     const 设置面板 = 节点.find((项) => 项.名称 === "对局设置:面板");
     const 设置文字 = 节点.filter((项) => 项.名称.startsWith("对局设置:文字"));
-    const 暂停按钮 = 节点.filter((项) => ["继续", "重新开始", "对局设置", "返回主菜单"].includes(项.名称));
+    const 暂停按钮 = 节点.filter((项) =>
+      ["继续", "重新开始", "对局设置", "返回主菜单"].includes(项.名称),
+    );
     const 暂停最高带 = Math.max(...暂停按钮.map((项) => 项.带));
     记录(
       "暂停菜单：设置遮罩压在暂停按钮之上",
       (设置遮罩?.带 ?? -1) > 暂停最高带,
       `遮罩带 ${设置遮罩?.带 ?? -1} > 暂停按钮最高带 ${暂停最高带}`,
+    );
+    const 设置控件 = 节点.filter((项) => ["网格", "按键说明", "落点影透明度"].includes(项.名称));
+    记录(
+      "暂停菜单：设置里的开关/滑块都在浮层（不被遮罩压住）",
+      设置控件.length > 0 && 设置控件.every((项) => 项.带 > (设置遮罩?.带 ?? -1)),
+      `控件 ${设置控件.map((项) => `${项.名称}@${项.带}`).join("、")}`,
     );
     记录(
       "暂停菜单：设置面板与文字都在遮罩之上",
