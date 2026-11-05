@@ -115,6 +115,47 @@ try {
     记录("对局持续重建脏层", 累计后 > 累计, `累计重建 ${累计} → ${累计后}`);
   }
 
+  // 透视主题（立体晶格）：井内是 3D 房间，2D 棋盘/已落/底板一次都不许画；
+  // 1.2.0 的拆带重构正是在这里漏了门控，2D 不透明底板把 3D 盖死，下落方块与落点影不可见。
+  if (!是包体) {
+    await 页.evaluate(() =>
+      (window as any).__再消一行测试__.进入素材场景("对局", 390, 844, "立体晶格"),
+    );
+    await 页.waitForTimeout(1600);
+    await 页.evaluate(() => (window as any).__再消一行测试__.重置棋盘2D计数());
+    await 页.waitForTimeout(1200);
+    const 统计 = await 页.evaluate(() => window.__three版__!.读取统计());
+    const 棋盘2D = (统计 as unknown as { 棋盘2D: { 棋盘: number; 已落: number; 底: number } })
+      .棋盘2D;
+    const 棋盘表现 = (统计 as unknown as { 棋盘表现: string | null }).棋盘表现;
+    记录(
+      "透视主题井内交给 3D，2D 不再画棋盘",
+      棋盘表现 === "透视" && 棋盘2D.棋盘 === 0 && 棋盘2D.已落 === 0 && 棋盘2D.底 === 0,
+      `棋盘表现 ${棋盘表现}；2D 落笔 棋盘 ${棋盘2D.棋盘} / 已落 ${棋盘2D.已落} / 底 ${棋盘2D.底}`,
+    );
+    const 甲 = await 截图("04-立体晶格-3D");
+    await 页.waitForTimeout(1200);
+    const 乙 = await 截图("05-立体晶格-1.2秒后");
+    记录("立体晶格 3D 画面在动", 甲.哈希 !== 乙.哈希, `${甲.哈希} → ${乙.哈希}`);
+
+    // 回到默认主题，确认 2D 棋盘照常落笔（防止门控写成全局跳过）。
+    await 页.evaluate(() =>
+      (window as any).__再消一行测试__.进入素材场景("对局", 390, 844, "极光原野"),
+    );
+    await 页.waitForTimeout(2200);
+    await 页.evaluate(() => (window as any).__再消一行测试__.重置棋盘2D计数());
+    await 页.waitForTimeout(3500);
+    const 平面 = (await 页.evaluate(() => window.__three版__!.读取统计())) as unknown as {
+      棋盘2D: { 棋盘: number; 已落: number; 底: number };
+      棋盘表现: string | null;
+    };
+    记录(
+      "平面主题仍由 2D 画棋盘",
+      平面.棋盘表现 !== "透视" && 平面.棋盘2D.棋盘 > 0,
+      `棋盘表现 ${平面.棋盘表现}；2D 落笔 棋盘 ${平面.棋盘2D.棋盘} / 已落 ${平面.棋盘2D.已落} / 底 ${平面.棋盘2D.底}`,
+    );
+  }
+
   记录("无页面错误", 页面错误.length === 0, 页面错误.slice(0, 3).join("；") || "无");
 
   const 结果 = {
