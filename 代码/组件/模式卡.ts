@@ -76,7 +76,8 @@ export class 模式卡组件 extends 组件<模式卡参数> {
       }
       return;
     }
-    const 在内 = this.读取卡矩形() ? 包含点(this.读取卡矩形()!, 点) : false;
+    const 卡 = this.读取卡矩形();
+    const 在内 = 卡 ? 包含点(卡, 点) : false;
     if (在内 !== this.按下中) {
       this.按下中 = 在内;
       this.节点?.标脏("移出");
@@ -89,13 +90,15 @@ export class 模式卡组件 extends 组件<模式卡参数> {
     this.捕获 = null;
     const 点 = this.局部转卡坐标(事件.局部坐标);
     if (捕获 === "排行") {
-      const 应点击 = this.排行按下 && this.读取排行矩形() && 包含点(this.读取排行矩形()!, 点);
+      const 排行 = this.读取排行矩形();
+      const 应点击 = this.排行按下 && 排行 !== null && 包含点(排行, 点);
       this.排行按下 = false;
       this.节点?.标脏("抬起");
       if (应点击) this.读取参数().排行点击?.();
       return;
     }
-    const 应点击 = this.按下中 && this.读取卡矩形() && 包含点(this.读取卡矩形()!, 点);
+    const 卡 = this.读取卡矩形();
+    const 应点击 = this.按下中 && 卡 !== null && 包含点(卡, 点);
     this.按下中 = false;
     this.节点?.标脏("抬起");
     if (应点击) this.读取参数().点击?.();

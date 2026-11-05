@@ -103,10 +103,11 @@ export async function 刷新Tap用户身份(): Promise<Tap用户身份> {
   if (!能力.在Tap容器) return 读取Tap用户身份();
 
   const 宿主 = 读取Tap宿主();
-  if (宿主?.getUserInfo) {
+  const 取用户信息 = 宿主?.getUserInfo;
+  if (宿主 && 取用户信息) {
     await new Promise<void>((resolve) => {
       try {
-        宿主.getUserInfo!({
+        取用户信息.call(宿主, {
           success: (res) => {
             const nick = res?.userInfo?.nickName || res?.userInfo?.nickname || "";
             if (nick) 记录Tap用户身份({ nickName: nick, 来源: "getUserInfo" });
@@ -122,10 +123,11 @@ export async function 刷新Tap用户身份(): Promise<Tap用户身份> {
 
   const 管理器 = 取排行榜管理器();
   const 编号 = 排行榜编号.马拉松;
-  if (管理器?.loadCurrentPlayerLeaderboardScore && 编号) {
+  const 加载我的分数 = 管理器?.loadCurrentPlayerLeaderboardScore;
+  if (管理器 && 加载我的分数 && 编号) {
     await new Promise<void>((resolve) => {
       try {
-        管理器.loadCurrentPlayerLeaderboardScore!({
+        加载我的分数.call(管理器, {
           leaderboardId: 编号,
           collection: "public",
           callback: {

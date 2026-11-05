@@ -18,10 +18,12 @@ export function 请求Tap登录(英文 = false): Promise<登录结果> {
     return Promise.resolve({ 完成: false, 原因: 文案.登录环境不支持 });
   }
   const 宿主 = 读取Tap宿主();
-  if (!宿主?.login) return Promise.resolve({ 完成: false, 原因: 文案.登录接口不可用 });
+  const 登录 = 宿主?.login;
+  if (!宿主 || !登录) return Promise.resolve({ 完成: false, 原因: 文案.登录接口不可用 });
   return new Promise((resolve) => {
     try {
-      宿主.login!({
+      // 方法先捕获成本地函数：闭包里 TS 收不到外部判空，`!` 只是把空值风险藏起来。
+      登录.call(宿主, {
         success: (res) => {
           if (res?.code) resolve({ 完成: true, 原因: 文案.登录已登录, code: res.code });
           else resolve({ 完成: false, 原因: res?.errMsg || 文案.登录未返回凭证 });

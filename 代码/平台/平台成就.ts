@@ -256,7 +256,8 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
     return { 本地编号, 平台编号, 完成: true, 原因: 现.原因 || 文案.平台成就已同步 };
   }
   const m = 取成就管理器();
-  if (!m?.unlockAchievement) {
+  const 解锁成就 = m?.unlockAchievement;
+  if (!m || !解锁成就) {
     置状态(本地编号, { 状态: "无能力", 原因: 文案.平台成就管理器不可用, 时间: Date.now() });
     return { 本地编号, 平台编号, 完成: false, 原因: 文案.平台成就管理器不可用 };
   }
@@ -290,7 +291,7 @@ async function 执行解锁平台成就(本地编号: string, 强制: boolean): 
       }, 8000);
       try {
         // 官方文档结果走 registerListener；部分宿主仍支持 option.callback，两者都接。
-        m.unlockAchievement!({
+        解锁成就.call(m, {
           achievementId: 平台编号,
           callback: {
             onAchievementSuccess: 成功,

@@ -214,7 +214,8 @@ export async function 加载排行榜数据(选项: 加载排行榜选项): Prom
     return { ...空, 原因: 文案.排行榜无能力提示 };
   }
   const 管理器 = 读取Tap宿主()?.getLeaderboardManager?.();
-  if (!管理器?.loadLeaderboardScores) {
+  const 加载排行 = 管理器?.loadLeaderboardScores;
+  if (!管理器 || !加载排行) {
     return { ...空, 原因: 文案.排行榜查询不可用 };
   }
 
@@ -249,11 +250,12 @@ export async function 加载排行榜数据(选项: 加载排行榜选项): Prom
         },
       };
       if (periodToken) 参数.periodToken = periodToken;
-      管理器.loadLeaderboardScores!(参数);
+      加载排行.call(管理器, 参数);
     });
 
     let 我的: Tap排行榜分数 | null | undefined;
-    if (管理器.loadCurrentPlayerLeaderboardScore) {
+    const 加载我的分数 = 管理器.loadCurrentPlayerLeaderboardScore;
+    if (加载我的分数) {
       try {
         const 我 = await new Promise<Tap当前玩家分数结果>((resolve, reject) => {
           const 参数: {
@@ -277,7 +279,7 @@ export async function 加载排行榜数据(选项: 加载排行榜选项): Prom
             },
           };
           if (periodToken) 参数.periodToken = periodToken;
-          管理器.loadCurrentPlayerLeaderboardScore!(参数);
+          加载我的分数.call(管理器, 参数);
         });
         我的 = 我.currentUserScore ?? null;
         if (我的?.user?.openid || 我的?.user?.name) {

@@ -334,7 +334,9 @@ export class 菜单页 extends 页面基类 {
   }
 
   private 标题项(): 文字项 {
-    return 生成菜单文字项(this.布局, this.文字数据())[0]!;
+    const [标题项] = 生成菜单文字项(this.布局, this.文字数据());
+    if (!标题项) throw new Error("菜单文字项缺失：标题");
+    return 标题项;
   }
 
   private 文字节点坐标(项: 文字项): { 位置X: number; 位置Y: number; 宽: number; 高: number } {

@@ -508,7 +508,8 @@ export class 结算页面 extends 页面基类<页面上下文> {
         类型: "说明",
       });
     const 新成就 = this.数据.新成就;
-    const 名称 = 新成就.length > 0 ? 文案.成就名称[新成就[0]!] : undefined;
+    const 首个成就 = 新成就[0];
+    const 名称 = 首个成就 ? 文案.成就名称[首个成就] : undefined;
     if (名称) {
       const 文本 =
         新成就.length > 1 ? 填充文案(文案.结算成就更多, { 名称, 数量: 新成就.length }) : 名称;

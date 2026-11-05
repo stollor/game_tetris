@@ -27,9 +27,29 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "useTemplate": "off"
+      },
+      "complexity": {
+        "noUselessStringRaw": "off",
+        "useLiteralKeys": "off",
+        "useOptionalChain": "off"
+      }
     }
   },
+  "overrides": [
+    {
+      "includes": ["测试/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
