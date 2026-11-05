@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { 格式化排行榜错误, 周期标签 } from "../../../代码/平台/排行榜";
-import { 格式化用户身份文案, type Tap用户身份 } from "../../../代码/平台/用户身份";
-import { 请求Tap登录 } from "../../../代码/平台/登录";
 import { 成就同步文案 } from "../../../代码/平台/平台成就";
+import { 周期标签, 格式化排行榜错误 } from "../../../代码/平台/排行榜";
+import { type Tap用户身份, 格式化用户身份文案 } from "../../../代码/平台/用户身份";
+import { 请求Tap登录 } from "../../../代码/平台/登录";
 import { 按英文取文案 } from "../../../代码/语言/文案";
 
 /**

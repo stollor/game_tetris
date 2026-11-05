@@ -1,6 +1,6 @@
-import { 街机彩砖规范 } from "../../主题/像素/像素规范";
 import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 亮色, 暗色, 混色 } from "../../../.gamemaker/依赖/框架/界面/颜色工具";
+import { 街机彩砖规范 } from "../../主题/像素/像素规范";
 import { 绘制天幕, 随机值 } from "./通用";
 
 /**

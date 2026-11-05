@@ -1,6 +1,6 @@
+import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 像素规范 } from "../../主题/像素/像素规范";
 import { 对局像素规格 } from "../../主题/像素/对局像素规格";
-import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 四行庆祝参数, 消行光带参数, 落块拖尾参数, 锁定闪光参数 } from "./消行配方";
 
 const 规 = 对局像素规格.特效;

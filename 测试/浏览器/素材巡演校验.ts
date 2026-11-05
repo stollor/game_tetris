@@ -51,10 +51,14 @@ const 页面错误: string[] = [];
 await 页.goto(地址, { waitUntil: "networkidle" });
 await 页.waitForFunction(() => Boolean(window.__再消一行测试__), undefined, { timeout: 20000 });
 await 页.waitForTimeout(600);
-await 页.evaluate(
-  (参数) => window.__再消一行测试__?.开始素材演示(参数),
-  { 模式, 皮肤: "全主题巡演", 目标: "成功" as const, 秒数, 宽: 1080, 高: 1920 },
-);
+await 页.evaluate((参数) => window.__再消一行测试__?.开始素材演示(参数), {
+  模式,
+  皮肤: "全主题巡演",
+  目标: "成功" as const,
+  秒数,
+  宽: 1080,
+  高: 1920,
+});
 
 const 采样: 采样[] = [];
 const 起点 = Date.now();

@@ -1,7 +1,7 @@
+import type { 样式选择 } from "../../.gamemaker/依赖/框架/设置/设置";
 import type { 游戏主题 } from "../../代码/应用/接口/服务";
 import type { 游戏设置 } from "../../代码/设置/游戏设置";
 import { 获取游戏设置 } from "../../代码/设置/游戏设置";
-import type { 样式选择 } from "../../.gamemaker/依赖/框架/设置/设置";
 import { 主题结果转设置, 读取有效游戏主题 } from "./主题组合";
 import { 是像素主题 } from "./像素/像素风格";
 import { 解析方块外观 } from "./外观/方块外观";

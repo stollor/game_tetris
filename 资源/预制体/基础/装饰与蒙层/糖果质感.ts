@@ -1,7 +1,7 @@
 import type { 图形对象, 点 } from "../../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 亮色, 暗色 } from "../../../../.gamemaker/依赖/框架/界面/颜色工具";
 import { 糖果规范 } from "../../../主题/糖果/糖果规范";
-import { type 边界, 同角, 圆角多边形, 裁进凸形 } from "./圆角裁剪";
+import { 同角, 圆角多边形, 裁进凸形, type 边界 } from "./圆角裁剪";
 
 /**
  * 糖果 2D 质感工具箱：把「一块糖」的六层读法沉成一套原语。
@@ -42,13 +42,7 @@ function 包围(形: readonly 点[]): 边界 {
 }
 
 /** 用「填充 + 同色粗描边」把任意凸形外扩一圈，得到投影/糖边的轮廓。 */
-function 膨胀填充(
-  图: 图形对象,
-  形: readonly 点[],
-  色: number,
-  透明度: number,
-  外扩: number,
-): void {
+function 膨胀填充(图: 图形对象, 形: readonly 点[], 色: number, 透明度: number, 外扩: number): void {
   图.fillStyle(色, 透明度).fillPoints(形, true);
   if (外扩 > 0.05) 图.lineStyle(外扩 * 2, 色, 透明度).strokePoints(形, true);
 }
@@ -90,9 +84,7 @@ export function 绘制形状侧壁(
   透明度 = 1,
 ): void {
   if (厚度 <= 0.2) return;
-  图
-    .fillStyle(暗色(填色, 壁暗), 透明度)
-    .fillPoints(平移(形, 0, 厚度), true);
+  图.fillStyle(暗色(填色, 壁暗), 透明度).fillPoints(平移(形, 0, 厚度), true);
   图
     .fillStyle(暗色(填色, 壁暗 + 0.24), 0.85 * 透明度)
     .fillPoints(平移(形, 0, Math.max(1, 厚度 * 0.52)), true);
@@ -171,7 +163,16 @@ export function 绘制形状糖面(
   );
   if (左带.length >= 3)
     图
-      .fillGradientStyle(亮色(填色, 0.3), 亮色(填色, 0.3), 亮色(填色, 0.3), 亮色(填色, 0.3), 0.4, 0, 0.4, 0)
+      .fillGradientStyle(
+        亮色(填色, 0.3),
+        亮色(填色, 0.3),
+        亮色(填色, 0.3),
+        亮色(填色, 0.3),
+        0.4,
+        0,
+        0.4,
+        0,
+      )
       .fillPoints(左带, true);
 }
 
@@ -200,23 +201,12 @@ export function 绘制形状高光(
   );
   if (顶带.length >= 3)
     图
-      .fillGradientStyle(
-        白,
-        白,
-        白,
-        白,
-        0.42 * 透明度 * 提亮,
-        0.3 * 透明度 * 提亮,
-        0,
-        0,
-      )
+      .fillGradientStyle(白, 白, 白, 白, 0.42 * 透明度 * 提亮, 0.3 * 透明度 * 提亮, 0, 0)
       .fillPoints(顶带, true);
   // 左上镜面：一块大柔光 + 一个更亮的小点，位置固定在左上 1/5 处。
   const 光X = 边.左 + 宽 * 0.24;
   const 光Y = 边.上 + 高 * 0.26;
-  图
-    .fillStyle(白, 0.2 * 透明度 * 提亮)
-    .fillEllipse(光X, 光Y, 宽 * 0.3, 高 * 0.24);
+  图.fillStyle(白, 0.2 * 透明度 * 提亮).fillEllipse(光X, 光Y, 宽 * 0.3, 高 * 0.24);
   图
     .fillStyle(白, 0.34 * 透明度 * 提亮)
     .fillEllipse(边.左 + 宽 * 0.17, 边.上 + 高 * 0.17, 宽 * 0.13, 高 * 0.13);
@@ -249,13 +239,8 @@ export function 绘制形状内阴影(
   if (带形.length < 3) return;
   const 暗 = 色 ?? 糖果规范.色.巧克力深;
   if (贴边 === "上")
-    图
-      .fillGradientStyle(暗, 暗, 暗, 暗, 透明度, 透明度, 0, 0)
-      .fillPoints(带形, true);
-  else
-    图
-      .fillGradientStyle(暗, 暗, 暗, 暗, 0, 0, 透明度 * 0.9, 透明度)
-      .fillPoints(带形, true);
+    图.fillGradientStyle(暗, 暗, 暗, 暗, 透明度, 透明度, 0, 0).fillPoints(带形, true);
+  else 图.fillGradientStyle(暗, 暗, 暗, 暗, 0, 0, 透明度 * 0.9, 透明度).fillPoints(带形, true);
 }
 
 /** 糖霜颗粒：按固定种子撒的细点，亮暗两色交错，读作糖面的糖霜而不是噪点。 */
@@ -347,12 +332,6 @@ export function 绘制糖钉(
 }
 
 /** 圆角矩形的多边形轮廓，供调用方在自己的复合形状里拼接（如名牌侧耳）。 */
-export function 糖片轮廓(
-  左: number,
-  上: number,
-  宽: number,
-  高: number,
-  圆角: number,
-): 点[] {
+export function 糖片轮廓(左: number, 上: number, 宽: number, 高: number, 圆角: number): 点[] {
   return 糖形(左, 上, 宽, 高, 圆角);
 }

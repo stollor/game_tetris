@@ -1,6 +1,6 @@
+import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import { 是像素风格 } from "../../主题/像素/像素风格";
 import { 是立体风格 } from "../../主题/立体/立体风格";
-import type { 图形对象 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 
 /**
  * 面板下方的多层柔影（与 GM 框架同算法）。

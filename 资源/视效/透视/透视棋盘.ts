@@ -21,9 +21,9 @@ import {
   Vector4,
 } from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { 立体规范 } from "../../主题/立体/立体规范";
-import type { 方块类型 } from "../../../代码/玩法/再消一行";
 import type { 渲染前置上下文 } from "../../../.gamemaker/依赖/框架/世界/渲染编排";
+import type { 方块类型 } from "../../../代码/玩法/再消一行";
+import { 立体规范 } from "../../主题/立体/立体规范";
 import type { 棋盘输入 } from "../../预制体/对局/棋盘配方";
 import type { 特效状态 } from "../特效/对局特效";
 import { 计算房间取景 } from "./取景";

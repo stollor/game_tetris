@@ -1,5 +1,5 @@
-import type { 游戏主题 } from "../../../代码/应用/接口/服务";
 import type { 界面配色 } from "../../../.gamemaker/依赖/框架/界面/控件/类型";
+import type { 游戏主题 } from "../../../代码/应用/接口/服务";
 import { 收藏色 } from "./收藏配色";
 
 /**

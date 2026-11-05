@@ -7,10 +7,7 @@
   "方向": "竖屏",
   "云存档": {
     "槽位": "slot_travel_v1",
-    "本地键": [
-      "旅行版:收藏",
-      "neon-pulse:achievements"
-    ]
+    "本地键": ["旅行版:收藏", "neon-pulse:achievements"]
   },
   "排行榜": [
     {

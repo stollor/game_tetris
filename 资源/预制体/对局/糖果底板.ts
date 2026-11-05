@@ -1,11 +1,11 @@
 import type { 图形对象, 点 } from "../../../.gamemaker/依赖/框架/界面/绘制/协议";
 import type { 对局布局数据 } from "../../../代码/页面/布局/对局布局";
-import { 画糖果背景 } from "./底板/背景";
+import { 是糖果风格 } from "../../主题/糖果/糖果风格";
+import { 画糖果侧栏 } from "./底板/侧栏";
 import { 画糖果操作盘 } from "./底板/操作盘";
 import { 画糖果棋盘 } from "./底板/棋盘";
-import { 画糖果侧栏 } from "./底板/侧栏";
+import { 画糖果背景 } from "./底板/背景";
 import { 画糖果顶栏 } from "./底板/顶栏";
-import { 是糖果风格 } from "../../主题/糖果/糖果风格";
 
 /**
  * 糖果主题的「底板」：整屏静态外观（背景、棋盘框与井、顶栏、侧栏、底部操作盘）
@@ -159,7 +159,6 @@ export function 建路径(点集: readonly 点[], 闭合 = true): Path2D {
   if (闭合) 路径.closePath();
   return 路径;
 }
-
 
 /**
  * 画整块糖果底板：按「背景 → 棋盘 → 顶栏 → 侧栏 → 操作盘」的顺序在同一张画布上作画，

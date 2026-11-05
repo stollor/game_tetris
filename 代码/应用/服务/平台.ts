@@ -1,7 +1,7 @@
 import { 探测Tap能力 } from "../../../.gamemaker/依赖/框架/平台/TapTap/宿主探测";
 import { 解锁平台成就 } from "../../平台/平台成就";
-import { type 加载排行榜结果, 加载排行榜数据, 提交模式分数 } from "../../平台/排行榜";
-import type { 语言服务, 平台服务 } from "../接口/服务";
+import { 加载排行榜数据, type 加载排行榜结果, 提交模式分数 } from "../../平台/排行榜";
+import type { 平台服务, 语言服务 } from "../接口/服务";
 
 /**
  * 平台服务：TapTap 能力在普通浏览器全部关闭，所有方法静默降级、不抛错。

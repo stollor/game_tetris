@@ -151,8 +151,7 @@ export function 打开排行榜(
   const 文案 = 按英文取文案(英文);
   const 编号 = 取排行榜编号(模式, 周期) || 取默认排行榜编号(模式);
   if (!编号) return Promise.resolve({ 完成: false, 原因: 文案.排行榜编号未配置 });
-  if (!探测Tap能力().有排行榜)
-    return Promise.resolve({ 完成: false, 原因: 文案.排行榜无能力 });
+  if (!探测Tap能力().有排行榜) return Promise.resolve({ 完成: false, 原因: 文案.排行榜无能力 });
   const 管理器 = 读取Tap宿主()?.getLeaderboardManager?.();
   if (!管理器) return Promise.resolve({ 完成: false, 原因: 文案.排行榜管理器不可用 });
   return new Promise((resolve) => {

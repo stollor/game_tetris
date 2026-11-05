@@ -111,8 +111,7 @@ interface 失败解读 {
 function 解读成就失败(代码?: number, 消息?: string): 失败解读 {
   const 文 = (消息 ?? "").trim();
   const 低 = 文.toLowerCase();
-  if (是未登录错误(代码, 文))
-    return { 文案: 文案.平台成就原因未登录, 已解锁: false, 需登录: true };
+  if (是未登录错误(代码, 文)) return { 文案: 文案.平台成就原因未登录, 已解锁: false, 需登录: true };
   if (
     低.includes("pending") ||
     低.includes("publish") ||
