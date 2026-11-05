@@ -30,6 +30,9 @@ declare global {
         高: number;
       }): void;
       读取素材演示(): { 场景: string; 结束: boolean; 完赛: boolean; 消行数: number };
+      /** 宣发录像：画布 + 游戏音频合成一条流；停止后回 base64 webm。 */
+      开始素材录像(帧率?: number): boolean;
+      停止素材录像(): Promise<string>;
       准备倒计时: (剩余毫秒: number) => void;
       准备贴墙旋转: () => void;
       /** 压测快进：构造马拉松后期（消行/等级/分数/堆叠），不写存档。 */

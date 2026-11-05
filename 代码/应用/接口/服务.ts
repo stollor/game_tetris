@@ -112,6 +112,11 @@ export interface 音频服务 {
     暂停: boolean;
     音乐强度: number;
   };
+  /**
+   * 录制用：把音乐与音效总线接到一条 MediaStream 上，素材录像据此带上游戏原声。
+   * 音频上下文未创建时返回 null，调用方按「无声录像」处理，不静默伪造音轨。
+   */
+  读取录音流(): MediaStream | null;
   停止全部(): void;
 }
 

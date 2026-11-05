@@ -77,6 +77,8 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
     已解锁 = false;
   let 场景音乐: string | null = null;
   let 正在试听 = false;
+  /** 录像用的音频分流目标：首次请求时把音乐与音效总线各接一路，不打断原有输出。 */
+  let 录音目标: MediaStreamAudioDestinationNode | null = null;
   const 宿主活跃 = () =>
     !已销毁 && (typeof document === "undefined" || (!document.hidden && document.hasFocus()));
 
@@ -193,6 +195,17 @@ export function 创建音频服务(设置: 设置服务): 音频服务 {
 
   return {
     解锁,
+    // 录像带原声：把两条总线各接一路到 MediaStreamDestination，音乐/音效照常出声，只是多一路可录。
+    读取录音流: () => {
+      const 当前 = 确保环境();
+      if (!当前 || !上下文 || !音乐输出 || !音效输出) return null;
+      if (!录音目标) {
+        录音目标 = 上下文.createMediaStreamDestination();
+        音乐输出.connect(录音目标);
+        音效输出.connect(录音目标);
+      }
+      return 录音目标.stream;
+    },
     设置暂停: (暂停) => {
       场景暂停 = 暂停;
       同步播放();

@@ -20,7 +20,7 @@ import type { 游戏模式 } from "../../../代码/玩法/再消一行";
 import { 更新游戏设置 } from "../../../代码/设置/游戏设置";
 import { 素材演示状态 } from "../../../代码/页面/对局/素材演示";
 import { 项目默认主题 } from "../../../代码/项目配置/主题";
-import { 主题价格, 主题列表, 可购主题, 是主题名, 默认主题 } from "../../../代码/项目配置/主题目录";
+import { 主题价格, 主题列表, 可购主题, 是主题名, 默认主题, type 主题名 } from "../../../代码/项目配置/主题目录";
 import { 读取有效游戏主题 } from "../../../资源/主题/主题组合";
 import { 读取透视棋盘占用 } from "../../../资源/视效/透视/透视棋盘";
 import type { 压测采样 } from "../压测采样";
@@ -67,10 +67,19 @@ export interface 调试桥选项 {
 }
 
 /**
- * 素材目录里声明的一档「皮肤」：这一局不换局，只按消行进度依次切全部主题，
+ * 素材目录里声明的一档「皮肤」：这一局不换局，按宣发节奏依次切全部主题，
  * 用来录「同一局连续展示五套主题」的实机视频。名字与 配置/素材采集.json 的 皮肤 一致。
  */
 export const 全主题巡演 = "全主题巡演";
+
+/**
+ * 宣发片节奏：前 3 秒快闪五套（每套 0.6 秒），随后每套各停留 3 秒；
+ * 节奏走完停在最后一档，用 0.1 秒的落子间隔把剩下的行数打完。全程同一局，状态不重置。
+ */
+export const 宣发节奏: readonly { 主题: 主题名; 秒数: number }[] = [
+  ...主题列表.map((主题) => ({ 主题, 秒数: 0.6 })),
+  ...主题列表.map((主题) => ({ 主题, 秒数: 3 })),
+];
 
 /**
  * 素材录制换主题：素材脚本不碰存档实现，走金币服务的正式购买路径临时解锁，
@@ -86,8 +95,7 @@ function 应用素材主题(选项: 调试桥选项, 主题: string): void {
   更新游戏设置({ 主题选择: 主题 });
 }
 
-/** 旧验收脚本用 操作(名称) 驱动键盘；这里转成真实 KeyboardEvent，走对局页自己的按键监听。 */
-const 操作按键表: Record<string, KeyboardEventInit> = {
+/** 旧验收脚本用 操作(名称) 驱动键盘；这里转成真实 KeyboardEvent，走对局页自己的按键监听。 */const 操作按键表: Record<string, KeyboardEventInit> = {
   左移: { code: "ArrowLeft", key: "ArrowLeft" },
   右移: { code: "ArrowRight", key: "ArrowRight" },
   旋转: { code: "ArrowUp", key: "ArrowUp" },
@@ -151,6 +159,9 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
   };
 
   const 测试控制 = () => 读取对局页()?.测试 ?? 读取当前页()?.测试;
+
+  /** 宣发录像会话：MediaRecorder 与已收集分片；同一时间只允许一段。 */
+  let 素材录像: { 录制: MediaRecorder; 分片: Blob[] } | null = null;
 
   /**
    * 素材场景切换是异步的：导航刚发出时测试控制还挂在旧页上，这时摆画面等于空调用。
@@ -295,7 +306,8 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
       测试控制()?.开始素材演示({
         目标: 参数.目标,
         秒数: 参数.秒数,
-        主题序列: 巡演 ? 主题列表 : undefined,
+        主题节奏: 巡演 ? 宣发节奏 : undefined,
+        收尾间隔秒: 0.1,
       });
       选项.请求渲染();
     },
@@ -303,6 +315,47 @@ export function 挂载调试桥(选项: 调试桥选项): () => void {
       场景: 选项.栈.读取栈().at(-1)?.名称 ?? 选项.读取页面编号(),
       ...素材演示状态,
     }),
+    /**
+     * 宣发录像：画布画面 + 游戏音频合成一条流交给 MediaRecorder，音画同源天然同步。
+     * 停止后回 base64 webm；录制脚本落盘后再用 ffmpeg 转 H.264/AAC 的 mp4。
+     * 音频走音频服务的录音分流，音乐与音效照常出声，不静音、不改设置。
+     */
+    开始素材录像: (帧率 = 30) => {
+      if (素材录像) return false;
+      const 视频轨 = 选项.渲染.画布.captureStream(帧率).getVideoTracks();
+      const 音频流 = 选项.服务.音频.读取录音流();
+      const 流 = new MediaStream([...视频轨, ...(音频流?.getAudioTracks() ?? [])]);
+      const 录制 = new MediaRecorder(流, {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+          ? "video/webm;codecs=vp9,opus"
+          : "video/webm",
+        videoBitsPerSecond: 12_000_000,
+        audioBitsPerSecond: 160_000,
+      });
+      const 分片: Blob[] = [];
+      录制.ondataavailable = (事件) => {
+        if (事件.data.size > 0) 分片.push(事件.data);
+      };
+      录制.start(250);
+      素材录像 = { 录制, 分片 };
+      return true;
+    },
+    停止素材录像: () =>
+      new Promise<string>((完成) => {
+        const 当前 = 素材录像;
+        if (!当前) {
+          完成("");
+          return;
+        }
+        素材录像 = null;
+        当前.录制.onstop = () => {
+          const 读 = new FileReader();
+          读.onload = () => 完成(String(读.result ?? ""));
+          读.onerror = () => 完成("");
+          读.readAsDataURL(new Blob(当前.分片, { type: "video/webm" }));
+        };
+        当前.录制.stop();
+      }),
     /**
      * 素材采集的「场景就绪」判定：素材目录用「主界面」，页面编号叫「菜单」；
      * 结算场景落在浮层「结算」。GM 有这个钩子就不再按 sceneId 硬等 20 秒。
