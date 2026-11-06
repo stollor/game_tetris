@@ -15,8 +15,21 @@ import {
  * 全部用四边形合批的时间函数画出来，不建新纹理；省电模式可由调用方跳过绘制。
  */
 
+/** 被消掉的一个格子：行号是消掉那一刻的可见行号，与之后棋盘下移无关。 */
+export interface 消行格子 {
+  列: number;
+  行: number;
+  类型: 方块类型;
+}
+
 export interface 消行特效 {
   行: number[];
+  /**
+   * 被消掉格子的原始快照（消行那一刻采集）。
+   * 棋盘在消行后立刻少行、上方整体下移，所以动画必须按这份快照画，
+   * 不能按「当前棋盘的行号」去缩——那样缩掉的是顶下来的其它行。
+   */
+  格子: 消行格子[];
   经过秒: number;
   时长秒: number;
   四行: boolean;
@@ -70,11 +83,19 @@ export function 创建特效状态(): 特效状态 {
   return { 消行: null, 拖尾: null, 锁定: null, 震动: null, 庆祝: 0 };
 }
 
-export function 触发消行(特效: 特效状态, 行: readonly number[]): void {
+export function 触发消行(
+  特效: 特效状态,
+  行: readonly number[],
+  格子: readonly (readonly [number, number, 方块类型])[] = [],
+): void {
   const 可见行 = 行.filter((行号) => 行号 >= 0 && 行号 < 布局.棋盘.行).slice(0, 4);
   if (!可见行.length) return;
+  const 可见集合 = new Set(可见行);
   特效.消行 = {
     行: [...可见行],
+    格子: 格子
+      .filter(([, 行号]) => 可见集合.has(行号))
+      .map(([列, 行号, 类型]) => ({ 列, 行: 行号, 类型 })),
     经过秒: 0,
     时长秒: 可见行.length === 4 ? 四行时长秒 : 消行时长秒,
     四行: 可见行.length === 4,
