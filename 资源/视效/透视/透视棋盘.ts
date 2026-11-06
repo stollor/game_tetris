@@ -26,6 +26,7 @@ import type { 方块类型 } from "../../../代码/玩法/再消一行";
 import { 立体规范 } from "../../主题/立体/立体规范";
 import type { 棋盘输入 } from "../../预制体/对局/棋盘配方";
 import type { 特效状态 } from "../特效/对局特效";
+import { 下落缓动, 计算下移行数, 计算消行变形 } from "../特效/消行补间";
 import { 计算房间取景 } from "./取景";
 import { 建房间装置, 建辉光材质 } from "./房间装置";
 import { 转颜色向量 } from "./直通颜色";
@@ -36,38 +37,6 @@ const 色 = new Color();
 const 视口缓存 = new Vector4();
 const 房间 = 立体规范.房间;
 const 块规 = 立体规范.块;
-
-/**
- * 消行动画：前 30% 闪白「亮一下」，后 70% 收缩到 0 消失；每列按序号错峰，
- * 读起来是连锁消除而不是整行方块一起被吸走。
- */
-export function 计算消行变形(
-  进度: number,
-  列: number,
-  列数: number,
-): { 缩比: number; 提亮: number } {
-  const 列延迟 = (列 / Math.max(1, 列数)) * 0.18;
-  const 段进度 = Math.max(0, Math.min(1, (进度 - 列延迟) / (1 - 列延迟)));
-  const 闪段 = Math.min(1, 段进度 / 0.3);
-  const 缩比 = 段进度 <= 0.3 ? 1 : 1 - ((段进度 - 0.3) / 0.7) ** 1.5;
-  return { 缩比, 提亮: 0.3 + 闪段 * 0.7 };
-}
-
-/** 消行期间上方行的下移进度：前 40% 完成下落，缓出收尾。 */
-export function 下落缓动(进度: number): number {
-  const 段 = Math.max(0, Math.min(1, 进度 / 0.4));
-  return 1 - (1 - 段) ** 3;
-}
-
-/**
- * 消行时某行要下移的行数：它下方每消掉一行就下移一行。
- * 乘以 `下落缓动(进度)` 就是当前位移，用来做「上方行平滑落下」而不是瞬移。
- */
-export function 计算下移行数(行: number, 消行行: readonly number[]): number {
-  let 数 = 0;
-  for (const 消行 of 消行行) if (消行 > 行) 数 += 1;
-  return 数;
-}
 
 export interface 拖尾残影项 {
   列: number;
