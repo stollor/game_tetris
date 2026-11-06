@@ -10,6 +10,7 @@ import { 手势组件 } from "../../.gamemaker/依赖/框架/节点/组件/手�
 import { 按钮组件, type 按钮绘制状态 } from "../../.gamemaker/依赖/框架/节点/组件/按钮";
 import { 文字组件, 读取画笔 } from "../../.gamemaker/依赖/框架/节点/组件/文字";
 import type { 节点 } from "../../.gamemaker/依赖/框架/节点/节点";
+import { 是像素风格 } from "../../资源/主题/像素/像素风格";
 import { 糖果规范 } from "../../资源/主题/糖果/糖果规范";
 import { 是糖果风格 } from "../../资源/主题/糖果/糖果风格";
 import { 读取霓虹调色板 } from "../../资源/主题/配色/调色板";
@@ -248,7 +249,11 @@ export class 菜单页 extends 页面基类 {
     文字变换?: ReturnType<typeof 文字空间矩阵>,
   ): void {
     const 标签尺寸 = 画笔.测量文字(文案, 读取常规按钮文字样式(选项));
-    const 内容 = 生成常规按钮内容(区域.中心X, 区域.中心Y, 文案, 选项, 标签尺寸);
+    const 内容 = 生成常规按钮内容(区域.中心X, 区域.中心Y, 文案, 选项, 标签尺寸, {
+      宽: 区域.宽,
+      高: 区域.高,
+      内边距: 是像素风格() ? 8 : 0,
+    });
     图形.save();
     图形.translateCanvas(区域.中心X, 区域.中心Y);
     图形.scaleCanvas(缩放.x, 缩放.y);

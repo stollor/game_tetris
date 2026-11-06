@@ -834,10 +834,14 @@ describe("计分反馈", () => {
     expect(冲刺.目标行数).toBe(模式配置.冲刺目标行数);
     expect(每日.目标行数).toBe(模式配置.马拉松目标行数);
     expect(冲刺.分数X).toBeGreaterThan(195);
-    expect(马拉松.计时栏).toBeNull();
-    expect(每日.计时栏).toBeNull();
-    expect(冲刺.计时栏).toBe("左");
-    expect(极限.计时栏).toBe("右");
+    expect(马拉松.计时舱).toBeNull();
+    expect(每日.计时舱).toBeNull();
+    expect(冲刺.计时舱).toBe("左");
+    // 极限：倒计时占中间舱，分数挪到右侧（这是用户要求的布局）。
+    expect(极限.计时舱).toBe("主");
+    expect(极限.分数舱).toBe("右");
+    expect(极限.分数X).toBeGreaterThan(195);
+    expect(马拉松.分数舱).toBe("主");
     expect(极限.目标行数).toBeNull();
     expect(格式化仪表时间(120000)).toBe("2:00");
     expect(格式化仪表时间(9300, true)).toBe("9.3");
