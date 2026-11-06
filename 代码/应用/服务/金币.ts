@@ -1,8 +1,9 @@
+import type { 存储接口 } from "../../../.gamemaker/依赖/框架/存档";
 import { 收藏 } from "../../存档/收藏";
 import type { 金币服务 } from "../接口/服务";
 
 /** 金币/主题所有权：每次操作都用同一份版本化存档重新读取，失败不清空原数据。 */
-export function 创建金币服务(存储: Storage = localStorage): 金币服务 {
+export function 创建金币服务(存储: 存储接口 = localStorage): 金币服务 {
   const 订阅者 = new Set<() => void>();
   const 通知 = () => {
     for (const 回调 of 订阅者) 回调();

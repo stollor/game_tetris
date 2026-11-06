@@ -483,8 +483,10 @@ function 建幽灵材质(): ShaderMaterial {
     void main() {
       vec2 p = abs(vGlowUv - 0.5) * 2.0;
       float edge = max(p.x, p.y);
+      // 边框亮线描出落点；面内再压一层淡填充，暗背景上才能一眼看出「这里会落地」。
       float line = smoothstep(${(1 - 立体规范.幽灵.线宽 * 2).toFixed(3)}, 0.99, edge);
-      gl_FragColor = vec4(vGlowColor, line * opacity);
+      float face = 0.12;
+      gl_FragColor = vec4(vGlowColor, max(line, face) * opacity);
     }`;
   return 材质;
 }
