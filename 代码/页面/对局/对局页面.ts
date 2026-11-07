@@ -63,6 +63,7 @@ import {
 } from "../../玩法/再消一行";
 import { 新对局编号 } from "../../玩法/对局编号";
 import { 选择演示落点 } from "../../玩法/演示落子";
+import { 计算对局仪表 } from "../../界面/对局仪表";
 import { 获取技巧反馈 } from "../../界面/技巧反馈";
 import type { 游戏设置 } from "../../设置/游戏设置";
 import type { 游戏文案 } from "../../语言/类型";
@@ -537,15 +538,11 @@ export class 对局页面 extends 页面基类<页面上下文> {
     this.已进入 = false;
   }
 
+  /** 启动层在失焦/切后台时调用：必须和点暂停按钮走同一条路径（含弹窗），
+   *  否则玩家回到游戏只看到画面定住、没有暂停提示，会以为卡死。 */
   暂停(): void {
-    if (this.状态.阶段 === "进行中") {
-      切换暂停(this.状态);
-      this.输入.清空();
-      this.记录("暂停", "失焦自动暂停");
-      this.上下文.服务.音频.设置暂停(true);
-      this.上下文.资源.设置玩法进行中(false);
-      this.标记全部();
-    }
+    if (this.状态.阶段 !== "进行中") return;
+    this.设置暂停(true);
   }
 
   恢复(): void {
@@ -992,7 +989,7 @@ export class 对局页面 extends 页面基类<页面上下文> {
     };
     const 失焦 = () => {
       this.输入.清空();
-      // 窗口失焦自动暂停，回到页面后由玩家按 P/Esc 或点「继续」恢复。
+      // 窗口失焦自动暂停并弹出暂停菜单：恢复只能通过弹窗里的按钮。
       if (this.状态.阶段 === "进行中" && !this.素材演示 && !this.预览画面) this.设置暂停(true);
     };
     window.addEventListener("keydown", 按下);
@@ -1214,6 +1211,11 @@ export class 对局页面 extends 页面基类<页面上下文> {
     });
     this.布局缓存 = { 键, 值 };
     return 值;
+  }
+
+  /** 验收用：当前模式下的仪表舱位（左/主/右）与职责划分。 */
+  读取仪表区域(): ReturnType<typeof 计算对局仪表> {
+    return 计算对局仪表(this.读取布局(), this.模式);
   }
 
   设置暂停(暂停: boolean): void {

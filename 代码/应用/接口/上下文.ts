@@ -226,6 +226,15 @@ export interface 页面实例 extends 场景接口<页面上下文> {
   读取子层偏移?(子层: number): { x: number; y: number } | null;
   /** 本页节点子树实际用到的绘制带数（含页面自定义扩展带）；缺省按基类 3 条带算。 */
   读取绘制带数?(): number;
+  /** 对局页仪表舱位：验收据此检查顶部文字是否落在舱内、标签与数值是否重叠。 */
+  读取仪表区域?(): {
+    左: { 左: number; 上: number; 宽: number; 高: number };
+    主: { 左: number; 上: number; 宽: number; 高: number };
+    右: { 左: number; 上: number; 宽: number; 高: number };
+    计时舱: "左" | "主" | "右" | null;
+    分数舱: "主" | "右";
+    目标行数: number | null;
+  };
   /** 页面节点树根：验收用它读各节点的绘制带，核对层级是否压对。 */
   读取节点根?(): {
     名称: string;
